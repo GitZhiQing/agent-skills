@@ -1,6 +1,6 @@
 [project]
 name = "ddgs-web-access"
-version = "0.2.0"
+version = "0.2.1"
 description = "Minimal web search & web fetch CLI for AI coding agents, wrapping ddgs (DuckDuckGo metasearch)."
 readme = "README.md"
 requires-python = ">=3.10"

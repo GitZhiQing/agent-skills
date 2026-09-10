@@ -1,0 +1,37 @@
+{
+  "name": "agent-skills",
+  "owner": {
+    "name": "QING",
+    "url": "https://github.com/GitZhiQing"
+  },
+  "description": "个人 AI coding agent skills 集合：联网搜索抓取、主题分批提交、深度调研（遵循 Agent Skills 开放规范）",
+  "plugins": [
+    {
+      "name": "ddgs-web-access",
+      "source": "./skills/ddgs-web-access",
+      "skills": ["./"],
+      "description": "联网搜索与网页抓取工具（基于 ddgs 多引擎元搜索：ddgs-web-search / ddgs-web-fetch）",
+      "version": "0.2.1",
+      "author": { "name": "QING" },
+      "keywords": ["web-search", "web-fetch", "ddgs"]
+    },
+    {
+      "name": "theme-commit",
+      "source": "./skills/theme-commit",
+      "skills": ["./"],
+      "description": "工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交",
+      "version": "0.1.1",
+      "author": { "name": "QING" },
+      "keywords": ["git", "commit"]
+    },
+    {
+      "name": "deep-research",
+      "source": "./skills/deep-research",
+      "skills": ["./"],
+      "description": "先校准问题、再消耗调研资源的深度调研，产出调研报告 + 素材登记簿双文档",
+      "version": "0.1.1",
+      "author": { "name": "QING" },
+      "keywords": ["research", "deep-research"]
+    }
+  ]
+}

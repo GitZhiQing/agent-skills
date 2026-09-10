@@ -1,0 +1,6 @@
+{
+  "name": "theme-commit",
+  "description": "工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交",
+  "version": "0.1.1",
+  "author": { "name": "QING" }
+}
