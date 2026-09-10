@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+# skills-lint.sh — 仓库结构与元数据一致性校验。
+#
+# 检查项（标准见 docs/开发与维护规范.md）：
+#   L-frontmatter  每个 skill 有 SKILL.md + 合法 frontmatter，name 与目录名
+#                  一致，description 非空（过短仅 warn）
+#   L-version      metadata.version 必须存在且为 semver；若 skill 带
+#                  pyproject.toml 则两处一致；与 SKILLS.md 总览版本列一致
+#   L-ledger       台账总览 ↔ 磁盘目录双向一致；总览每行有对应明细小节，
+#                  明细无孤儿小节
+#   L-artifacts    运行产物（.venv/ .cache/ __pycache__/ *.egg-info/）未入库
+#
+# 退出码：0 全部通过 / 1 存在失配 / 2 用法错误。
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+. "$SCRIPT_DIR/lib.sh"
+
+[ $# -eq 0 ] || { echo "usage: skills-lint.sh" >&2; exit 2; }
+
+oks=0 warns=0 errors=0
+ok()   { printf 'ok: %s\n' "$*"; oks=$((oks + 1)); }
+warn() { printf 'warn: %s\n' "$*"; warns=$((warns + 1)); }
+err()  { printf 'ERROR: %s\n' "$*" >&2; errors=$((errors + 1)); }
+
+semver_re='^[0-9]+\.[0-9]+\.[0-9]+$'
+
+# --- 台账 SKILLS.md 解析 ----------------------------------------------------
+
+# ledger_rows：总览表每行输出 "name<TAB>version"。
+ledger_rows() {
+  awk -F'|' '
+    /^## / { in_ov = ($0 ~ /^## 总览/) }
+    in_ov && /^\|/ && NF >= 4 {
+      s = $2; v = $3
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", v)
+      if (s ~ /^[-: ]+$/ || s == "Skill") next
+      if (s ~ /^\[/) { sub(/^\[/, "", s); sub(/\].*$/, "", s) }
+      else { sub(/\/$/, "", s) }
+      print s "\t" v
+    }
+  ' "$LEDGER"
+}
+
+# ledger_details：明细下 "### <name>" 小节名清单。
+ledger_details() {
+  awk '/^## / { in_det = ($0 ~ /^## 明细/) }
+       in_det && /^### / { s = $2; sub(/\/$/, "", s); print s }' "$LEDGER"
+}
+
+ledger_name_list="$(ledger_rows | cut -f1)"
+ledger_detail_list="$(ledger_details)"
+
+# --- 逐 skill 检查 -----------------------------------------------------------
+
+skills_list="$(list_skills)"
+if [ -z "$skills_list" ]; then
+  err "未发现任何 skill（每个 skill 需为含 SKILL.md 的一级子目录）"
+fi
+
+for skill in $skills_list; do
+  if fm_exists "$skill"; then
+    ok "$skill: frontmatter 完整"
+  else
+    err "$skill: SKILL.md 缺少 YAML frontmatter（首行 --- 起始，存在闭合 ---）"
+    continue
+  fi
+
+  fm_name="$(fm_value "$skill" name)"
+  if [ -z "$fm_name" ]; then
+    err "$skill: frontmatter 缺少 name"
+  elif [ "$fm_name" != "$skill" ]; then
+    err "$skill: frontmatter name「$fm_name」与目录名不一致"
+  else
+    ok "$skill: name 与目录名一致"
+  fi
+
+  desc_chars="$(fm_description_chars "$skill")"
+  if [ "$desc_chars" -eq 0 ]; then
+    err "$skill: description 为空"
+  elif [ "$desc_chars" -lt 30 ]; then
+    warn "$skill: description 仅 ${desc_chars} 字符，难以承载正向触发 + 反向不触发（规范 §3）"
+  else
+    ok "$skill: description 非空（${desc_chars} 字符）"
+  fi
+
+  ver="$(fm_subvalue "$skill" metadata version)"
+  if [ -z "$ver" ]; then
+    err "$skill: frontmatter 缺少 metadata.version（规范 §3：全部 skill 必须标注）"
+  elif ! printf '%s' "$ver" | grep -Eq "$semver_re"; then
+    err "$skill: metadata.version「$ver」不是 semver（X.Y.Z）"
+  else
+    ok "$skill: metadata.version $ver"
+  fi
+
+  if [ -f "$REPO_ROOT/$skill/pyproject.toml" ]; then
+    pp_ver="$(awk -F'"' '/^version[[:space:]]*=/ { print $2; exit }' "$REPO_ROOT/$skill/pyproject.toml")"
+    if [ -n "$ver" ] && [ -n "$pp_ver" ] && [ "$ver" != "$pp_ver" ]; then
+      err "$skill: 版本不一致：SKILL.md $ver != pyproject.toml $pp_ver"
+    else
+      ok "$skill: pyproject.toml 版本一致（$pp_ver）"
+    fi
+  fi
+
+  if printf '%s\n' "$ledger_name_list" | grep -qx "$skill"; then
+    # frontmatter 版本本身有问题时跳过比对，避免重复报错
+    if [ -n "$ver" ] && printf '%s' "$ver" | grep -Eq "$semver_re"; then
+      row_ver="$(ledger_rows | awk -F'\t' -v s="$skill" '$1 == s { print $2; exit }')"
+      if [ "$row_ver" != "$ver" ]; then
+        err "$skill: 台账总览版本「$row_ver」与 frontmatter「$ver」不一致"
+      else
+        ok "$skill: 台账总览版本一致（$ver）"
+      fi
+    fi
+  else
+    err "$skill: 台账总览缺少该 skill 的行（SKILLS.md）"
+  fi
+done
+
+# --- 台账 ↔ 磁盘，双向一致 ---------------------------------------------------
+
+for name in $ledger_name_list; do
+  if ! printf '%s\n' "$skills_list" | grep -qx "$name"; then
+    err "台账总览的「$name」在磁盘上不存在（目录缺失或无 SKILL.md）"
+  fi
+  if ! printf '%s\n' "$ledger_detail_list" | grep -qx "$name"; then
+    err "台账明细缺少「$name」小节（### $name）"
+  fi
+done
+for name in $ledger_detail_list; do
+  if ! printf '%s\n' "$ledger_name_list" | grep -qx "$name"; then
+    err "台账明细的「$name」小节没有对应总览行"
+  fi
+done
+
+# --- 一级非 skill 目录：仅提示 ------------------------------------------------
+
+for d in "$REPO_ROOT"/*/; do
+  [ -f "${d}SKILL.md" ] || printf 'info: 非技能目录（无 SKILL.md）：%s\n' "$(basename "$d")"
+done
+
+# --- 运行产物未入库 -----------------------------------------------------------
+
+tracked_bad="$(git -C "$REPO_ROOT" ls-files 2>/dev/null | grep -E '(^|/)(\.venv|\.cache|__pycache__)/|\.egg-info/' || true)"
+if [ -n "$tracked_bad" ]; then
+  while IFS= read -r line; do
+    err "运行产物已入库：$line"
+  done <<< "$tracked_bad"
+else
+  ok "无运行产物入库（.venv/.cache/__pycache__/*.egg-info）"
+fi
+
+# --- 汇总 ----------------------------------------------------------------------
+
+printf '\nlint: %d ok, %d warn, %d error\n' "$oks" "$warns" "$errors"
+[ "$errors" -eq 0 ] || exit 1
+exit 0
