@@ -8,11 +8,11 @@
 
 各 skill 的完整元信息（版本、依赖、分发链接、文档索引、状态）见 [SKILLS.md](SKILLS.md)。
 
-| Skill | 版本 | 类型 | 说明 | 分发状态 |
-| --- | --- | --- | --- | --- |
-| [ddgs-web-access](ddgs-web-access/) | 0.2.0 | Python CLI | 基于 ddgs 的联网搜索与网页抓取工具（`ddgs-web-search` / `ddgs-web-fetch`） | 已链接到 `~/.zcode`、`~/.agents`、`~/.claude` 三个 skills 目录 |
-| [theme-commit](theme-commit/) | 0.1.0 | 纯提示词 | 分析混杂变更，按逻辑主题分组提交 git | 已链接三端 |
-| [deep-research](deep-research/) | 0.1.0 | 纯提示词 | 先校准问题再调研：环境检查→预检索校准→选项式澄清→档位推荐→增量登记→报告 + 素材登记簿双文档 | 已链接三端 |
+| Skill | 版本 | 类型 | 说明 |
+| --- | --- | --- | --- |
+| [ddgs-web-access](ddgs-web-access/) | 0.2.0 | Python CLI | 基于 ddgs 的联网搜索与网页抓取工具（`ddgs-web-search` / `ddgs-web-fetch`） |
+| [theme-commit](theme-commit/) | 0.1.0 | 纯提示词 | 分析混杂变更，按逻辑主题分组提交 git |
+| [deep-research](deep-research/) | 0.1.0 | 纯提示词 | 先校准问题再调研：环境检查→预检索校准→选项式澄清→档位推荐→增量登记→报告 + 素材登记簿双文档 |
 
 ## 快速使用
 
@@ -43,29 +43,6 @@ bash scripts/skills-lint.sh                        # 结构与元数据一致性
 ```
 
 ddgs-web-access 另自带 `scripts/install.sh` / `uninstall.sh`，供把该 skill 目录单独拷走使用的场景；在本仓库内分发统一用上面的根脚本。
-
-## 目录结构
-
-```text
-skills/
-├── AGENTS.md            # AI 会话入口：定位、运行验证、约定、当前状态
-├── README.md            # 本文件
-├── SKILLS.md            # Skills 台账：全部 skill 的元信息记录
-├── docs/                # 仓库级文档与规范
-│   ├── 开发与维护规范.md   # 目录/frontmatter/版本/台账/分发/回归标准
-│   └── 维护脚本测试集.md   # scripts/ 下 5 个脚本的测试用例
-├── scripts/             # 仓库级维护脚本（lint / doctor / link / unlink / new）
-├── ddgs-web-access/     # Python CLI skill（含 docs/ 设计文档与测试集、bin/ 启动器、scripts/ 安装脚本）
-├── deep-research/       # 纯提示词调研 skill（docs/ 含需求与设计、竞品调研、测试集与 ZERO 灵感文档）
-└── theme-commit/        # 纯提示词 skill（docs/ 测试集）
-```
-
-## 开发约定
-
-- 一个 skill 一个目录，SKILL.md 为入口；frontmatter 需含 `name`（与目录名一致）、三段式 `description`、`metadata.version`，完整标准见 [开发与维护规范](docs/开发与维护规范.md) §3。
-- 改动代码或 SKILL.md 后按该 skill 的 `docs/测试集.md` 回归；ddgs-web-access 的搜索/抓取调用间隔 ≥2 秒，避免限流。
-- 改动后跑 `bash scripts/skills-lint.sh`；链接变更后跑 `bash scripts/skills-doctor.sh` 并回填台账"分发状态"列。
-- 运行产物（`.venv/`、`.cache/`、`__pycache__/`、`*.egg-info/`）不提交，lint 会检查。
 
 ## 许可
 
