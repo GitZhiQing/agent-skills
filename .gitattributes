@@ -1,0 +1,7 @@
+# 换行规范：仓库内统一 LF，Windows 专用启动器 CRLF
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
