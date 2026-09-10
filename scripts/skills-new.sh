@@ -16,11 +16,12 @@ printf '%s' "$name" | grep -Eq '^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$' || {
   echo "ERROR: name 须为 kebab-case（小写字母/数字/连字符，不以连字符结尾）：$name" >&2
   exit 2
 }
-[ ! -e "$REPO_ROOT/$name" ] || { echo "ERROR: 目录已存在：$REPO_ROOT/$name" >&2; exit 2; }
+dir="$(skill_dir "$name")"
+[ ! -e "$dir" ] || { echo "ERROR: 目录已存在：$dir" >&2; exit 2; }
 
-mkdir -p "$REPO_ROOT/$name/docs"
+mkdir -p "$dir/docs"
 
-cat > "$REPO_ROOT/$name/SKILL.md" <<EOF
+cat > "$dir/SKILL.md" <<EOF
 ---
 name: $name
 description: >-
@@ -38,7 +39,7 @@ metadata:
 决策较多的 skill 另建 docs/需求与设计文档.md；规范见仓库根 docs/开发与维护规范.md。>
 EOF
 
-cat > "$REPO_ROOT/$name/docs/测试集.md" <<EOF
+cat > "$dir/docs/测试集.md" <<EOF
 # $name 测试集
 
 版本：v0.1.0（随 skill 首版创建）。行为协议断言，人工会话执行；
@@ -56,7 +57,7 @@ cat > "$REPO_ROOT/$name/docs/测试集.md" <<EOF
 - = <断言：明确禁止出现的行为>
 EOF
 
-echo "created: $REPO_ROOT/$name"
+echo "created: $dir"
 echo
 echo "后续步骤（规范 §9）："
 echo "  1. 填写 SKILL.md 的 description 三段式与正文，按需补 docs/ 文档"

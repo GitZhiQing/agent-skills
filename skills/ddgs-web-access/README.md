@@ -16,14 +16,14 @@
 
 ## 安装
 
-**方式一（推荐，多 agent 共享）**：本仓库即 skill。运行安装脚本，自动在本机已安装的 agent（Claude Code / ZCode / Agents / Cursor）skills 目录下创建指向本仓库的链接（Windows 用 junction，免管理员权限；Unix 用符号链接）：
+**方式一（推荐，多 agent 共享）**：运行安装脚本，自动在本机已安装的 agent（Claude Code / ZCode / Agents / Cursor）skills 目录下创建指向本 skill 目录的链接（Windows 用 junction，免管理员权限；Unix 用符号链接）：
 
 ```bash
 bash scripts/install.sh        # 卸载：bash scripts/uninstall.sh
 ```
 
-- 单一来源：所有 agent 指向同一个仓库，代码更新（如 git pull）后全端生效；
-- 抓取缓存（仓库 `.cache/`）跨 agent、跨项目共享；
+- 单一来源：所有 agent 指向同一个目录，代码更新（如 git pull）后全端生效；
+- 抓取缓存（目录 `.cache/`）跨 agent、跨项目共享；
 - 幂等可重复执行；卸载只删除指向本仓库的链接。
 
 **方式二（手动）**：把本目录复制到目标 agent 的 skills 目录，如 `~/.claude/skills/ddgs-web-access/`。
@@ -43,7 +43,7 @@ bash <仓库路径>/bin/ddgs-web-search --help
 
 ## 使用
 
-所有命令不依赖当前工作目录，两种等价写法（`<skill_dir>` 为 skill 目录，即仓库根；`bin/` 为自带启动器，自动定位仓库）：
+所有命令不依赖当前工作目录，两种等价写法（`<skill_dir>` 为 skill 目录；`bin/` 为自带启动器，自动定位 skill 目录）：
 
 ```bash
 # 搜索（启动器形式 / uv run 形式）

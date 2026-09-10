@@ -39,7 +39,7 @@ while IFS= read -r skill; do
       fail=1
       continue
     fi
-    echo "linked: $target -> $REPO_ROOT/$skill"
+    echo "linked: $target -> $(skill_dir "$skill")"
   done < <(agent_skills_dirs)
 done < <(printf '%s\n' "$targets")
 
