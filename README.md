@@ -1,49 +1,64 @@
-# skills — 个人 AI Agent Skills 集合
+# agent-skills
 
-存放供 AI coding agent（ZCode / Claude Code / Agents 等）使用的 skills。每个一级子目录是一个独立 skill，以 SKILL.md 为入口；通过链接（Windows junction / Unix symlink）分发到本机各 agent 的 skills 目录，做到单一来源、改一处全端生效。
+A collection of [Agent Skills](https://agentskills.io)（SKILL.md 开放格式）for AI coding agents —— 个人 AI coding agent skills 集合。
 
-开发与维护标准（目录结构、frontmatter、版本规则、台账格式、分发与回归流程）见 [docs/开发与维护规范.md](docs/开发与维护规范.md)。
+全部 skill 遵循 [Agent Skills 开放规范](https://agentskills.io/specification)：一个 skill 一个目录，`SKILL.md` 为唯一入口；可被 Claude Code、Codex、Cursor 等支持该格式的 agent 加载。
 
-## Skills 一览
-
-各 skill 的完整元信息（版本、依赖、分发链接、文档索引、状态）见 [SKILLS.md](SKILLS.md)。
+## Skills
 
 | Skill | 版本 | 类型 | 说明 |
 | --- | --- | --- | --- |
-| [ddgs-web-access](ddgs-web-access/) | 0.2.0 | Python CLI | 基于 ddgs 的联网搜索与网页抓取工具（`ddgs-web-search` / `ddgs-web-fetch`） |
-| [theme-commit](theme-commit/) | 0.1.0 | 纯提示词 | 分析混杂变更，按逻辑主题分组提交 git |
-| [deep-research](deep-research/) | 0.1.0 | 纯提示词 | 先校准问题再调研：环境检查→预检索校准→选项式澄清→档位推荐→增量登记→报告 + 素材登记簿双文档 |
+| [ddgs-web-access](skills/ddgs-web-access/) | 0.2.1 | Python CLI | 基于 [ddgs](https://github.com/deedy5/ddgs) 的联网搜索与网页抓取（`ddgs-web-search` / `ddgs-web-fetch`） |
+| [theme-commit](skills/theme-commit/) | 0.1.1 | 纯提示词 | 工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交 |
+| [deep-research](skills/deep-research/) | 0.1.1 | 纯提示词 | 先校准问题再调研：环境检查→预检索校准→选项式澄清→档位推荐→报告 + 素材登记簿双文档 |
+
+各 skill 的调用方法、参数与排障见其目录内的 SKILL.md / README.md。
+
+## 安装
+
+三种方式任选其一：
+
+**skills CLI**（跨 agent，支持 20+ 平台，自动 symlink）：
+
+```bash
+npx skills add GitZhiQing/agent-skills              # 全部 skill
+npx skills add GitZhiQing/agent-skills/theme-commit # 单个 skill
+```
+
+**Claude Code plugin marketplace**（托管安装，随版本更新）：
+
+```
+/plugin marketplace add GitZhiQing/agent-skills
+/plugin install ddgs-web-access@agent-skills         # 或 theme-commit / deep-research
+```
+
+**手动**（clone 后用仓库自带脚本链接到本机各 agent 的 skills 目录，Windows junction / Unix symlink，单一来源改一处全端生效）：
+
+```bash
+git clone https://github.com/GitZhiQing/agent-skills.git
+cd agent-skills
+bash scripts/skills-link.sh --all      # 卸载：bash scripts/skills-unlink.sh --all
+bash scripts/skills-doctor.sh          # 巡检链接健康
+```
 
 ## 快速使用
 
 以 ddgs-web-access 为例（需 [uv](https://docs.astral.sh/uv/) >= 0.5，首次调用自动安装依赖）：
 
 ```bash
-bash ddgs-web-access/bin/ddgs-web-search "python 3.13 asyncio" -m 5
-bash ddgs-web-access/bin/ddgs-web-fetch "https://example.com"
+npx skills add GitZhiQing/agent-skills/ddgs-web-access
+bash ~/.claude/skills/ddgs-web-access/bin/ddgs-web-search "python 3.13 asyncio" -m 5
+bash ~/.claude/skills/ddgs-web-access/bin/ddgs-web-fetch "https://example.com"
 ```
 
-各 skill 的调用方法、参数与排障见其目录内的 SKILL.md / README.md。
+## 仓库维护（面向贡献者/维护者）
 
-## 安装与分发
+- 仓库结构、frontmatter 标准、版本与台账规则见 [docs/开发与维护规范.md](docs/开发与维护规范.md)。
+- 改动后跑 `bash scripts/skills-lint.sh` 校验；维护脚本自身的测试用例见 [docs/维护脚本测试集.md](docs/维护脚本测试集.md)。
+- 新增 skill：`bash scripts/skills-new.sh my-skill` 生成规范骨架。
 
-仓库级脚本把指定 skill 链接到本机已发现的 agent skills 目录（Windows junction / Unix symlink，幂等，可重复执行）：
+## 许可与安全
 
-```bash
-bash scripts/skills-link.sh --all                  # 分发全部 skill（或指定名称：skills-link.sh theme-commit）
-bash scripts/skills-doctor.sh                      # 巡检链接健康（linked/missing/foreign/broken）
-bash scripts/skills-unlink.sh --all                # 卸载（只删指向本仓库的链接）
-```
-
-新增 skill 用脚手架生成规范骨架，改动后跑校验：
-
-```bash
-bash scripts/skills-new.sh my-skill                # SKILL.md + docs/测试集.md 骨架
-bash scripts/skills-lint.sh                        # 结构与元数据一致性校验
-```
-
-ddgs-web-access 另自带 `scripts/install.sh` / `uninstall.sh`，供把该 skill 目录单独拷走使用的场景；在本仓库内分发统一用上面的根脚本。
-
-## 许可
-
-本仓库以 [MIT](LICENSE) 发布（ddgs-web-access 目录内另附一份，供该 skill 单独拷走使用）。注意上游 ddgs 声明"仅供教育目的使用"，使用时请遵守目标网站服务条款与 robots 协议。
+- 本仓库以 [MIT](LICENSE) 发布（ddgs-web-access 目录内另附一份，供单独拷走使用）。
+- **skill 含可执行代码**（`skills/*/bin/`、`skills/*/scripts/`），安装前请自行审阅。
+- ddgs-web-access 依赖的上游 ddgs 声明"仅供教育目的使用"，使用时请遵守目标网站服务条款与 robots 协议。
