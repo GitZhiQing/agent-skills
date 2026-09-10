@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# ddgs-web-search — location-independent launcher.
+# Resolves the project root from this script's own location, so the skill
+# works from any working directory and from any install spot (copy, junction
+# or symlink). Equivalent to: uv run --project <repo> ddgs-web-search "$@"
+set -euo pipefail
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if command -v cygpath >/dev/null 2>&1; then
+  PROJECT_DIR="$(cygpath -w "$PROJECT_DIR")"
+fi
+exec uv run --project "$PROJECT_DIR" ddgs-web-search "$@"
