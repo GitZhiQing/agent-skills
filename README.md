@@ -2,13 +2,17 @@
 
 存放供 AI coding agent（ZCode / Claude Code / Agents 等）使用的 skills。每个一级子目录是一个独立 skill，以 SKILL.md 为入口；通过链接（Windows junction / Unix symlink）分发到本机各 agent 的 skills 目录，做到单一来源、改一处全端生效。
 
+开发与维护标准（目录结构、frontmatter、版本规则、台账格式、分发与回归流程）见 [docs/开发与维护规范.md](docs/开发与维护规范.md)。
+
 ## Skills 一览
+
+各 skill 的完整元信息（版本、依赖、分发链接、文档索引、状态）见 [SKILLS.md](SKILLS.md)。
 
 | Skill | 版本 | 类型 | 说明 | 分发状态 |
 | --- | --- | --- | --- | --- |
 | [ddgs-web-access](ddgs-web-access/) | 0.2.0 | Python CLI | 基于 ddgs 的联网搜索与网页抓取工具（`ddgs-web-search` / `ddgs-web-fetch`） | 已链接到 `~/.zcode`、`~/.agents`、`~/.claude` 三个 skills 目录 |
-| [theme-commit](theme-commit/) | — | 纯提示词 | 分析混杂变更，按逻辑主题分组提交 git | 仅存于本仓库，未链接 |
-| research-with-docs/ | — | — | 空目录，规划中 | — |
+| [theme-commit](theme-commit/) | 0.1.0 | 纯提示词 | 分析混杂变更，按逻辑主题分组提交 git | 已链接三端 |
+| [deep-research](deep-research/) | 0.1.0 | 纯提示词 | 先校准问题再调研：环境检查→预检索校准→选项式澄清→档位推荐→增量登记→报告 + 素材登记簿双文档 | 已链接三端 |
 
 ## 快速使用
 
@@ -23,13 +27,22 @@ bash ddgs-web-access/bin/ddgs-web-fetch "https://example.com"
 
 ## 安装与分发
 
-ddgs-web-access 自带安装脚本，把本仓库链接到本机已安装 agent 的 skills 目录（可重复执行，卸载只删链接）：
+仓库级脚本把指定 skill 链接到本机已发现的 agent skills 目录（Windows junction / Unix symlink，幂等，可重复执行）：
 
 ```bash
-bash ddgs-web-access/scripts/install.sh      # 卸载：bash ddgs-web-access/scripts/uninstall.sh
+bash scripts/skills-link.sh --all                  # 分发全部 skill（或指定名称：skills-link.sh theme-commit）
+bash scripts/skills-doctor.sh                      # 巡检链接健康（linked/missing/foreign/broken）
+bash scripts/skills-unlink.sh --all                # 卸载（只删指向本仓库的链接）
 ```
 
-纯提示词 skill（如 theme-commit）无安装脚本，需要时手动复制或链接到目标 agent 的 skills 目录。
+新增 skill 用脚手架生成规范骨架，改动后跑校验：
+
+```bash
+bash scripts/skills-new.sh my-skill                # SKILL.md + docs/测试集.md 骨架
+bash scripts/skills-lint.sh                        # 结构与元数据一致性校验
+```
+
+ddgs-web-access 另自带 `scripts/install.sh` / `uninstall.sh`，供把该 skill 目录单独拷走使用的场景；在本仓库内分发统一用上面的根脚本。
 
 ## 目录结构
 
@@ -37,17 +50,23 @@ bash ddgs-web-access/scripts/install.sh      # 卸载：bash ddgs-web-access/scr
 skills/
 ├── AGENTS.md            # AI 会话入口：定位、运行验证、约定、当前状态
 ├── README.md            # 本文件
+├── SKILLS.md            # Skills 台账：全部 skill 的元信息记录
+├── docs/                # 仓库级文档与规范
+│   ├── 开发与维护规范.md   # 目录/frontmatter/版本/台账/分发/回归标准
+│   └── 维护脚本测试集.md   # scripts/ 下 5 个脚本的测试用例
+├── scripts/             # 仓库级维护脚本（lint / doctor / link / unlink / new）
 ├── ddgs-web-access/     # Python CLI skill（含 docs/ 设计文档与测试集、bin/ 启动器、scripts/ 安装脚本）
-├── theme-commit/        # 纯提示词 skill
-└── research-with-docs/  # 规划中（空）
+├── deep-research/       # 纯提示词调研 skill（docs/ 含需求与设计、竞品调研、测试集与 ZERO 灵感文档）
+└── theme-commit/        # 纯提示词 skill（docs/ 测试集）
 ```
 
 ## 开发约定
 
-- 一个 skill 一个目录，SKILL.md 为入口；复杂 skill 另带 README.md 与 docs/。
-- ddgs-web-access 的改动按其 [测试集](ddgs-web-access/docs/测试集.md) 回归；搜索/抓取调用间隔 ≥2 秒，避免限流。
-- 运行产物（`.venv/`、`.cache/`、`__pycache__/`、`*.egg-info/`）不提交。
+- 一个 skill 一个目录，SKILL.md 为入口；frontmatter 需含 `name`（与目录名一致）、三段式 `description`、`metadata.version`，完整标准见 [开发与维护规范](docs/开发与维护规范.md) §3。
+- 改动代码或 SKILL.md 后按该 skill 的 `docs/测试集.md` 回归；ddgs-web-access 的搜索/抓取调用间隔 ≥2 秒，避免限流。
+- 改动后跑 `bash scripts/skills-lint.sh`；链接变更后跑 `bash scripts/skills-doctor.sh` 并回填台账"分发状态"列。
+- 运行产物（`.venv/`、`.cache/`、`__pycache__/`、`*.egg-info/`）不提交，lint 会检查。
 
 ## 许可
 
-ddgs-web-access 为 MIT；注意上游 ddgs 声明"仅供教育目的使用"，使用时请遵守目标网站服务条款与 robots 协议。
+本仓库以 [MIT](LICENSE) 发布（ddgs-web-access 目录内另附一份，供该 skill 单独拷走使用）。注意上游 ddgs 声明"仅供教育目的使用"，使用时请遵守目标网站服务条款与 robots 协议。
