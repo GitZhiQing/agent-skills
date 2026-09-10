@@ -10,6 +10,13 @@
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Skills 台账；格式标准见 docs/开发与维护规范.md §5。
 LEDGER="$REPO_ROOT/SKILLS.md"
+# Skills 目录：全部 skill 位于 skills/ 下，一个 skill 一个子目录（规范 §2）。
+SKILLS_DIR="$REPO_ROOT/skills"
+
+# skill_dir <name> — skill 目录绝对路径的唯一定义点。
+skill_dir() {
+  printf '%s\n' "$SKILLS_DIR/$1"
+}
 
 is_windows() {
   case "${OSTYPE:-}" in
@@ -28,11 +35,10 @@ agent_skills_dirs() {
     "$HOME/.cursor/skills"
 }
 
-# skill 的定义：含 SKILL.md 的一级子目录（glob 自动跳过 .git/.zcode 等隐藏目录；
-# docs/、scripts/ 无 SKILL.md，天然排除）。
+# skill 的定义：skills/ 下含 SKILL.md 的子目录。
 list_skills() {
   local d
-  for d in "$REPO_ROOT"/*/; do
+  for d in "$SKILLS_DIR"/*/; do
     [ -f "${d}SKILL.md" ] || continue
     basename "$d"
   done
@@ -42,7 +48,7 @@ list_skills() {
 
 # fm_exists <skill> — SKILL.md 存在合法 frontmatter 块（首行 --- 起，有闭合 ---）。
 fm_exists() {
-  local f="$REPO_ROOT/$1/SKILL.md"
+  local f="$SKILLS_DIR/$1/SKILL.md"
   [ -f "$f" ] || return 1
   head -n 1 "$f" | grep -q '^---[[:space:]]*$' || return 1
   awk 'NR > 1 && /^---[[:space:]]*$/ { ok = 1; exit } END { exit(ok ? 0 : 1) }' "$f"
@@ -60,7 +66,7 @@ fm_value() {
       print v
       exit
     }
-  ' "$REPO_ROOT/$1/SKILL.md"
+  ' "$SKILLS_DIR/$1/SKILL.md"
 }
 
 # fm_subvalue <skill> <parent> <key> — 二级标量值，如 fm_subvalue <skill> metadata version。
@@ -79,7 +85,7 @@ fm_subvalue() {
       print v
       exit
     }
-  ' "$REPO_ROOT/$1/SKILL.md"
+  ' "$SKILLS_DIR/$1/SKILL.md"
 }
 
 # fm_description_chars <skill> — description 内容的字符数（行内值或折叠块累加），
@@ -97,7 +103,7 @@ fm_description_chars() {
     fm && /^[A-Za-z0-9_-]+:/ { if (ind) exit }
     ind { n += length($0) }
     END { print n + 0 }
-  ' "$REPO_ROOT/$1/SKILL.md"
+  ' "$SKILLS_DIR/$1/SKILL.md"
 }
 
 # --- 链接管理（junction / symlink 统一抽象） ---------------------------------
@@ -109,9 +115,9 @@ create_link() {
   if is_windows; then
     # /c 用单斜杠：MSYS2_ARG_CONV_EXCL="*" 下双斜杠会原样传入 "//c"，
     # 使 cmd 掉进交互模式（ddgs-web-access 设计文档 v0.5 勘误）。
-    MSYS2_ARG_CONV_EXCL="*" cmd /c mklink /J "$(cygpath -w "$target")" "$(cygpath -w "$REPO_ROOT/$2")" >/dev/null
+    MSYS2_ARG_CONV_EXCL="*" cmd /c mklink /J "$(cygpath -w "$target")" "$(cygpath -w "$SKILLS_DIR/$2")" >/dev/null
   else
-    ln -s "$REPO_ROOT/$2" "$target"
+    ln -s "$SKILLS_DIR/$2" "$target"
   fi
 }
 
@@ -136,7 +142,7 @@ link_state() {
   if [ ! -e "$target" ] && [ ! -L "$target" ]; then echo missing; return 0; fi
   if [ ! -f "$target/SKILL.md" ]; then echo broken; return 0; fi
   tgt_id="$(stat -Lc '%d:%i' "$target" 2>/dev/null)" || { echo broken; return 0; }
-  src_id="$(stat -Lc '%d:%i' "$REPO_ROOT/$2" 2>/dev/null)" || { echo broken; return 0; }
+  src_id="$(stat -Lc '%d:%i' "$SKILLS_DIR/$2" 2>/dev/null)" || { echo broken; return 0; }
   if [ "$tgt_id" = "$src_id" ]; then echo linked; else echo foreign; fi
 }
 
@@ -150,7 +156,7 @@ link_points_to_repo() {
     real="$(cygpath -u "$real" 2>/dev/null || printf '%s' "$real")"
   fi
   [ -d "$real" ] && real="$(cd "$real" && pwd)"
-  [ "$real" = "$REPO_ROOT/$2" ]
+  [ "$real" = "$SKILLS_DIR/$2" ]
 }
 
 # resolve_skills <args...> — 把命令行参数解析为 skill 名清单输出：

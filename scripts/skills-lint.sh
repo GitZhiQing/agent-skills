@@ -8,6 +8,8 @@
 #                  pyproject.toml 则两处一致；与 SKILLS.md 总览版本列一致
 #   L-ledger       台账总览 ↔ 磁盘目录双向一致；总览每行有对应明细小节，
 #                  明细无孤儿小节
+#   L-layout       skill 必须位于 skills/ 子目录（skills/<name>/SKILL.md），
+#                  根级不允许出现 skill 目录
 #   L-artifacts    运行产物（.venv/ .cache/ __pycache__/ *.egg-info/）未入库
 #
 # 退出码：0 全部通过 / 1 存在失配 / 2 用法错误。
@@ -57,7 +59,7 @@ ledger_detail_list="$(ledger_details)"
 
 skills_list="$(list_skills)"
 if [ -z "$skills_list" ]; then
-  err "未发现任何 skill（每个 skill 需为含 SKILL.md 的一级子目录）"
+  err "未发现任何 skill（每个 skill 需为 skills/ 下含 SKILL.md 的子目录）"
 fi
 
 for skill in $skills_list; do
@@ -95,8 +97,8 @@ for skill in $skills_list; do
     ok "$skill: metadata.version $ver"
   fi
 
-  if [ -f "$REPO_ROOT/$skill/pyproject.toml" ]; then
-    pp_ver="$(awk -F'"' '/^version[[:space:]]*=/ { print $2; exit }' "$REPO_ROOT/$skill/pyproject.toml")"
+  if [ -f "$SKILLS_DIR/$skill/pyproject.toml" ]; then
+    pp_ver="$(awk -F'"' '/^version[[:space:]]*=/ { print $2; exit }' "$SKILLS_DIR/$skill/pyproject.toml")"
     if [ -n "$ver" ] && [ -n "$pp_ver" ] && [ "$ver" != "$pp_ver" ]; then
       err "$skill: 版本不一致：SKILL.md $ver != pyproject.toml $pp_ver"
     else
@@ -135,10 +137,17 @@ for name in $ledger_detail_list; do
   fi
 done
 
-# --- 一级非 skill 目录：仅提示 ------------------------------------------------
+# --- 目录布局：skill 必须在 skills/ 下，根级仅允许仓库级目录 ------------------
 
 for d in "$REPO_ROOT"/*/; do
-  [ -f "${d}SKILL.md" ] || printf 'info: 非技能目录（无 SKILL.md）：%s\n' "$(basename "$d")"
+  name="$(basename "$d")"
+  if [ -f "${d}SKILL.md" ]; then
+    err "skill「$name」不在 skills/ 下（规范 §2）"
+  elif [ "$name" = docs ] || [ "$name" = scripts ] || [ "$name" = skills ]; then
+    :
+  else
+    printf 'info: 非技能目录（无 SKILL.md）：%s\n' "$name"
+  fi
 done
 
 # --- 运行产物未入库 -----------------------------------------------------------
