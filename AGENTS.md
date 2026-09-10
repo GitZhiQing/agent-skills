@@ -42,7 +42,7 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 
 ## 当前状态与下一步
 
-- git 仓库已初始化（main 分支，2026-09-10），尚未配置远端。
+- git 仓库已初始化（main 分支，2026-09-10），远端为 GitHub `GitZhiQing/skills`（公开，MIT）。
 - 仓库级维护脚本已就位：`scripts/`（lib / lint / doctor / link / unlink / new），规范与测试集在 `docs/`；改动脚本后按 `docs/维护脚本测试集.md` 回归。
 - ddgs-web-access v0.2.0 已定稿：设计文档 v0.6、测试集 v1.1，三端链接验证生效。
 - theme-commit v0.1.0：已补 `metadata.version` 与 `docs/测试集.md`，已链接三端。
