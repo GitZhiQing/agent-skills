@@ -7,8 +7,9 @@ description: >-
   有歧义、领域冷门、表述模糊时主动使用。调研开始前先检查环境可用的 web_search /
   web_fetch 工具并向用户确认。当用户只需一次搜索可答的单点查询、或明确要求不联网时，
   不要使用本 skill。
+license: MIT
 metadata:
-  version: 0.1.0
+  version: 0.1.1
   category: research
 ---
 

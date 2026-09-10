@@ -5,15 +5,11 @@ description: >-
   当用户需要搜索最新资料、查找代码、文档或新闻、验证事实、或抓取某个网页的正文内容时使用；
   触发词包括"搜索""查一下""web search""找资料""联网查证""抓取网页""网页正文""fetch 这个页面"等。
   当用户只是讨论本地文件内容、或已有完整文本无需再抓取网页时，不要使用本 skill。
-compatibility:
-  - 需要 uv >= 0.5 与网络访问；首次调用会联网安装 ddgs 依赖（约 30-60 秒）
-  - 需要代理时通过 --proxy 或环境变量传入（见下文）
-allowed-tools:
-  - Bash(uv run *)
-  - Bash(bash *bin/ddgs-web-search *)
-  - Bash(bash *bin/ddgs-web-fetch *)
+license: MIT
+compatibility: 需要 uv >= 0.5 与网络访问；首次调用联网安装 ddgs 依赖（约 30-60 秒）；代理经 --proxy 或环境变量传入
+allowed-tools: Bash(uv run *) Bash(bash *bin/ddgs-web-search *) Bash(bash *bin/ddgs-web-fetch *)
 metadata:
-  version: 0.2.0
+  version: 0.2.1
   category: web
 ---
 
@@ -30,7 +26,7 @@ metadata:
 
 ## 调用方法
 
-标准形式（`<skill_dir>` 为本 skill 目录，即仓库根；命令不依赖当前工作目录）：
+标准形式（`<skill_dir>` 为本 skill 目录；命令不依赖当前工作目录）：
 
 ```bash
 bash "<skill_dir>/bin/ddgs-web-search" "<关键字>" -m 5
