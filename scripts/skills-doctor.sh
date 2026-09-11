@@ -6,7 +6,7 @@
 #   broken（链接存在但读不到 SKILL.md，error）
 #
 # 坏链接在 agent 侧不会报错，所以任何链接变更后都应跑一次本脚本，
-# 并据结果回填台账 SKILLS.md 的"分发状态"列（规范 §6）。
+# 并据结果回填本地台账 SKILLS.local.md 的"分发状态"列（规范 §6）。
 # 退出码：0 健康 / 1 存在 broken / 2 用法错误。
 set -euo pipefail
 

@@ -61,6 +61,6 @@ echo "created: $dir"
 echo
 echo "后续步骤（规范 §9）："
 echo "  1. 填写 SKILL.md 的 description 三段式与正文，按需补 docs/ 文档"
-echo "  2. 在 SKILLS.md 补总览一行 + 明细一节（版本 0.1.0）"
+echo "  2. 在 README Skills 表补一行（本机维护者另在 SKILLS.local.md 补总览一行 + 明细一节）"
 echo "  3. bash scripts/skills-lint.sh    # 应全绿"
 echo "  4. bash scripts/skills-link.sh $name && bash scripts/skills-doctor.sh"
