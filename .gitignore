@@ -1,6 +1,9 @@
 # AI 会话残留（计划文件），非项目内容
 .zcode/
 
+# 维护者本地台账与个人状态（不入库，公开目录以 README Skills 表为准）
+*.local.md
+
 # 运行产物（lint 会检查未入库）
 .venv/
 .cache/
