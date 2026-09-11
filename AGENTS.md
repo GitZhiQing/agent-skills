@@ -1,6 +1,6 @@
 # AGENTS.md — skills
 
-个人 AI coding agent skills 集合：每个 skill 位于 `skills/` 子目录下，一个 skill 一个目录，通过 junction/软链分发到本机各 agent 的 skills 目录（`~/.zcode/skills`、`~/.agents/skills`、`~/.claude/skills`、`~/.cursor/skills`）。
+个人 AI coding agent skills 集合：每个 skill 位于 `skills/` 子目录下，一个 skill 一个目录，通过 junction/软链分发到各 agent 的 skills 目录（`~/.zcode/skills`、`~/.agents/skills`、`~/.claude/skills`、`~/.cursor/skills`）。
 
 维护标准见 `docs/开发与维护规范.md`（目录结构、frontmatter、版本规则、台账格式、分发与回归流程）；执行细则见 `docs/维护脚本测试集.md`。
 
@@ -40,12 +40,3 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 - 分发与卸载统一用 `bash scripts/skills-link.sh` / `skills-unlink.sh`（在四个 agent 目录建/删指向本仓库的 junction，单一来源）；ddgs-web-access 自带的 `scripts/install.sh` 仅供该 skill 独立拷走时使用。链接变更后跑 `skills-doctor.sh` 并回填本地台账（SKILLS.local.md）"分发状态"列。
 - 运行产物（`.venv/`、`.cache/`、`__pycache__/`、`*.egg-info/`）已 gitignore，不纳入版本管理，lint 会检查。
 - `.zcode/`（会话计划产物）在根 .gitignore 中排除。
-
-## 当前状态与下一步
-
-- git 仓库已初始化（main 分支，2026-09-10），远端为 GitHub `GitZhiQing/agent-skills`（公开，MIT，原名 `skills`，旧 URL 自动重定向）。
-- 仓库级维护脚本已就位：`scripts/`（lib / lint / doctor / link / unlink / new），规范与测试集在 `docs/`；改动脚本后按 `docs/维护脚本测试集.md` 回归。
-- skill 全部位于 `skills/` 子目录（lint L-layout 强制）；对外分发走仓库 `.claude-plugin/marketplace.json`（Claude Code plugin，按 skill 粒度安装）与 `npx skills add GitZhiQing/agent-skills`。
-- ddgs-web-access v0.2.1 已定稿：设计文档 v0.6、测试集 v1.1，三端链接验证生效。
-- theme-commit v0.1.1：已补 `metadata.version` 与 `docs/测试集.md`，已链接三端。
-- deep-research v0.1.1 已实现（SKILL.md + 需求与设计文档 v0.2 + 竞品调研 v0.1 + 测试集 v1.0），已链接三端；下一步：按测试集 V-1~V-14 跑首轮真实调研，回填档位取值（设计文档 O2）。
