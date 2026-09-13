@@ -11,7 +11,7 @@ A collection of [Agent Skills](https://agentskills.io)（SKILL.md 开放格式�
 | [ddgs-web-access](skills/ddgs-web-access/) | 0.2.1 | Python CLI | 基于 [ddgs](https://github.com/deedy5/ddgs) 的联网搜索与网页抓取（`ddgs-web-search` / `ddgs-web-fetch`） |
 | [theme-commit](skills/theme-commit/) | 0.1.1 | 纯提示词 | 工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交 |
 | [deep-research](skills/deep-research/) | 0.2.0 | 纯提示词 | 先校准问题再调研：环境检查→理解确认→档位推荐→确认门→research/ 目录交付 REPORT.md + REFERENCES.md 双文件 |
-| [zero-coding](skills/zero-coding/) | 0.1.0 | 纯提示词 | 从零启动个人项目并维持稳定开发：最小文档集（ZERO/SPEC/DECISIONS/AGENTS/README），按"捕获→固化→骨架→稳定开发"推进 |
+| [zero-coding](skills/zero-coding/) | 0.2.0 | 纯提示词 | 从零启动个人项目并维持稳定开发：最小文档集（ZERO/SPEC/DECISIONS/AGENTS/README），按"捕获→固化→骨架→稳定开发"推进 |
 
 各 skill 的调用方法、参数与排障见其目录内的 SKILL.md / README.md。
 
