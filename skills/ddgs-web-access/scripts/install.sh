@@ -47,9 +47,36 @@ link_skill() {
   echo "linked: $target -> $REPO_DIR"
 }
 
-for d in "$HOME/.zcode/skills" "$HOME/.agents/skills" "$HOME/.claude/skills" "$HOME/.cursor/skills"; do
-  link_skill "$d"
-done
+# Default agent skills directories: mainstream agents that adopted the Agent
+# Skills format, probed by existence (keep in sync with scripts/lib.sh
+# builtin_agent_targets; rationale and full table in the repo's
+# docs/开发与维护规范.md §6).
+default_skill_dirs() {
+  printf '%s\n' \
+    "$HOME/.zcode/skills" \
+    "$HOME/.agents/skills" \
+    "$HOME/.claude/skills" \
+    "$HOME/.cursor/skills" \
+    "$HOME/.codex/skills" \
+    "$HOME/.copilot/skills" \
+    "$HOME/.gemini/skills" \
+    "$HOME/.config/opencode/skills" \
+    "$HOME/.codeium/windsurf/skills" \
+    "$HOME/.cline/skills" \
+    "$HOME/.roo/skills" \
+    "$HOME/.qwen/skills" \
+    "$HOME/.kilo/skills" \
+    "$HOME/.junie/skills" \
+    "$HOME/.trae/skills"
+}
+
+# usage: install.sh [skills-dir ...] — no args = default list above; pass
+# directories to link only into those (e.g. a project-level .agents/skills).
+if [ $# -gt 0 ]; then
+  for d in "$@"; do link_skill "$d"; done
+else
+  while IFS= read -r d; do link_skill "$d"; done < <(default_skill_dirs)
+fi
 
 echo
 echo "done. 验证（任意目录下执行）:"

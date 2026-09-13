@@ -40,10 +40,34 @@ unlink_skill() {
   echo "removed: $target"
 }
 
-for d in "$HOME/.zcode/skills" "$HOME/.agents/skills" "$HOME/.claude/skills" "$HOME/.cursor/skills"; do
-  if [ -d "$d" ]; then
-    unlink_skill "$d"
-  fi
-done
+# Default agent skills directories (keep in sync with scripts/lib.sh
+# builtin_agent_targets and scripts/install.sh).
+default_skill_dirs() {
+  printf '%s\n' \
+    "$HOME/.zcode/skills" \
+    "$HOME/.agents/skills" \
+    "$HOME/.claude/skills" \
+    "$HOME/.cursor/skills" \
+    "$HOME/.codex/skills" \
+    "$HOME/.copilot/skills" \
+    "$HOME/.gemini/skills" \
+    "$HOME/.config/opencode/skills" \
+    "$HOME/.codeium/windsurf/skills" \
+    "$HOME/.cline/skills" \
+    "$HOME/.roo/skills" \
+    "$HOME/.qwen/skills" \
+    "$HOME/.kilo/skills" \
+    "$HOME/.junie/skills" \
+    "$HOME/.trae/skills"
+}
+
+# usage: uninstall.sh [skills-dir ...] — no args = default list above.
+if [ $# -gt 0 ]; then
+  for d in "$@"; do if [ -d "$d" ]; then unlink_skill "$d"; fi; done
+else
+  while IFS= read -r d; do
+    if [ -d "$d" ]; then unlink_skill "$d"; fi
+  done < <(default_skill_dirs)
+fi
 
 echo "done."

@@ -13,7 +13,7 @@
         "./"
       ],
       "description": "联网搜索与网页抓取工具（基于 ddgs 多引擎元搜索：ddgs-web-search / ddgs-web-fetch）",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "author": {
         "name": "QING"
       },

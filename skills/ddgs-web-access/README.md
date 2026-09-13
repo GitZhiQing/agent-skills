@@ -16,10 +16,11 @@
 
 ## 安装
 
-**方式一（推荐，多 agent 共享）**：运行安装脚本，自动在本机已安装的 agent（Claude Code / ZCode / Agents / Cursor）skills 目录下创建指向本 skill 目录的链接（Windows 用 junction，免管理员权限；Unix 用符号链接）：
+**方式一（推荐，多 agent 共享）**：运行安装脚本，自动在本机已安装的主流 agent skills 全局位（ZCode / Claude Code / Cursor / Codex / Copilot / Gemini CLI / opencode / Windsurf / Cline / Roo / Qwen / Kilo / Junie / Trae 及跨端通用目录 `~/.agents/skills`）下创建指向本 skill 目录的链接（Windows 用 junction，免管理员权限；Unix 用符号链接）：
 
 ```bash
-bash scripts/install.sh        # 卸载：bash scripts/uninstall.sh
+bash scripts/install.sh                    # 卸载：bash scripts/uninstall.sh
+bash scripts/install.sh <skills-dir> ...   # 仅链接指定目录（如某项目的 .agents/skills）
 ```
 
 - 单一来源：所有 agent 指向同一个目录，代码更新（如 git pull）后全端生效；
