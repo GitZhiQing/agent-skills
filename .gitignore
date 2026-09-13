@@ -4,6 +4,9 @@
 # 维护者本地台账与个人状态（不入库，公开目录以 README Skills 表为准）
 *.local.md
 
+# 本机分发目标自定义（skills-link/unlink/doctor 读取，语法见 docs/开发与维护规范.md §6）
+agents.local.conf
+
 # 运行产物（lint 会检查未入库）
 .venv/
 .cache/

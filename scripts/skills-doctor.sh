@@ -16,23 +16,36 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 [ $# -eq 0 ] || { echo "usage: skills-doctor.sh" >&2; exit 2; }
 
-# 只为本机实际存在的 agent 目录生成列。
+# 目标清单 = 内置主流 agent 清单 ⊕ agents.local.conf 本地自定义（规范 §6）；
+# 只为本机实际存在的目录生成列，列名即清单 name。
+targets="$(agent_targets)"
 dirs=()
 labels=()
-while IFS= read -r d; do
-  [ -d "$d" ] || continue
-  dirs+=("$d")
-  lb="$(basename "$(dirname "$d")")"
-  labels+=("${lb#.}")
-done < <(agent_skills_dirs)
+absent=()
+while IFS=$'\t' read -r name d; do
+  if [ -d "$d" ]; then
+    dirs+=("$d")
+    labels+=("$name")
+  else
+    absent+=("$name")
+  fi
+done <<<"$targets"
 
-[ "${#dirs[@]}" -gt 0 ] || { echo "ERROR: 未发现任何 agent skills 目录（~/.zcode/skills 等）" >&2; exit 1; }
+[ "${#dirs[@]}" -gt 0 ] || { echo "ERROR: 未发现任何 agent skills 目录（内置清单见 docs/开发与维护规范.md §6，自定义见 agents.local.conf）" >&2; exit 1; }
+
+if [ "${#absent[@]}" -gt 0 ]; then
+  printf 'targets: %s（未检测到: %s）\n' \
+    "$(printf '%s\n' "${labels[@]}" | paste -sd, -)" \
+    "$(printf '%s\n' "${absent[@]}" | paste -sd, -)"
+else
+  printf 'targets: %s\n' "$(printf '%s\n' "${labels[@]}" | paste -sd, -)"
+fi
 
 n_linked=0 n_missing=0 n_foreign=0 n_broken=0
 broken_details=()
 
 printf '%-17s' "skill"
-for lb in "${labels[@]}"; do printf '%-8s' "$lb"; done
+for lb in "${labels[@]}"; do printf '%-9s' "$lb"; done
 printf '\n'
 
 while IFS= read -r skill; do
@@ -45,7 +58,7 @@ while IFS= read -r skill; do
       foreign) n_foreign=$((n_foreign + 1)) ;;
       broken)  n_broken=$((n_broken + 1)); broken_details+=("$skill @ $d") ;;
     esac
-    printf '%-8s' "$state"
+    printf '%-9s' "$state"
   done
   printf '\n'
 done < <(list_skills)

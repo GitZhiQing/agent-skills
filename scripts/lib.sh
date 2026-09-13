@@ -28,13 +28,112 @@ is_windows() {
   return 1
 }
 
-# 接收链接的 agent skills 目录清单（与 ddgs-web-access/scripts/install.sh 保持一致）。
-agent_skills_dirs() {
-  printf '%s\n' \
-    "$HOME/.zcode/skills" \
-    "$HOME/.agents/skills" \
-    "$HOME/.claude/skills" \
-    "$HOME/.cursor/skills"
+# --- 分发目标（agent skills 目录）清单 ---------------------------------------
+# 目标 = 内置主流清单 ⊕ agents.local.conf 本地自定义（可选，不入库，见下）；
+# 目录存在才生效（消费方按存在性跳过）。
+
+# 本地自定义清单：仓库根 agents.local.conf，每行一条，# 为注释：
+#   <name> <路径>   新增/覆盖同名内置目标（路径以 ~ 或 / 开头，可含空格）
+#   !<name>         禁用同名内置目标
+AGENT_CONF="$REPO_ROOT/agents.local.conf"
+
+# 内置清单：name<TAB>全局 skills 目录，每 agent 一行。
+# 入表标准：官方支持 Agent Skills（agentskills.io 格式）且全局目录固定；
+# 只读 ~/.agents/skills 的 agent（Codex 新版/Zed/Goose/Amp/Crush 等）由
+# agents 行覆盖，不单列原生位。清单依据与说明见 docs/开发与维护规范.md §6；
+# 与 skills/ddgs-web-access/scripts/install.sh 的默认清单保持一致。
+builtin_agent_targets() {
+  printf '%s\t%s\n' \
+    zcode     "$HOME/.zcode/skills" \
+    agents    "$HOME/.agents/skills" \
+    claude    "$HOME/.claude/skills" \
+    cursor    "$HOME/.cursor/skills" \
+    codex     "$HOME/.codex/skills" \
+    copilot   "$HOME/.copilot/skills" \
+    gemini    "$HOME/.gemini/skills" \
+    opencode  "$HOME/.config/opencode/skills" \
+    windsurf  "$HOME/.codeium/windsurf/skills" \
+    cline     "$HOME/.cline/skills" \
+    roo       "$HOME/.roo/skills" \
+    qwen      "$HOME/.qwen/skills" \
+    kilo      "$HOME/.kilo/skills" \
+    junie     "$HOME/.junie/skills" \
+    trae      "$HOME/.trae/skills"
+}
+
+# agent_targets — 解析后的完整目标清单，输出 name<TAB>path 每行一条。
+# agents.local.conf 有语法错误时 stderr 报文件与行号并返回 2（fail-fast）；
+# 禁用未知名仅 warn。同路径去重保留首个。
+agent_targets() {
+  builtin_agent_targets | awk -F'\t' -v conf="$AGENT_CONF" -v home="$HOME" '
+    BEGIN { ni = 0 }
+    { n[ni] = $1; p[ni] = $2; ix[$1] = ni; ni++ }
+    END {
+      err = 0
+      if (conf != "") {
+        ln = 0
+        while ((getline line < conf) > 0) {
+          ln++
+          sub(/\r$/, "", line)
+          sub(/^[[:space:]]+/, "", line)
+          if (line ~ /^#/ || line == "") continue
+          if (line ~ /^!/) {
+            name = substr(line, 2)
+            gsub(/[[:space:]]/, "", name)
+            if (name in ix) off[name] = 1
+            else printf "warn: %s:%d 禁用了未知目标 %s\n", conf, ln, name > "/dev/stderr"
+            continue
+          }
+          nf = split(line, f, /[[:space:]]+/)
+          path = f[2]; for (j = 3; j <= nf; j++) path = path " " f[j]
+          if (nf < 2 || f[1] !~ /^[a-z0-9][a-z0-9-]*$/ || path !~ /^[~\/]/) {
+            printf "ERROR: %s:%d 无法解析：%s\n", conf, ln, line > "/dev/stderr"
+            err = 1
+            continue
+          }
+          if (substr(path, 1, 2) == "~/") path = home substr(path, 2)
+          if (f[1] in ix) { p[ix[f[1]]] = path; off[f[1]] = 0 }
+          else { n[ni] = f[1]; p[ni] = path; ix[f[1]] = ni; ni++ }
+        }
+        close(conf)
+      }
+      if (err) exit 2
+      for (i = 0; i < ni; i++) {
+        if (off[n[i]]) continue
+        if (dup[p[i]]++) continue
+        print n[i] "\t" p[i]
+      }
+    }'
+}
+
+# resolve_agent_targets <过滤器...> — 无过滤器时输出全部目标（name<TAB>path）；
+# 过滤器为目标名（只保留该目标）或 name=path（临时目标，覆盖同名，路径可为
+# 任意绝对目录——含链接进其他项目 .agents/skills 的一次性场景）。同名重复
+# 出现以首个为准；未知名 stderr 报错并列出可用名称，返回 2。
+resolve_agent_targets() {
+  local all line name path out=""
+  all="$(agent_targets)" || return $?
+  if [ $# -eq 0 ]; then printf '%s\n' "$all"; return 0; fi
+  for line in "$@"; do
+    case "$line" in
+      *=*)
+        name="${line%%=*}"; path="${line#*=}"
+        if ! printf '%s' "$name" | grep -Eq '^[a-z0-9][a-z0-9-]*$' || [ -z "$path" ]; then
+          echo "ERROR: 无法解析的分发目标：$line（应为 name 或 name=path）" >&2
+          return 2
+        fi
+        out+="$name"$'\t'"$path"$'\n'
+        ;;
+      *)
+        if ! printf '%s\n' "$all" | awk -F'\t' -v t="$line" '$1 == t { found = 1; exit } END { exit(found ? 0 : 1) }'; then
+          echo "ERROR: 未知分发目标：$line（可用：$(printf '%s\n' "$all" | cut -f1 | paste -sd' ' -)）" >&2
+          return 2
+        fi
+        out+="$(printf '%s\n' "$all" | awk -F'\t' -v t="$line" '$1 == t { print; exit }')"$'\n'
+        ;;
+    esac
+  done
+  printf '%s' "$out" | awk -F'\t' '!seen[$1]++'
 }
 
 # skill 的定义：skills/ 下含 SKILL.md 的子目录。
