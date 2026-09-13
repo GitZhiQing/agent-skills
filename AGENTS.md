@@ -6,7 +6,7 @@
 
 ## 怎么跑起来 / 验证
 
-- 纯提示词 skill（theme-commit、deep-research）：无运行时，直接读 SKILL.md。
+- 纯提示词 skill（theme-commit、deep-research、zero-coding）：无运行时，直接读 SKILL.md。
 - ddgs-web-access 需要 uv >= 0.5，命令不依赖当前工作目录：
 
 ```bash
@@ -29,7 +29,8 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 
 - ddgs-web-access：Python >= 3.10（uv 托管虚拟环境），依赖 ddgs + markdownify，单文件 CLI（`ddgs_web_access.py`）+ `bin/` 位置无关启动器；stdout 结果 / stderr 提示与错误 / 退出码 0-1-2。
 - theme-commit：纯 SKILL.md 提示词（git 按主题分组提交），0.1.1。
-- deep-research：纯 SKILL.md 提示词（先校准再调研：环境检查 → 预检索校准 → 选项式澄清 → 档位推荐 → 增量登记 → 双文档交付），0.1.1。
+- deep-research：纯 SKILL.md 提示词（先校准再调研：环境检查 → 预检索校准 → 选项式澄清 → 档位推荐 → 强制确认门 → 增量登记落盘 research/ 目录 → REPORT.md + REFERENCES.md 双文件交付），0.2.0。
+- zero-coding：纯 SKILL.md 提示词（从零启动个人项目：最小文档集 ZERO/SPEC/DECISIONS/AGENTS/README，按"捕获 → 固化 → 骨架 → 稳定开发"推进，产物快照式书写——零历史、新读者测试），0.1.0。
 - scripts/：bash + coreutils 维护脚本套件，公共函数在 `scripts/lib.sh`；退出码统一 0-1-2，状态走 stdout、错误走 stderr。
 
 ## 目录与约定
