@@ -6,18 +6,19 @@ A collection of [Agent Skills](https://agentskills.io)（SKILL.md 开放格式�
 
 ## Skills
 
-| Skill | 版本 | 类型 | 说明 |
-| --- | --- | --- | --- |
-| [ddgs-web-access](skills/ddgs-web-access/) | 0.2.1 | Python CLI | 基于 [ddgs](https://github.com/deedy5/ddgs) 的联网搜索与网页抓取（`ddgs-web-search` / `ddgs-web-fetch`） |
-| [theme-commit](skills/theme-commit/) | 0.1.1 | 纯提示词 | 工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交 |
-| [deep-research](skills/deep-research/) | 0.2.0 | 纯提示词 | 先校准问题再调研：环境检查→理解确认→档位推荐→确认门→research/ 目录交付 REPORT.md + REFERENCES.md 双文件 |
-| [zero-coding](skills/zero-coding/) | 0.2.0 | 纯提示词 | 从零启动个人项目并维持稳定开发：最小文档集（ZERO/SPEC/DECISIONS/AGENTS/README），按"捕获→固化→骨架→稳定开发"推进 |
+
+| Skill                                      | 版本  | 类型       | 说明                                                                                                                |
+| -------------------------------------------- | ------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| [ddgs-web-access](skills/ddgs-web-access/) | 0.2.2 | Python CLI | 基于[ddgs](https://github.com/deedy5/ddgs) 的联网搜索与网页抓取（`ddgs-web-search` / `ddgs-web-fetch`）             |
+| [theme-commit](skills/theme-commit/)       | 0.1.1 | 纯提示词   | 工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交                                                               |
+| [deep-research](skills/deep-research/)     | 0.2.0 | 纯提示词   | 先校准问题再调研：环境检查→理解确认→档位推荐→确认门→research/ 目录交付 REPORT.md + REFERENCES.md 双文件         |
+| [zero-coding](skills/zero-coding/)         | 0.2.0 | 纯提示词   | 从零启动个人项目并维持稳定开发：最小文档集（ZERO/SPEC/DECISIONS/AGENTS/README），按"捕获→固化→骨架→稳定开发"推进 |
 
 各 skill 的调用方法、参数与排障见其目录内的 SKILL.md / README.md。
 
 ## 安装
 
-三种方式任选其一：
+四种方式任选其一：
 
 **skills CLI**（跨 agent，支持 20+ 平台，自动 symlink）：
 
@@ -40,6 +41,17 @@ git clone https://github.com/GitZhiQing/agent-skills.git
 cd agent-skills
 bash scripts/skills-link.sh --all      # 卸载：bash scripts/skills-unlink.sh --all
 bash scripts/skills-doctor.sh          # 巡检链接健康
+```
+
+默认覆盖本机已安装的主流 agent（目录存在才生效）：zcode、agents（Codex 新版 / Zed / Goose / Amp 等跨端通用目录）、claude、cursor、codex、copilot、gemini、opencode、windsurf、cline、roo、qwen、kilo、junie、trae。增删目标：仓库根写 `agents.local.conf`（每行「名称 路径」新增/覆盖、「!名称」禁用）；或一次性指定 `--agent <name>` / `--agent <name>=<path>`（任意目录，含其他项目的 `.agents/skills`）。详见 [docs/开发与维护规范.md](docs/开发与维护规范.md) §6。
+
+**让 Agent 代装**（把下面这段发给任意支持 Agent Skills 的 coding agent，它会替你完成克隆、链接与验证）：
+
+```text
+帮我安装 GitHub 仓库 GitZhiQing/agent-skills 的全部 skills：
+1. 把 https://github.com/GitZhiQing/agent-skills.git 克隆到本地并记住位置
+2. 进入仓库根目录执行 bash scripts/skills-link.sh --all（链接到你所在 agent 的 skills 目录，幂等可重跑）
+3. 执行 bash scripts/skills-doctor.sh 确认各 skill 显示 linked
 ```
 
 ## 快速使用

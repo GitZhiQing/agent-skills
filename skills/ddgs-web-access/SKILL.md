@@ -9,7 +9,7 @@ license: MIT
 compatibility: 需要 uv >= 0.5 与网络访问；首次调用联网安装 ddgs 依赖（约 30-60 秒）；代理经 --proxy 或环境变量传入
 allowed-tools: Bash(uv run *) Bash(bash *bin/ddgs-web-search *) Bash(bash *bin/ddgs-web-fetch *)
 metadata:
-  version: 0.2.1
+  version: 0.2.2
   category: web
 ---
 
