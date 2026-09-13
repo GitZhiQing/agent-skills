@@ -4,6 +4,7 @@
 # 检查项（标准见 docs/开发与维护规范.md）：
 #   L-frontmatter  每个 skill 有 SKILL.md + 合法 frontmatter，name 与目录名
 #                  一致，description 非空（过短仅 warn）
+#   L-readme-file  每个 skill 目录含 README.md（面向人的导览，规范 §2）
 #   L-version      metadata.version 必须存在且为 semver；若 skill 带
 #                  pyproject.toml 则两处一致；与 README 目录表版本列一致
 #   L-readme       README Skills 目录表 ↔ 磁盘双向一致
@@ -92,6 +93,12 @@ for skill in $skills_list; do
     warn "$skill: description 仅 ${desc_chars} 字符，难以承载正向触发 + 反向不触发（规范 §3）"
   else
     ok "$skill: description 非空（${desc_chars} 字符）"
+  fi
+
+  if [ -f "$SKILLS_DIR/$skill/README.md" ]; then
+    ok "$skill: README.md 存在"
+  else
+    err "$skill: 缺少 README.md（规范 §2：面向人的目录导览，全部 skill 必备）"
   fi
 
   ver="$(fm_subvalue "$skill" metadata version)"
