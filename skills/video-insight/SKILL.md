@@ -1,15 +1,15 @@
 ---
 name: video-insight
 description: >-
-  视频内容与画面的深度分析（拉片级），两档模式：L1 文案档仅凭转写做内容摘要、逻辑骨架、话术模板与文案层问题；
+  视频内容与画面的深度分析（拉片级），两档模式：L1 文案档做内容摘要、逻辑骨架、话术模板与文案层问题（口播视频凭转写，无口播视频凭画面文案提取）；
   L2 画面档叠加抽帧、帧差、定帧、音频与取色证据，回答画面承接、排版、节奏与标注时机，所有结论带帧证据与精度声明。
-  当用户要求「分析这条视频」「拆解文案/话术/结构」「拉片」「画面分析」「音画对齐」「节奏分析」「字幕排版检查」时使用；
-  触发词包括「分析这条视频」「拉片」「画面有没有接住口播」「字幕排版」等，即使未说「分析」二字，只要意图是理解或评估一条已有视频也应使用。
+  当用户要求「分析这条视频」「拆解文案/话术/结构」「拉片」「画面分析」「音画对齐」「节奏分析」「字幕排版检查」，或给出纯 BGM 无口播、文案烧在画面上的视频要求「提取画面文案/画面文字」时使用；
+  触发词包括「分析这条视频」「拉片」「无口播」「纯 BGM」「画面文案」「文案烧在画面上」等，即使未说「分析」二字，只要意图是理解或评估一条已有视频也应使用。
   仅需转写或摘要时不要使用本 skill，改用 video-to-subtitle-summary；生成视频素材、剪辑、下载非 B站 链接同样不属于本 skill。
 license: MIT
-compatibility: 需要 Python 3.9+ 与 ffmpeg/ffprobe；B站链接下载需 yt-dlp（或 uvx）；转写复用上游 video-to-subtitle-summary 的火山引擎豆包脚本与 API Key，可将其放到本 skill 同级目录，或用 VIDEO_INSIGHT_ASR_SCRIPT 指定脚本路径
+compatibility: 需要 Python 3.9+ 与 ffmpeg/ffprobe；B站链接下载需 yt-dlp（或 uvx）；转写复用上游 video-to-subtitle-summary 的火山引擎豆包脚本与 API Key，可将其放到本 skill 同级目录，或用 VIDEO_INSIGHT_ASR_SCRIPT 指定脚本路径；OCR 回退（无读图能力时）设 PADDLEOCR_ACCESS_TOKEN 接官方托管 API，或本地安装 paddleocr
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   category: media
 ---
 
@@ -44,18 +44,20 @@ metadata:
 
 > 成本为 2026-09-14 实测（样本各 1–3 次，含全部图像读取，波动较大；视频越长越高）。档位未明确时必须按 §0 提问确认。
 
+**无口播形态**（纯 BGM 无人声、文案烧录在画面上，或整条无音轨）：文案的唯一来源是画面，两档都必须先走画面文案提取（§2.1）。此时 L1 = 画面文案提取 + 内容分析，成本高于普通 L1（**预估** 60–150 万 token，待实测校准后回填）；L2 照常叠加画面/节奏/取色证据，音画对齐变为「BGM 结构 × 文案屏切换节奏」（audio_probe 照跑，BGM 是唯一音频线索）。
+
 **升级到 L2 的触发**：用户提到 画面/拉片/排版/节奏/音画/承接/标注/字幕样式；或 L1 发现"文案本身没问题但效果不好"这类只有画面才能解释的现象。**触发只是建议**——带成本问用户，得到同意再跑（§0）。
 
 ## 2. 执行流程
 
 设 `S` = 本技能 `scripts/` 目录，`OUT` = 输出目录（默认 `<cwd>/video-insight/<slug>/`，建议放到用户任务目录）。
-**每个脚本跑完都会更新 `<OUT>/manifest.json`；继续下一步前检查对应 status 是否 ok，不 ok 先修复**——归档链中途断一次，空目录就会被当成"没问题"。
+**每个脚本跑完都会更新 `<OUT>/manifest.json`；继续下一步前检查对应 status 是否 ok，不 ok 先修复**——归档链中途断一次，空目录就会被当成"没问题"。唯一例外：transcribe 的 `no_speech` 不是故障，是无口播分支信号（§2.1）。
 
 | 步骤 | 命令 | 产出 |
 | --- | --- | --- |
 | 0 自检 | `python $S/doctor.py --workdir <目录>` | 缺项按 JSON 提示补齐 |
 | 0.5 取链 | `python $S/fetch.py <B站URL> --output-dir $OUT` | $OUT/video.mp4（ffprobe 校验可播放） |
-| 1 转写 | `python $S/transcribe.py <输入> --output-dir $OUT --domain finance` | transcript.srt/.txt/.json（临时音频自动清理） |
+| 1 转写 | `python $S/transcribe.py <输入> --output-dir $OUT --domain finance` | transcript.srt/.txt/.json；无音轨或 ASR 空产出 → `no_speech`，转 §2.1 |
 | 2 探测 | `python $S/probe.py <视频> --output-dir $OUT` | meta.json |
 | 3 L1 分析 | （模型工作，读 transcript） | analysis/01、02 |
 | 4 抽帧 | `python $S/extract_frames.py <视频> --output-dir $OUT [--strip-crop WxH+X+Y]` | evidence/overview、subtitle-strip + 时间戳 JSON |
@@ -68,11 +70,31 @@ metadata:
 **输入识别**：B站链接（bilibili.com / b23.tv）用 fetch.py 直接下载（实测可用）；抖音 / 小红书 / 快手 / 视频号**不支持**（实测下载路径不可用或文档不可靠），fetch.py 会拒绝并给出原因，此时请用户手动下载后改用本地文件；音频直链交给 transcribe.py；已有转写稿（.srt/.txt）直接放入 `$OUT/transcript.*`，跳过步骤 1。
 **领域热词**：从内容判断 finance / education / tech；金融术语漏了热词必错（"筹码峰""诱多"零错误的唯一原因就是热词）。判断不了就问用户或 `--domain none`。
 
-## 3. L1 怎么做（读 transcript.*）
+### 2.1 无口播分支 · 画面文案提取
 
-1. **术语校对**：对照热词表与领域常识逐句核对，产出 01-转写校对.md（改了哪些词、为什么）。
-2. **语义分段**：按话题/悬念/转折切段，标注每段时间码。
-3. **口播数据**：字数、语速（字/秒）、停顿分布（有音频时用 data/audio.json）。
+**触发**（任一）：
+- 步骤 1 输出 `no_speech: true`（无音轨，或 ASR 正常跑完但零文本——纯 BGM 无人声的客观信号）；
+- 用户开局就说明是纯 BGM / 无口播视频、文案在画面上；
+- 有口播但用户点名「提取画面文案 / 画面文字」——同走本分支，成稿与 transcript 对照（漏字/删改类问题恰来自这里）。
+
+| 步骤 | 命令 | 产出 |
+| --- | --- | --- |
+| b0 确认门 | 告知判定证据与模式切换（见下） | — |
+| b1 粗筛 | `python $S/extract_frames.py <视频> --output-dir $OUT [--fps 0.5]` | evidence/overview 拼版 → 确认文字卡形态、文案区域（居中/底部/多区）、估屏数 |
+| b2 时间轴 | `python $S/detect_changes.py <视频> --output-dir $OUT` 然后 `python $S/screen_segments.py $OUT/data/changes.json --output-dir $OUT` | data/screen_segments.json：每屏起止 + 建议定帧时刻（帧差实测；文案卡切换=事件、停留=静止期） |
+| b3 精读 | 自己能读图：`python $S/grab_frames.py <视频> --at "<各屏 grab_at>" --output-dir $OUT [--crop ... --zoom 6 --flags neighbor]`；不能读图：`python $S/screen_ocr.py <视频> --segments $OUT/data/screen_segments.json --output-dir $OUT` | evidence/keyframes 每屏一帧（读不清先放大）或 data/screen_ocr.json（逐屏文本+置信度） |
+| b4 成稿 | （模型工作）逐屏读帧图或读 OCR JSON → 写 `transcript.screen.srt` + `transcript.screen.json` | 每屏 t_start/t_end/文案/证据帧路径/可读度（清晰·放大后可读·不可读） |
+| b5 分析 | （模型工作）读 transcript.screen.* 按 §3 做 01（画面文案稿形态）/02 | analysis/01、02 |
+
+**b0 确认门**：有用户可问 → 告知「检测为无口播视频（证据：ASR 零文本产出 / 无音轨），文案在画面上，改用画面文案提取，成本预估 60–150 万 token」后继续；无用户可问 → 在报告头部与 manifest `declaration` 块显式声明（同 §0 精神，声明不是默选）。
+**粗筛纠偏**：b1 拼版若显示画面其实是说话头/采访（ASR 可能漏检），**不硬切**——如实报告并建议检查上游 ASR 后再定。`suspect_no_speech: true`（ASR 只吐了零星幻听字）同样在粗筛时留意此情形。
+**精度与合并**：屏起止来自帧差（实测）；b3 uniform 兜底模式（连续动画、无静止期）的时间一律写「约」；打字机/逐行浮现被拆成相邻屏且文案相同时，成稿合并并注明；读不清的字如实标「不可读」，禁止猜写。
+
+## 3. L1 怎么做（读 transcript.*；无口播视频读 transcript.screen.*）
+
+1. **术语校对**：对照热词表与领域常识逐句核对，产出 01-转写校对.md（改了哪些词、为什么）；无口播形态改为 01-画面文案稿.md（逐屏文案 + 可读度标注 + 合并记录，模板见 references/输出模板.md）。
+2. **语义分段**：按话题/悬念/转折切段，标注每段时间码（无口播形态按文案屏分段）。
+3. **口播数据**：字数、语速（字/秒）、停顿分布（有音频时用 data/audio.json）；无口播形态改为屏数、每屏字数、每屏停留时长（t_end−t_start，实测）。
 4. **逻辑骨架**：钩子→展开→结论→CTA 各在第几秒、占比多少；话术模板是什么（对仗、设问、二选一……）。
 5. **主张与准确性核查**：逐个主张标注 属实/存疑/违规（金融类必查合规：承诺收益、确定性结论、诱导开户）。
 6. 按 `references/输出模板.md` 的 L1 骨架写 02-内容分析.md。
@@ -90,12 +112,15 @@ metadata:
 ## 5. 判断纪律（详见 references/证据纪律.md，此处只列要点）
 
 - 表述分三档并强制标注：**实测**（有 JSON/定帧支撑）、**约**（1s 抽帧 ±0.5s 精度）、**推断**（显式标注，不得混入实测）。
+- 画面文案（§2.1 产物）的表述映射：屏起止时间=帧差/定帧（实测档）；文案内容=模型读图（清晰/放大后可读/不可读三档标注）或 OCR 置信度；uniform 兜底模式的时间一律「约」；读不清的字如实标「不可读」，禁止猜写。
 - 交付形态没对齐、分析深度没确认，都不动手（无用户可问时按 §0 显式声明）；客观结论被用户质疑时，给一次带数据的说明，然后把表述改写成对两种可能都成立，继续推进——赢了检测输了进度。
 - 追求"结论可信、可回溯、可重复"，不追求"分析得更多"。
 
 ## 6. 边界
 
 - 不做转写本身（发现并调用上游 video-to-subtitle-summary，不复制其代码）；不做视频下载；不做剪辑与素材生成。
+- OCR 只作为无读图能力时的画面文案回退（官方托管 API 或本地 paddleocr），不做通用"图片转文字"服务。
+- 纯音频输入且转写为空 → 无画面可提取文案，如实说明并停止该分支，不硬造文案稿。
 - 产出物命名与归档遵循用户工作区约定；本技能自己的产物集中在 `$OUT`。
 
 ## 7. 参考文档

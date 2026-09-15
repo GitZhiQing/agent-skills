@@ -1,9 +1,10 @@
-"""Integration test: run the whole ffmpeg-backed pipeline on a synthetic video.
+"""Integration test: run the whole ffmpeg-backed pipeline on synthetic videos.
 
 Skipped automatically when ffmpeg (with libx264) is unavailable.
 """
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -17,6 +18,13 @@ ROOT_SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 FFMPEG = shutil.which("ffmpeg")
 FFPROBE = shutil.which("ffprobe")
 
+FONT_CANDIDATES = (
+    "C:/Windows/Fonts/arial.ttf",
+    "C:/Windows/Fonts/msyh.ttc",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/System/Library/Fonts/Supplemental/Arial.ttf",
+)
+
 
 def _can_encode_h264_aac() -> bool:
     if not FFMPEG:
@@ -29,6 +37,40 @@ def _can_encode_h264_aac() -> bool:
     except Exception:
         return False
     return "libx264" in text and " aac" in text
+
+
+def _find_font() -> str | None:
+    for candidate in FONT_CANDIDATES:
+        if Path(candidate).exists():
+            return candidate
+    return None
+
+
+def _has_drawtext() -> bool:
+    if not FFMPEG:
+        return False
+    try:
+        proc = subprocess.run(
+            [FFMPEG, "-hide_banner", "-filters"], capture_output=True, timeout=30
+        )
+        return " drawtext " in proc.stdout.decode("utf-8", "replace")
+    except Exception:
+        return False
+
+
+def _text_card_filter(font: str) -> str:
+    cards = [
+        ("SCREEN ONE", "white", 0, 2),
+        ("SCREEN TWO", "yellow", 2, 4),
+        ("SCREEN THREE", "cyan", 4, 6),
+    ]
+    parts = [
+        f"drawtext=text='{text}':fontsize=56:fontcolor={color}"
+        f":x=(w-text_w)/2:y=(h-text_h)/2:fontfile='{font}'"
+        f":enable='between(t,{lo},{hi})'"
+        for text, color, lo, hi in cards
+    ]
+    return ",".join(parts)
 
 
 @unittest.skipUnless(
@@ -124,6 +166,120 @@ class TestPipelineOnSyntheticVideo(unittest.TestCase):
         statuses = {name: rec["status"] for name, rec in manifest["scripts"].items()}
         for name, status in statuses.items():
             self.assertEqual(status, "ok", f"{name} recorded status {status}")
+
+
+@unittest.skipUnless(
+    FFMPEG and FFPROBE and _can_encode_h264_aac() and _has_drawtext() and _find_font(),
+    "ffmpeg with libx264 + drawtext + a font required",
+)
+class TestNoSpeechTextCards(unittest.TestCase):
+    """A BGM-less text-card video: the no-speech branch of the pipeline."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = TemporaryDirectory()
+        cls.root = Path(cls.tmp.name)
+        cls.video = cls.root / "textcards.mp4"
+        subprocess.run(
+            [
+                FFMPEG, "-loglevel", "error",
+                "-f", "lavfi", "-i", "color=black:size=640x360:rate=30:duration=6",
+                "-vf", _text_card_filter(_find_font().replace(":", r"\:")),
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-y", str(cls.video),
+            ],
+            capture_output=True,
+            timeout=120,
+        )
+        assert cls.video.exists() and cls.video.stat().st_size > 0, "text-card encoding failed"
+        cls.out = cls.root / "out"
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def run_script(self, name, *argv):
+        result = subprocess.run(
+            [sys.executable, str(ROOT_SCRIPTS / f"{name}.py"), *argv, "--output-dir", str(self.out)],
+            capture_output=True,
+            timeout=300,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8", "replace")[-2000:])
+        return json.loads(result.stdout.decode("utf-8", "replace"))
+
+    def test_01_probe_reports_no_audio(self):
+        summary = self.run_script("probe", str(self.video))
+        self.assertEqual(summary["audio"], {})
+
+    def test_02_transcribe_no_speech_not_fatal(self):
+        summary = self.run_script("transcribe", str(self.video))
+        self.assertTrue(summary["no_speech"])
+        self.assertEqual(summary["reason"], "no_audio_track")
+        self.assertEqual(summary["status"], "no_speech")
+
+    def test_03_detect_changes_finds_card_switches(self):
+        summary = self.run_script("detect_changes", str(self.video))
+        self.assertEqual(summary["n_events"], 2)
+        starts = sorted(
+            float(chunk.split("(")[0]) for chunk in summary["events"]
+        )
+        self.assertAlmostEqual(starts[0], 2.0, delta=0.2)
+        self.assertAlmostEqual(starts[1], 4.0, delta=0.2)
+
+    def test_04_screen_segments_three_screens(self):
+        self.run_script("detect_changes", str(self.video))
+        summary = self.run_script(
+            "screen_segments", str(self.out / "data" / "changes.json")
+        )
+        self.assertEqual(summary["n_screens"], 3)
+        self.assertEqual(summary["mode"], "event")
+        segments = json.loads(
+            (self.out / "data" / "screen_segments.json").read_text(encoding="utf-8")
+        )["segments"]
+        self.assertEqual(segments[0]["t_start"], 0.0)
+        self.assertAlmostEqual(segments[0]["t_end"], 2.0, delta=0.2)
+        self.assertAlmostEqual(segments[1]["t_start"], 2.0, delta=0.2)
+        self.assertAlmostEqual(segments[2]["t_end"], 6.0, delta=0.1)
+        for seg in segments:
+            self.assertTrue(seg["t_start"] <= seg["grab_at"] <= seg["t_end"])
+
+    def test_05_grab_frames_per_segment(self):
+        summary = self.run_script(
+            "grab_frames", str(self.video), "--at", "1.0,3.0,5.0", "--label", "card"
+        )
+        self.assertEqual(summary["grabbed"], 3)
+        for t in (1, 3, 5):
+            self.assertTrue(
+                (self.out / "evidence" / "keyframes" / f"card_{t}s.jpg").exists()
+            )
+
+    def test_06_manifest_mixed_status(self):
+        manifest = json.loads((self.out / "manifest.json").read_text(encoding="utf-8"))
+        statuses = {name: rec["status"] for name, rec in manifest["scripts"].items()}
+        self.assertEqual(statuses["transcribe"], "no_speech")
+        for name, status in statuses.items():
+            if name != "transcribe":
+                self.assertEqual(status, "ok", f"{name} recorded status {status}")
+
+    @unittest.skipUnless(
+        os.environ.get("PADDLEOCR_ACCESS_TOKEN"),
+        "PADDLEOCR_ACCESS_TOKEN required for the real hosted-API OCR test",
+    )
+    def test_07_screen_ocr_real_api(self):
+        summary = self.run_script(
+            "screen_ocr", str(self.video),
+            "--segments", str(self.out / "data" / "screen_segments.json"),
+        )
+        self.assertEqual(summary["engine"], "api")
+        self.assertEqual(summary["n_screens"], 3)
+        self.assertEqual(summary["screens_failed"], 0)
+        ocr = json.loads(
+            (self.out / "data" / "screen_ocr.json").read_text(encoding="utf-8")
+        )
+        joined = " ".join(s["full_text"] for s in ocr["screens"])
+        for word in ("ONE", "TWO", "THREE"):
+            self.assertIn(word, joined.upper().replace(" ", ""))
+        frames = list((self.out / "evidence" / "ocr_frames").glob("seg_*.png"))
+        self.assertEqual(len(frames), 3)
 
 
 if __name__ == "__main__":
