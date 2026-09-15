@@ -23,6 +23,7 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 ```
 
 - 改动 ddgs-web-access 代码后按 `skills/ddgs-web-access/docs/测试集.md` 回归；搜索/抓取调用间隔 ≥2 秒（ddgs 多引擎聚合，过频会限流）。
+- 改动 video-insight 代码后按 `skills/video-insight/docs/测试集.md` 回归：`python -m unittest discover -s skills/video-insight/tests`（49 条，含合成视频集成测试，纯标准库无第三方依赖）。
 - 等价形式：`uv run --project skills/ddgs-web-access <命令>`；Windows 用 `bin/*.cmd`。
 
 ## 技术栈
@@ -31,6 +32,7 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 - theme-commit：纯 SKILL.md 提示词（git 按主题分组提交），0.1.1。
 - deep-research：纯 SKILL.md 提示词（先校准再调研：环境检查 → 预检索校准 → 选项式澄清 → 档位推荐 → 强制确认门 → 增量登记落盘 research/ 目录 → REPORT.md + REFERENCES.md 双文件交付），0.2.0。
 - zero-coding：纯 SKILL.md 提示词（从零启动个人项目：最小文档集 ZERO/SPEC/DECISIONS/AGENTS/README，按"捕获 → 固化 → 骨架 → 稳定开发"推进，产物快照式书写——零历史、新读者测试；首次触发以 3~5 句开局说明交代全程），0.2.0。
+- video-insight：拉片级视频分析（L1 文案档 / L2 画面档，档位确认门 + 实测/约/推断三档表述），Python 脚本纯标准库，外部依赖 ffmpeg/ffprobe（B站下载另需 yt-dlp），转写复用上游 video-to-subtitle-summary，0.1.0。
 - scripts/：bash + coreutils 维护脚本套件，公共函数在 `scripts/lib.sh`；退出码统一 0-1-2，状态走 stdout、错误走 stderr。
 
 ## 目录与约定

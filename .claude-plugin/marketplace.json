@@ -4,7 +4,7 @@
     "name": "QING",
     "url": "https://github.com/GitZhiQing"
   },
-  "description": "个人 AI coding agent skills 集合：联网搜索抓取、主题分批提交、深度调研、从零启动项目（遵循 Agent Skills 开放规范）",
+  "description": "个人 AI coding agent skills 集合：联网搜索抓取、主题分批提交、深度调研、从零启动项目、视频内容与画面分析（遵循 Agent Skills 开放规范）",
   "plugins": [
     {
       "name": "ddgs-web-access",
@@ -70,6 +70,24 @@
         "project-bootstrapping",
         "workflow",
         "documentation"
+      ]
+    },
+    {
+      "name": "video-insight",
+      "source": "./skills/video-insight",
+      "skills": [
+        "./"
+      ],
+      "description": "视频内容与画面深度分析（拉片级）：L1 文案档 / L2 画面档，结论带帧证据与精度声明",
+      "version": "0.1.0",
+      "author": {
+        "name": "QING"
+      },
+      "keywords": [
+        "video",
+        "video-analysis",
+        "transcript",
+        "ffmpeg"
       ]
     }
   ]
