@@ -6,6 +6,16 @@ from unittest import mock
 
 from test_common import load_module
 
+CFG = {
+    "key": "k",
+    "resource_id": "volc.seedasr.auc",
+    "api_base": "https://openspeech.bytedance.com",
+}
+
+
+def _asr_result(txt="", srt="", raw=None):
+    return {"srt": srt, "txt": txt, "raw": raw or {}, "request_id": "rid-1"}
+
 
 class TestHotwords(unittest.TestCase):
     def setUp(self):
@@ -52,8 +62,9 @@ class TestNoSpeech(unittest.TestCase):
                 return self._proc(0, "")  # ffprobe lists no audio stream
 
             with mock.patch.object(self.mod, "run", side_effect=fake_run), \
-                    mock.patch.object(self.mod, "resolve_asr",
-                                      side_effect=AssertionError("no ASR needed")):
+                    mock.patch.object(
+                        self.mod.asr_volc, "api_config",
+                        side_effect=AssertionError("no ASR needed")):
                 result = self.mod.transcribe(video, Path(tmp), "none", None, None)
         self.assertTrue(result["no_speech"])
         self.assertEqual(result["reason"], "no_audio_track")
@@ -63,7 +74,6 @@ class TestNoSpeech(unittest.TestCase):
             out = Path(tmp)
             video = out / "v.mp4"
             video.write_bytes(b"x")
-            (out / "tmp" / "asr").mkdir(parents=True)  # ASR ran, produced nothing
 
             def fake_run(cmd, **kwargs):
                 argv = [str(c) for c in cmd]
@@ -72,8 +82,10 @@ class TestNoSpeech(unittest.TestCase):
                 return self._proc(0, "")
 
             with mock.patch.object(self.mod, "run", side_effect=fake_run), \
-                    mock.patch.object(self.mod, "resolve_asr",
-                                      return_value={"ok": True, "asr_script": "fake.py"}):
+                    mock.patch.object(self.mod.asr_volc, "api_config",
+                                      return_value=CFG), \
+                    mock.patch.object(self.mod.asr_volc, "transcribe_audio",
+                                      return_value=_asr_result()):
                 result = self.mod.transcribe(video, out, "none", None, None)
         self.assertTrue(result["no_speech"])
         self.assertEqual(result["reason"], "asr_empty")
@@ -89,11 +101,13 @@ class TestNoSpeech(unittest.TestCase):
                 argv = [str(c) for c in cmd]
                 if argv[0] == "ffprobe":
                     return self._proc(0, "audio\n")
-                return self._proc(1, "")
+                return self._proc(0, "")
 
             with mock.patch.object(self.mod, "run", side_effect=fake_run), \
-                    mock.patch.object(self.mod, "resolve_asr",
-                                      return_value={"ok": True, "asr_script": "fake.py"}):
+                    mock.patch.object(self.mod.asr_volc, "api_config",
+                                      return_value=CFG), \
+                    mock.patch.object(self.mod.asr_volc, "transcribe_audio",
+                                      side_effect=RuntimeError("HTTP 401")):
                 with self.assertRaises(RuntimeError):
                     self.mod.transcribe(video, out, "none", None, None)
 
@@ -102,9 +116,6 @@ class TestNoSpeech(unittest.TestCase):
             out = Path(tmp)
             video = out / "v.mp4"
             video.write_bytes(b"x")
-            asr_out = out / "tmp" / "asr"
-            asr_out.mkdir(parents=True)
-            (asr_out / "text.txt").write_text("嗯", encoding="utf-8")
 
             def fake_run(cmd, **kwargs):
                 argv = [str(c) for c in cmd]
@@ -113,11 +124,82 @@ class TestNoSpeech(unittest.TestCase):
                 return self._proc(0, "")
 
             with mock.patch.object(self.mod, "run", side_effect=fake_run), \
-                    mock.patch.object(self.mod, "resolve_asr",
-                                      return_value={"ok": True, "asr_script": "fake.py"}):
+                    mock.patch.object(self.mod.asr_volc, "api_config",
+                                      return_value=CFG), \
+                    mock.patch.object(
+                        self.mod.asr_volc, "transcribe_audio",
+                        return_value=_asr_result(txt="嗯")):
                 result = self.mod.transcribe(video, out, "none", None, None)
         self.assertFalse(result.get("no_speech"))
         self.assertTrue(result["info"]["suspect_no_speech"])
+
+
+class TestSuccess(unittest.TestCase):
+    def setUp(self):
+        self.mod = load_module("transcribe")
+
+    @staticmethod
+    def _proc(returncode=0, stdout=""):
+        return subprocess.CompletedProcess([], returncode, stdout, "")
+
+    def _fake_run(self):
+        def fake_run(cmd, **kwargs):
+            argv = [str(c) for c in cmd]
+            if argv[0] == "ffprobe":
+                return self._proc(0, "audio\n")
+            return self._proc(0, "")
+        return fake_run
+
+    def test_writes_transcripts_and_backend_info(self):
+        with TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            video = out / "v.mp4"
+            video.write_bytes(b"x")
+            raw = {"result": {
+                "text": "这是口播内容",
+                "utterances": [
+                    {"text": "这是口播内容", "start_time": 0, "end_time": 2000},
+                ],
+            }}
+            srt = "1\n00:00:00,000 --> 00:00:02,000\n这是口播内容"
+            with mock.patch.object(self.mod, "run",
+                                   side_effect=self._fake_run()), \
+                    mock.patch.object(self.mod.asr_volc, "api_config",
+                                      return_value=CFG), \
+                    mock.patch.object(self.mod.asr_volc, "transcribe_audio",
+                                      return_value=_asr_result(
+                                          txt="这是口播内容", srt=srt, raw=raw)):
+                result = self.mod.transcribe(video, out, "none", None, None)
+            names = {p.name for p in result["produced"]}
+            self.assertEqual(names, {"transcript.srt", "transcript.txt",
+                                     "transcript.json"})
+            for p in result["produced"]:
+                self.assertGreater((out / p.name).stat().st_size, 0)
+            self.assertFalse((out / "tmp").exists())  # temp audio cleaned up
+            info = result["info"]
+            self.assertEqual(info["asr_backend"], "volc_seedasr")
+            self.assertEqual(info["model"], "volc.seedasr.auc")
+            self.assertEqual(info["api_base"], CFG["api_base"])
+            self.assertEqual(info["request_id"], "rid-1")
+            self.assertFalse(info["suspect_no_speech"])
+            self.assertIn("这是口播内容",
+                          (out / "transcript.txt").read_text(encoding="utf-8"))
+
+    def test_no_utterances_skips_srt_keeps_txt_json(self):
+        with TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            video = out / "v.mp4"
+            video.write_bytes(b"x")
+            with mock.patch.object(self.mod, "run",
+                                   side_effect=self._fake_run()), \
+                    mock.patch.object(self.mod.asr_volc, "api_config",
+                                      return_value=CFG), \
+                    mock.patch.object(self.mod.asr_volc, "transcribe_audio",
+                                      return_value=_asr_result(txt="短文本")):
+                result = self.mod.transcribe(video, out, "none", None, None)
+            names = {p.name for p in result["produced"]}
+            self.assertEqual(names, {"transcript.txt", "transcript.json"})
+            self.assertTrue(result["info"]["suspect_no_speech"])
 
 
 if __name__ == "__main__":

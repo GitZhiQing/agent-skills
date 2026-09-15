@@ -4,7 +4,6 @@ Skipped automatically when ffmpeg (with libx264) is unavailable.
 """
 
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -17,6 +16,10 @@ from test_common import load_module
 ROOT_SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 FFMPEG = shutil.which("ffmpeg")
 FFPROBE = shutil.which("ffprobe")
+
+# Skip conditions resolve tokens the same way the scripts do (env > .env).
+sys.path.insert(0, str(ROOT_SCRIPTS))
+from _common import get_config  # noqa: E402
 
 FONT_CANDIDATES = (
     "C:/Windows/Fonts/arial.ttf",
@@ -167,6 +170,21 @@ class TestPipelineOnSyntheticVideo(unittest.TestCase):
         for name, status in statuses.items():
             self.assertEqual(status, "ok", f"{name} recorded status {status}")
 
+    @unittest.skipUnless(
+        get_config("VOLC_BIGMODEL_API_KEY"),
+        "VOLC_BIGMODEL_API_KEY required for the real hosted-API ASR test",
+    )
+    def test_09_transcribe_real_api(self):
+        """Real-API smoke on the sine-tone video: auth/submit/poll/normalize
+        wiring must hold; a tone legitimately yields no_speech."""
+        summary = self.run_script("transcribe", str(self.video))
+        if summary.get("no_speech"):
+            self.assertEqual(summary["status"], "no_speech")
+        else:
+            self.assertEqual(summary["status"], "ok")
+            self.assertEqual(summary["asr_backend"], "volc_seedasr")
+            self.assertTrue((self.out / "transcript.txt").exists())
+
 
 @unittest.skipUnless(
     FFMPEG and FFPROBE and _can_encode_h264_aac() and _has_drawtext() and _find_font(),
@@ -261,7 +279,7 @@ class TestNoSpeechTextCards(unittest.TestCase):
                 self.assertEqual(status, "ok", f"{name} recorded status {status}")
 
     @unittest.skipUnless(
-        os.environ.get("PADDLEOCR_ACCESS_TOKEN"),
+        get_config("PADDLEOCR_ACCESS_TOKEN"),
         "PADDLEOCR_ACCESS_TOKEN required for the real hosted-API OCR test",
     )
     def test_07_screen_ocr_real_api(self):

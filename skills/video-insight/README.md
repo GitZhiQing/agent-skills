@@ -7,7 +7,7 @@
 - 用户要求分析一条视频的内容、结构、话术，或提出「拉片」「画面分析」「音画对齐」「节奏分析」「字幕排版检查」；
 - 无口播 / 纯 BGM / 文案在画面上的视频，或点名「提取画面文案 / 画面文字」；
 - 只要意图是理解或评估一条已有视频即适用——未说"分析"二字同样触发；
-- 仅需转写或摘要、或要求生成素材 / 剪辑时不适用（见边界）。
+- 仅需转写字幕或浅摘要（不要结构化分析）、或要求生成素材 / 剪辑时不适用（见边界）。
 
 ## 工作方式
 
@@ -24,7 +24,7 @@
 
 ## 边界
 
-- 不做：转写本身（复用上游 `video-to-subtitle-summary`）、非 B站 链接的视频下载、素材生成、剪辑、通用"图片转文字"（OCR 仅限无口播分支回退）；
+- 不做：独立于分析的转写/字幕服务（转写只作为内部分步）、非 B站 链接的视频下载、素材生成、剪辑、通用"图片转文字"（OCR 仅限无口播分支回退）；
 - 链接支持矩阵以实测为准：B站 支持；抖音 / 小红书 / 快手 / 视频号 不支持，`fetch.py` 会拒绝并给出手动下载指引。
 
 ## 安装
@@ -34,10 +34,27 @@
 运行时依赖：
 
 - Python 3.9+，`ffmpeg` / `ffprobe` 在 PATH 中可用；
-- B站链接下载需要 `yt-dlp`（或 `uvx`）；
-- 转写复用上游 skill `video-to-subtitle-summary` 的 `scripts/transcribe_volcengine_bigmodel.py` 与火山引擎豆包 API Key——把它安装到本 skill 同级目录即自动发现，或用 `VIDEO_INSIGHT_ASR_SCRIPT` 指定脚本路径，或把该脚本复制进本 skill 的 `scripts/`；
-- 可选：OCR 回退引擎——设置 `PADDLEOCR_ACCESS_TOKEN`（星河社区访问令牌页免费获取）接官方托管 API，或本地安装 `paddleocr`（也可 `uv run --with paddleocr --with paddlepaddle` 临时运行）；多模态 agent 不需要；
-- 环境自检：`python scripts/doctor.py --workdir <工作目录>` 一次列出缺失项与补救指引。
+- B站链接下载需要 `yt-dlp`（或 `uvx`）。
+
+### API Key 配置
+
+两个可选 Key、同一套读取规则（**环境变量 > skill 目录 `.env`**，脚本与 doctor 一致；`.env` 已 gitignore，模板见 `.env.example`）：
+
+| Key | 用在哪 | 哪些场景可以不配 | 获取方式 |
+| --- | --- | --- | --- |
+| `VOLC_BIGMODEL_API_KEY` | 口播视频 L1 转写（内置火山引擎 Seed ASR 托管 API，纯标准库直连，默认模型 `volc.seedasr.auc`） | 无口播分支 / 已有转写稿 / L2 画面档 | [火山控制台 > API Key 管理](https://console.volcengine.com/speech/new/setting/apikeys) |
+| `PADDLEOCR_ACCESS_TOKEN` | 无读图能力 agent 的 OCR 回退 | 多模态 agent（能直接读图） | [星河社区访问令牌页](https://aistudio.baidu.com/token)（免费） |
+
+配置步骤（以转写 Key 为例）：
+
+```bash
+cd skills/video-insight
+cp .env.example .env   # 然后编辑 .env，填入 VOLC_BIGMODEL_API_KEY
+```
+
+也可直接设环境变量；`VOLC_BIGMODEL_RESOURCE_ID` / `VOLC_BIGMODEL_API_BASE` 保持默认即可。OCR 回退不用 token 的替代路径：本地安装 `paddleocr`（或 `uv run --with paddleocr --with paddlepaddle` 临时运行）。
+
+验证：`python scripts/doctor.py --workdir <工作目录>`——Key 未配置只降级为 warn（exit 0，会列出对应的弱可用场景与获取指引），ffmpeg 等硬依赖缺失才是 missing。
 
 ## 文档
 

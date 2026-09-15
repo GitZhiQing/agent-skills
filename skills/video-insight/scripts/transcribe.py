@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Transcribe via the upstream ASR helper with domain hotwords.
+"""Transcribe audio/video via the built-in Volcengine Seed ASR client.
 
-Wraps video-to-subtitle-summary's transcribe_volcengine_bigmodel.py:
+asr_volc.py submits the audio to the hosted 录音文件识别大模型 API (pure
+standard library) and returns utterances with timestamps; this script
 extracts audio from a local video when needed, injects a hotword preset,
-renames the outputs to transcript.* and cleans up temporary files.
+writes transcript.srt/.txt/.json and cleans up temporary files.
 
 Usage:
     python transcribe.py <input> [--output-dir DIR]
@@ -11,14 +12,13 @@ Usage:
         [--language zh-CN]
 
 Outputs: transcript.srt / transcript.txt / transcript.json in <output-dir>.
-The API key is read by the upstream script from its own .env (discovered
-automatically); see .env.example if that is not configured.
+The API key resolves via env var or the skill's .env (see .env.example).
 
-A video without an audio track, or an ASR run that exits 0 but produces no
+A video without an audio track, or an ASR run that completes but produces no
 text, is NOT an error: the script records manifest status "no_speech" and
 prints {"no_speech": true, "reason": "no_audio_track"|"asr_empty"} — the
-caller switches to the screen-text branch (SKILL.md §2.1). An upstream
-script failure (non-zero exit) remains fatal.
+caller switches to the screen-text branch (SKILL.md §2.1). An API failure
+(network/auth/quota) remains fatal.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ from _common import (  # noqa: E402
     update_manifest,
     write_json,
 )
-from resolve_asr import resolve_asr  # noqa: E402
+import asr_volc  # noqa: E402
 
 VIDEO_EXTS = {".mp4", ".mkv", ".mov", ".webm", ".avi", ".flv", ".ts", ".m4v", ".wmv"}
 
@@ -129,10 +129,7 @@ def transcribe(input_path: Path, out_dir: Path, domain: str, extra_words: str | 
             "info": {"input_kind": kind},
         }
 
-    resolution = resolve_asr()
-    if not resolution["ok"]:
-        raise RuntimeError(resolution.get("hint", "ASR helper not found"))
-    asr_script = Path(resolution["asr_script"])
+    cfg = asr_volc.api_config()  # raises with setup guidance when key missing
 
     preset = load_preset(domain) if domain not in ("none", "") else []
     hotwords = merge_hotwords(preset, extra_words)
@@ -140,32 +137,16 @@ def transcribe(input_path: Path, out_dir: Path, domain: str, extra_words: str | 
     tmp_dir = out_dir / "tmp"
     audio, extracted = prepare_audio(input_path, tmp_dir)
 
-    asr_out = tmp_dir / "asr"
-    cmd = [
-        sys.executable, str(asr_script), str(audio),
-        "--output-dir", str(asr_out),
-    ]
-    if language:
-        cmd += ["--language", language]
-    if hotwords:
-        cmd += ["--hotwords", hotwords]
-    proc = run(cmd, check=False, timeout=1800)
-    if proc.returncode != 0:
-        raise RuntimeError(f"ASR script failed:\n{proc.stderr[-2000:]}")
+    try:
+        asr = asr_volc.transcribe_audio(
+            audio, language=language, hotwords=hotwords or None
+        )
+    except Exception as exc:
+        raise RuntimeError(f"ASR transcription failed: {exc}") from exc
 
-    renames = {
-        "subtitle.srt": out_dir / "transcript.srt",
-        "text.txt": out_dir / "transcript.txt",
-        "result.json": out_dir / "transcript.json",
-    }
-    produced = []
-    for src_name, target in renames.items():
-        src = asr_out / src_name
-        if src.exists() and src.stat().st_size > 0:
-            target.write_bytes(src.read_bytes())
-            produced.append(target)
-    if not any(p.suffix == ".txt" for p in produced):
-        # Upstream exited 0 but found no speech: BGM-only video, not an error.
+    txt = asr["txt"]
+    if not txt:
+        # ASR completed but found no speech: BGM-only video, not an error.
         _cleanup_dir(tmp_dir)
         return {
             "no_speech": True,
@@ -173,25 +154,43 @@ def transcribe(input_path: Path, out_dir: Path, domain: str, extra_words: str | 
             "info": {"input_kind": kind},
         }
 
-    txt_path = next(p for p in produced if p.suffix == ".txt")
     chars = sum(
         1
-        for ch in txt_path.read_text(encoding="utf-8")
+        for ch in txt
         if ch.isalnum()  # CJK chars count, punctuation does not
     )
-    suspect_no_speech = chars < 20 and not any(p.suffix == ".srt" for p in produced)
+    suspect_no_speech = chars < 20 and not asr["srt"].strip()
 
-    # Temporary media and raw ASR outputs are removed only after the renamed
-    # copies are verified non-empty.
+    files = {
+        "transcript.srt": (out_dir / "transcript.srt", asr["srt"], None),
+        "transcript.txt": (out_dir / "transcript.txt", txt, None),
+        "transcript.json": (out_dir / "transcript.json", None, asr["raw"]),
+    }
+    produced = []
+    for _, (target, text, raw) in files.items():
+        if text is not None and not text.strip():
+            continue  # e.g. no utterances: skip the srt, keep txt+json
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if raw is not None:
+            write_json(target, raw)
+        else:
+            target.write_text(text, encoding="utf-8")
+        produced.append(target)
+
+    # Temporary media is removed only after the final outputs are verified
+    # non-empty.
     for target in produced:
         if not target.exists() or target.stat().st_size == 0:
-            raise RuntimeError(f"transcription output missing after copy: {target}")
+            raise RuntimeError(f"transcription output missing after write: {target}")
     _cleanup_dir(tmp_dir)
 
     return {
         "produced": produced,
         "info": {
-            "asr_script": str(asr_script),
+            "asr_backend": "volc_seedasr",
+            "model": cfg["resource_id"],
+            "api_base": cfg["api_base"],
+            "request_id": asr["request_id"],
             "domain": domain or "none",
             "hotwords": len([w for w in hotwords.split(",") if w]),
             "language": language,
@@ -234,7 +233,7 @@ def main(argv: list[str] | None = None) -> int:
             if reason == "no_audio_track":
                 hint = "输入视频无音轨：走无口播分支，用画面文案提取（SKILL.md §2.1）"
             elif result["info"].get("input_kind") == "audio":
-                hint = "输入为纯音频且 ASR 无文本：无画面可提取文案，请与用户确认输入或检查上游 ASR"
+                hint = "输入为纯音频且 ASR 无文本：无画面可提取文案，请与用户确认输入或检查转写后端配置"
             else:
                 hint = "ASR 正常完成但无文本：疑似纯 BGM 无口播；读 overview 拼版确认后走无口播分支（SKILL.md §2.1）"
             record = update_manifest(out_dir, "transcribe", status="no_speech",

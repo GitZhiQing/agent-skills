@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import time
 import urllib.error
@@ -40,6 +39,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import (  # noqa: E402
     default_output_dir,
     fail_manifest,
+    get_config,
     read_json,
     run,
     update_manifest,
@@ -337,7 +337,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     try:
-        engine, token = pick_engine(args.engine, os.environ.get(TOKEN_ENV))
+        engine, token = pick_engine(args.engine, get_config(TOKEN_ENV))
         segments = read_json(segments_path).get("segments") or []
         if not segments:
             raise RuntimeError(f"no segments in {segments_path}")

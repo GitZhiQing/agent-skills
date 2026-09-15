@@ -14,6 +14,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+/video-insight/
 
 # 系统文件
 .DS_Store
