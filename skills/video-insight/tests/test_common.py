@@ -1,8 +1,10 @@
 import importlib.util
+import os
 import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
@@ -74,6 +76,35 @@ class TestManifest(unittest.TestCase):
             empty.write_bytes(b"")
             record = self.common.update_manifest(tmp_path, "x", status="ok", outputs=[empty])
             self.assertEqual(record["status"], "missing_files")
+
+
+class TestGetConfig(unittest.TestCase):
+    def setUp(self):
+        self.common = load_module("_common")
+
+    def test_env_var_wins_over_env_file(self):
+        with TemporaryDirectory() as tmp:
+            (Path(tmp) / ".env").write_text("TEST_KEY=from_file\n", encoding="utf-8")
+            with mock.patch.object(self.common, "SKILL_DIR", Path(tmp)), \
+                    mock.patch.dict(os.environ, {"TEST_KEY": "from_env"}):
+                self.assertEqual(self.common.get_config("TEST_KEY"), "from_env")
+
+    def test_env_file_value_and_quote_stripping(self):
+        with TemporaryDirectory() as tmp:
+            (Path(tmp) / ".env").write_text(
+                '# comment\nTEST_A="quoted"\nTEST_B = \'single\'\n'
+                "TEST_C=bare\nMALFORMED_LINE\n\n",
+                encoding="utf-8",
+            )
+            with mock.patch.object(self.common, "SKILL_DIR", Path(tmp)), \
+                    mock.patch.dict(os.environ, {}, clear=True):
+                self.assertEqual(self.common.get_config("TEST_A"), "quoted")
+                self.assertEqual(self.common.get_config("TEST_B"), "single")
+                self.assertEqual(self.common.get_config("TEST_C"), "bare")
+                self.assertIsNone(self.common.get_config("TEST_MISSING"))
+                self.assertEqual(
+                    self.common.get_config("TEST_MISSING", "fallback"), "fallback"
+                )
 
 
 if __name__ == "__main__":

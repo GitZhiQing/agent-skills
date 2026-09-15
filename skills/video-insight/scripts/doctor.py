@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """Environment self-check for video-insight.
 
-One JSON verdict covering ffmpeg / ffprobe / python / ASR helper / API key /
-disk / required filters / OCR fallback, so callers never hand-roll probes.
-Exit 0 when nothing required is missing; exit 1 otherwise.
+One JSON verdict covering ffmpeg / ffprobe / python / ASR key / disk /
+required filters / OCR fallback, so callers never hand-roll probes.
+Exit 0 when nothing required is missing; exit 1 otherwise. A missing ASR
+key or OCR token is only a warning: the no-speech branch, pre-existing
+transcripts and L2 all work without them.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -18,6 +19,8 @@ import sys
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPTS_DIR))
+from _common import get_config  # noqa: E402
 
 # L2 needs these filters; missing ones are warnings (L1 still works) but
 # anything in CORE_FILTERS missing means the pipeline is broken.
@@ -25,6 +28,7 @@ CORE_FILTERS = ("tblend", "signalstats", "metadata", "tile", "crop", "scale", "f
 EXTRA_FILTERS = ("showspectrumpic", "loudnorm", "silencedetect", "astats")
 
 OCR_TOKEN_ENV = "PADDLEOCR_ACCESS_TOKEN"
+ASR_KEY_ENV = "VOLC_BIGMODEL_API_KEY"
 
 
 def _version_of(binary: str) -> tuple[str | None, str | None]:
@@ -66,7 +70,7 @@ def _ocr_fallback_report() -> dict:
     """OCR capability for agents without image reading (screen_ocr.py):
     hosted PaddleOCR API via token, or a local paddleocr install."""
     info: dict = {
-        "api_token": bool(os.environ.get(OCR_TOKEN_ENV)),
+        "api_token": bool(get_config(OCR_TOKEN_ENV)),
         "paddleocr_local": False,
         "uv": bool(shutil.which("uv")),
         "usable": False,
@@ -104,24 +108,23 @@ def check(workdir: str = ".") -> dict:
     if not ffprobe_path:
         report["missing"].append("ffprobe")
 
-    # ASR helper discovery is delegated to resolve_asr.py
-    asr = {"ok": False}
-    try:
-        proc = subprocess.run(
-            [sys.executable, str(SCRIPTS_DIR / "resolve_asr.py")],
-            capture_output=True,
-            timeout=60,
+    # Transcription is a hosted API (asr_volc.py); a missing key only
+    # disables the transcription step — the no-speech branch, pre-existing
+    # transcripts and L2 all work without it, so warn instead of missing.
+    asr_key = bool(get_config(ASR_KEY_ENV))
+    report["asr"] = {
+        "api_key": asr_key,
+        "resource_id": get_config("VOLC_BIGMODEL_RESOURCE_ID", "volc.seedasr.auc"),
+        "api_base": get_config("VOLC_BIGMODEL_API_BASE", "https://openspeech.bytedance.com"),
+    }
+    report["api_key_configured"] = asr_key
+    if not asr_key:
+        report["warn"].append(
+            "转写弱可用：VOLC_BIGMODEL_API_KEY 未配置（火山控制台 > API Key 管理 "
+            "https://console.volcengine.com/speech/new/setting/apikeys，"
+            "设为环境变量或复制 .env.example 为 .env）；"
+            "口播视频 L1 转写需要它，无口播分支 / 已有转写稿 / L2 画面档不受影响"
         )
-        asr = json.loads(proc.stdout.decode("utf-8", "replace"))
-    except Exception as exc:
-        report["warn"].append(f"resolve_asr.py failed to run: {exc}")
-    report["asr_helper"] = asr.get("asr_script")
-    report["api_key_configured"] = bool(asr.get("api_key", {}).get("configured"))
-    if not asr.get("ok"):
-        report["missing"].append("asr_helper")
-        report["warn"].append(asr.get("hint", "ASR helper not found"))
-    elif not report["api_key_configured"]:
-        report["missing"].append("VOLC_BIGMODEL_API_KEY")
 
     if ffmpeg_path:
         missing_core, missing_extra = _filter_report()
@@ -158,7 +161,9 @@ def check(workdir: str = ".") -> dict:
         )
 
     try:
-        usage = shutil.disk_usage(Path(workdir).resolve())
+        workdir_path = Path(workdir).expanduser()
+        workdir_path.mkdir(parents=True, exist_ok=True)
+        usage = shutil.disk_usage(workdir_path.resolve())
         free_gb = round(usage.free / 1024**3, 1)
         report["disk_free_gb"] = free_gb
         if free_gb < 2:

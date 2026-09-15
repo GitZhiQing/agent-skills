@@ -5,11 +5,11 @@ description: >-
   L2 画面档叠加抽帧、帧差、定帧、音频与取色证据，回答画面承接、排版、节奏与标注时机，所有结论带帧证据与精度声明。
   当用户要求「分析这条视频」「拆解文案/话术/结构」「拉片」「画面分析」「音画对齐」「节奏分析」「字幕排版检查」，或给出纯 BGM 无口播、文案烧在画面上的视频要求「提取画面文案/画面文字」时使用；
   触发词包括「分析这条视频」「拉片」「无口播」「纯 BGM」「画面文案」「文案烧在画面上」等，即使未说「分析」二字，只要意图是理解或评估一条已有视频也应使用。
-  仅需转写或摘要时不要使用本 skill，改用 video-to-subtitle-summary；生成视频素材、剪辑、下载非 B站 链接同样不属于本 skill。
+  仅需转写字幕或浅摘要（不要结构化分析）时不要使用本 skill；生成视频素材、剪辑、下载非 B站 链接同样不属于本 skill。
 license: MIT
-compatibility: 需要 Python 3.9+ 与 ffmpeg/ffprobe；B站链接下载需 yt-dlp（或 uvx）；转写复用上游 video-to-subtitle-summary 的火山引擎豆包脚本与 API Key，可将其放到本 skill 同级目录，或用 VIDEO_INSIGHT_ASR_SCRIPT 指定脚本路径；OCR 回退（无读图能力时）设 PADDLEOCR_ACCESS_TOKEN 接官方托管 API，或本地安装 paddleocr
+compatibility: 需要 Python 3.9+ 与 ffmpeg/ffprobe；B站链接下载需 yt-dlp（或 uvx）；转写内置火山引擎 Seed ASR 托管 API（纯标准库直连），设 VOLC_BIGMODEL_API_KEY 为环境变量或复制 .env.example 为 .env（无口播分支 / 已有转写稿 / L2 不需要）；OCR 回退（无读图能力时）设 PADDLEOCR_ACCESS_TOKEN 接官方托管 API，或本地安装 paddleocr
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   category: media
 ---
 
@@ -87,7 +87,7 @@ metadata:
 | b5 分析 | （模型工作）读 transcript.screen.* 按 §3 做 01（画面文案稿形态）/02 | analysis/01、02 |
 
 **b0 确认门**：有用户可问 → 告知「检测为无口播视频（证据：ASR 零文本产出 / 无音轨），文案在画面上，改用画面文案提取，成本预估 60–150 万 token」后继续；无用户可问 → 在报告头部与 manifest `declaration` 块显式声明（同 §0 精神，声明不是默选）。
-**粗筛纠偏**：b1 拼版若显示画面其实是说话头/采访（ASR 可能漏检），**不硬切**——如实报告并建议检查上游 ASR 后再定。`suspect_no_speech: true`（ASR 只吐了零星幻听字）同样在粗筛时留意此情形。
+**粗筛纠偏**：b1 拼版若显示画面其实是说话头/采访（ASR 可能漏检），**不硬切**——如实报告并建议检查转写后端与音频质量后再定。`suspect_no_speech: true`（ASR 只吐了零星幻听字）同样在粗筛时留意此情形。
 **精度与合并**：屏起止来自帧差（实测）；b3 uniform 兜底模式（连续动画、无静止期）的时间一律写「约」；打字机/逐行浮现被拆成相邻屏且文案相同时，成稿合并并注明；读不清的字如实标「不可读」，禁止猜写。
 
 ## 3. L1 怎么做（读 transcript.*；无口播视频读 transcript.screen.*）
@@ -118,7 +118,7 @@ metadata:
 
 ## 6. 边界
 
-- 不做转写本身（发现并调用上游 video-to-subtitle-summary，不复制其代码）；不做视频下载；不做剪辑与素材生成。
+- 转写是内部分步（内置火山 Seed ASR 托管 API 客户端），不对外提供独立的转写/字幕服务；不做视频下载（B站 除外，走 fetch.py）；不做剪辑与素材生成。
 - OCR 只作为无读图能力时的画面文案回退（官方托管 API 或本地 paddleocr），不做通用"图片转文字"服务。
 - 纯音频输入且转写为空 → 无画面可提取文案，如实说明并停止该分支，不硬造文案稿。
 - 产出物命名与归档遵循用户工作区约定；本技能自己的产物集中在 `$OUT`。
