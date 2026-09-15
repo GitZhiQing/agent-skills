@@ -2,7 +2,7 @@
 """Environment self-check for video-insight.
 
 One JSON verdict covering ffmpeg / ffprobe / python / ASR helper / API key /
-disk / required filters, so callers never hand-roll probes.
+disk / required filters / OCR fallback, so callers never hand-roll probes.
 Exit 0 when nothing required is missing; exit 1 otherwise.
 """
 
@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -22,6 +23,8 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 # anything in CORE_FILTERS missing means the pipeline is broken.
 CORE_FILTERS = ("tblend", "signalstats", "metadata", "tile", "crop", "scale", "fps", "showinfo")
 EXTRA_FILTERS = ("showspectrumpic", "loudnorm", "silencedetect", "astats")
+
+OCR_TOKEN_ENV = "PADDLEOCR_ACCESS_TOKEN"
 
 
 def _version_of(binary: str) -> tuple[str | None, str | None]:
@@ -57,6 +60,34 @@ def _filter_report() -> tuple[list[str], list[str]]:
     missing_core = [f for f in CORE_FILTERS if f not in names]
     missing_extra = [f for f in EXTRA_FILTERS if f not in names]
     return missing_core, missing_extra
+
+
+def _ocr_fallback_report() -> dict:
+    """OCR capability for agents without image reading (screen_ocr.py):
+    hosted PaddleOCR API via token, or a local paddleocr install."""
+    info: dict = {
+        "api_token": bool(os.environ.get(OCR_TOKEN_ENV)),
+        "paddleocr_local": False,
+        "uv": bool(shutil.which("uv")),
+        "usable": False,
+        "how": None,
+    }
+    try:
+        import paddleocr  # noqa: F401
+
+        info["paddleocr_local"] = True
+    except Exception:
+        pass
+    if info["api_token"]:
+        info["usable"] = True
+        info["how"] = f"hosted PaddleOCR API (${OCR_TOKEN_ENV} is set)"
+    elif info["paddleocr_local"]:
+        info["usable"] = True
+        info["how"] = "local paddleocr install"
+    elif info["uv"]:
+        info["usable"] = True
+        info["how"] = "uv run --with paddleocr --with paddlepaddle (first run downloads ~1-2 GB)"
+    return info
 
 
 def check(workdir: str = ".") -> dict:
@@ -116,6 +147,15 @@ def check(workdir: str = ".") -> dict:
     report["ytdlp"] = ytdlp_version
     if not ytdlp_version:
         report["warn"].append("yt-dlp not found: URL 输入(fetch.py)不可用；本地文件分析不受影响")
+
+    ocr = _ocr_fallback_report()
+    report["ocr_fallback"] = ocr
+    if not ocr["api_token"] and not ocr["paddleocr_local"]:
+        report["warn"].append(
+            "OCR 回退弱可用：设置 PADDLEOCR_ACCESS_TOKEN（星河社区访问令牌页免费获取，"
+            "接官方托管 API）或本地安装 paddleocr 后，无读图能力的 agent 才能对无口播视频提取画面文案；"
+            "多模态 agent 不受影响"
+        )
 
     try:
         usage = shutil.disk_usage(Path(workdir).resolve())

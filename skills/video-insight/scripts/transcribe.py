@@ -13,6 +13,12 @@ Usage:
 Outputs: transcript.srt / transcript.txt / transcript.json in <output-dir>.
 The API key is read by the upstream script from its own .env (discovered
 automatically); see .env.example if that is not configured.
+
+A video without an audio track, or an ASR run that exits 0 but produces no
+text, is NOT an error: the script records manifest status "no_speech" and
+prints {"no_speech": true, "reason": "no_audio_track"|"asr_empty"} — the
+caller switches to the screen-text branch (SKILL.md §2.1). An upstream
+script failure (non-zero exit) remains fatal.
 """
 
 from __future__ import annotations
@@ -57,6 +63,32 @@ def merge_hotwords(preset: list[str], extra: str | None) -> str:
     return ",".join(merged)
 
 
+def input_kind(input_path: Path) -> str:
+    if str(input_path).startswith(("http://", "https://")):
+        return "url"
+    if input_path.suffix.lower() in VIDEO_EXTS:
+        return "video"
+    return "audio"
+
+
+def has_audio_stream(input_path: Path) -> bool | None:
+    """True/False for local video files; None when the check does not apply
+    (URLs are probed by the ASR itself, audio files are audio by definition)."""
+    if input_kind(input_path) != "video":
+        return None
+    proc = run(
+        [
+            "ffprobe", "-v", "quiet", "-select_streams", "a",
+            "-show_entries", "stream=codec_type", "-of", "csv=p=0",
+            str(input_path),
+        ],
+        check=False,
+    )
+    if proc.returncode != 0:
+        return None  # undeterminable; let audio extraction surface the real error
+    return bool(proc.stdout.strip())
+
+
 def prepare_audio(input_path: Path, tmp_dir: Path) -> tuple[Path, bool]:
     """Return (audio file for ASR, whether it is a temporary extraction)."""
     text = str(input_path)
@@ -76,8 +108,27 @@ def prepare_audio(input_path: Path, tmp_dir: Path) -> tuple[Path, bool]:
     return input_path, False
 
 
+def _cleanup_dir(tmp_dir: Path) -> None:
+    if not tmp_dir.exists():
+        return
+    for item in sorted(tmp_dir.rglob("*"), reverse=True):
+        if item.is_file():
+            item.unlink()
+        elif item.is_dir():
+            item.rmdir()
+    tmp_dir.rmdir()
+
+
 def transcribe(input_path: Path, out_dir: Path, domain: str, extra_words: str | None,
                language: str | None) -> dict:
+    kind = input_kind(input_path)
+    if has_audio_stream(input_path) is False:
+        return {
+            "no_speech": True,
+            "reason": "no_audio_track",
+            "info": {"input_kind": kind},
+        }
+
     resolution = resolve_asr()
     if not resolution["ok"]:
         raise RuntimeError(resolution.get("hint", "ASR helper not found"))
@@ -114,26 +165,28 @@ def transcribe(input_path: Path, out_dir: Path, domain: str, extra_words: str | 
             target.write_bytes(src.read_bytes())
             produced.append(target)
     if not any(p.suffix == ".txt" for p in produced):
-        raise RuntimeError("ASR produced no text output")
+        # Upstream exited 0 but found no speech: BGM-only video, not an error.
+        _cleanup_dir(tmp_dir)
+        return {
+            "no_speech": True,
+            "reason": "asr_empty",
+            "info": {"input_kind": kind},
+        }
 
+    txt_path = next(p for p in produced if p.suffix == ".txt")
     chars = sum(
         1
-        for ch in next(p for p in produced if p.suffix == ".txt").read_text(encoding="utf-8")
+        for ch in txt_path.read_text(encoding="utf-8")
         if ch.isalnum()  # CJK chars count, punctuation does not
     )
+    suspect_no_speech = chars < 20 and not any(p.suffix == ".srt" for p in produced)
 
     # Temporary media and raw ASR outputs are removed only after the renamed
     # copies are verified non-empty.
     for target in produced:
         if not target.exists() or target.stat().st_size == 0:
             raise RuntimeError(f"transcription output missing after copy: {target}")
-    if tmp_dir.exists():
-        for item in sorted(tmp_dir.rglob("*"), reverse=True):
-            if item.is_file():
-                item.unlink()
-            elif item.is_dir():
-                item.rmdir()
-        tmp_dir.rmdir()
+    _cleanup_dir(tmp_dir)
 
     return {
         "produced": produced,
@@ -143,7 +196,9 @@ def transcribe(input_path: Path, out_dir: Path, domain: str, extra_words: str | 
             "hotwords": len([w for w in hotwords.split(",") if w]),
             "language": language,
             "audio_extracted": extracted,
+            "input_kind": kind,
             "chars": chars,
+            "suspect_no_speech": suspect_no_speech,
         },
     }
 
@@ -174,6 +229,21 @@ def main(argv: list[str] | None = None) -> int:
     try:
         result = transcribe(input_path, out_dir, args.domain, args.hotwords,
                             args.language or None)
+        if result.get("no_speech"):
+            reason = result["reason"]
+            if reason == "no_audio_track":
+                hint = "输入视频无音轨：走无口播分支，用画面文案提取（SKILL.md §2.1）"
+            elif result["info"].get("input_kind") == "audio":
+                hint = "输入为纯音频且 ASR 无文本：无画面可提取文案，请与用户确认输入或检查上游 ASR"
+            else:
+                hint = "ASR 正常完成但无文本：疑似纯 BGM 无口播；读 overview 拼版确认后走无口播分支（SKILL.md §2.1）"
+            record = update_manifest(out_dir, "transcribe", status="no_speech",
+                                     extra={"no_speech": True, "reason": reason})
+            print(json.dumps({"no_speech": True, "reason": reason,
+                              "input_kind": result["info"].get("input_kind"),
+                              "hint": hint, "status": record["status"]},
+                             ensure_ascii=False))
+            return 0
         record = update_manifest(out_dir, "transcribe", status="ok",
                                  outputs=result["produced"], extra=result["info"])
         print(json.dumps({**result["info"], "status": record["status"],
