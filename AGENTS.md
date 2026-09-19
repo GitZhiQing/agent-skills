@@ -31,7 +31,7 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 - ddgs-web-access：Python >= 3.10（uv 托管虚拟环境），依赖 ddgs + markdownify，单文件 CLI（`ddgs_web_access.py`）+ `bin/` 位置无关启动器；stdout 结果 / stderr 提示与错误 / 退出码 0-1-2。
 - theme-commit：纯 SKILL.md 提示词（git 按主题分组提交），0.1.1。
 - deep-research：纯 SKILL.md 提示词（先校准再调研：环境检查 → 预检索校准 → 选项式澄清 → 档位推荐 → 强制确认门 → 增量登记落盘 research/ 目录 → REPORT.md + REFERENCES.md 双文件交付），0.2.0。
-- zero-coding：纯 SKILL.md 提示词（从零启动个人项目：最小文档集 ZERO/SPEC/DECISIONS/AGENTS/README，按"捕获 → 固化 → 骨架 → 稳定开发"推进，产物快照式书写——零历史、新读者测试；首次触发以 3~5 句开局说明交代全程），0.2.0。
+- zero-coding：纯 SKILL.md 提示词（从零启动个人项目：最小文档集 ZERO/SPEC/DECISIONS/AGENTS/README，按"捕获 → 固化 → 骨架 → 稳定开发"推进，产物快照式书写——零历史、新读者测试；首次触发以 3~5 句开局说明交代全程；MVP 垂直切片、未知三通道查/问/试（一次性小样）、非常规切片开工对齐），0.3.0。
 - video-insight：拉片级视频分析（L1 文案档 / L2 画面档，开工确认门——交互模式分级判定 + doctor 前置单轮确认 + 确认/调整/显式委托三回应 + L2 拼版检查点，实测/约/推断三档表述；无口播视频走画面文案提取分支：no_speech 判定 → 帧差逐屏区间 → 读图精读 / OCR 回退），Python 脚本纯标准库，外部依赖 ffmpeg/ffprobe（B站下载另需 yt-dlp），转写内置火山 Seed ASR 托管 API 客户端（VOLC_BIGMODEL_API_KEY，env/.env 双通道），OCR 回退可选（PADDLEOCR_ACCESS_TOKEN 接官方托管 API，纯标准库直连），0.4.0。
 - scripts/：bash + coreutils 维护脚本套件，公共函数在 `scripts/lib.sh`；退出码统一 0-1-2，状态走 stdout、错误走 stderr。
 
