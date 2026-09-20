@@ -9,7 +9,7 @@ description: >-
 license: MIT
 compatibility: 需要 Python 3.9+ 与 ffmpeg/ffprobe；B站链接下载需 yt-dlp（或 uvx）；转写内置火山引擎 Seed ASR 托管 API（纯标准库直连），设 VOLC_BIGMODEL_API_KEY 为环境变量或复制 .env.example 为 .env（无口播分支 / 已有转写稿 / L2 不需要）；OCR 回退（无读图能力时）设 PADDLEOCR_ACCESS_TOKEN 接官方托管 API，或本地安装 paddleocr
 metadata:
-  version: 0.4.0
+  version: 0.6.0
   category: media
 ---
 
@@ -17,7 +17,7 @@ metadata:
 
 ## 0. 开工确认门
 
-先跑 doctor（只读）判环境，再单轮确认档位与形态；**确认前不跑任何分析命令**（fetch / 转写 / 抽帧均属分析命令）。分析深度决定成本一个数量级、交付形态决定整轮产出——**都属于用户的选择权，不能替他默选**（HIL 原则）。
+先跑 doctor（只读）判环境，再单轮确认档位与形态；**确认前不跑任何分析命令**（pipeline / fetch / 转写 / 抽帧均属分析命令）。分析深度决定成本一个数量级、交付形态决定整轮产出——**都属于用户的选择权，不能替他默选**（HIL 原则）。
 
 **① 交互模式判定**（操作定义，不许凭感觉）：
 - **交互模式**：请求来自人类用户的会话消息，且用户未明说「别问 / 直接跑 / 不用确认」→ 必须提问并等回应。**禁止以「用户无法实时回答」为由跳过提问**；判定不明时一律按交互模式处理——宁可多问一轮，不替用户做预算决策。
@@ -59,62 +59,83 @@ metadata:
 ## 2. 执行流程
 
 设 `S` = 本技能 `scripts/` 目录，`OUT` = 输出目录（默认 `<cwd>/video-insight/<slug>/`，建议放到用户任务目录）。
-**每个脚本跑完都会更新 `<OUT>/manifest.json`；继续下一步前检查对应 status 是否 ok，不 ok 先修复**——归档链中途断一次，空目录就会被当成"没问题"。唯一例外：transcribe 的 `no_speech` 不是故障，是无口播分支信号（§2.1）。
 
-| 步骤 | 命令 | 产出 |
-| --- | --- | --- |
-| 0 自检 | **§0 确认门前先跑**：`python $S/doctor.py --workdir <目录>` | 环境事实并入确认门；缺项按 JSON 提示补齐 |
-| 0.5 取链 | `python $S/fetch.py <B站URL> --output-dir $OUT` | $OUT/video.mp4（ffprobe 校验可播放） |
-| 1 转写 | `python $S/transcribe.py <输入> --output-dir $OUT --domain finance` | transcript.srt/.txt/.json；无音轨或 ASR 空产出 → `no_speech`，转 §2.1 |
-| 2 探测 | `python $S/probe.py <视频> --output-dir $OUT` | meta.json |
-| 3 L1 分析 | （模型工作，读 transcript） | analysis/01、02 |
-| 4 抽帧 | `python $S/extract_frames.py <视频> --output-dir $OUT [--strip-crop WxH+X+Y]` | evidence/overview、subtitle-strip + 时间戳 JSON |
-| 5 帧差 | `python $S/detect_changes.py <视频> --output-dir $OUT` | data/changes.json |
-| 6 定帧/放大 | `python $S/grab_frames.py <视频> --at "t1,t2" --output-dir $OUT [--crop WxH+X+Y --zoom 6]` | evidence/keyframes、crops |
-| 7 音频 | `python $S/audio_probe.py <视频> --output-dir $OUT [--range 起:止]` | data/audio.json + 频谱图 |
-| 8 取色 | `python $S/palette.py <视频> --at T --crop WxH+X+Y --output-dir $OUT` | data/palette.json |
-| 9 L2 分析 | （模型工作，读全部 JSON + 帧图） | analysis/03、04、05 |
+**机械采集一条命令**（0.5.0 起）：确认门通过后，采集段——取链 → 转写 → 探测 → 按 `no_speech` 自动切无口播分支（含 b1~b3 与 ocr 路径成稿）→ L2 基础证据（抽帧/帧差/音频）——全部由 `pipeline.py` 一次完成，**不要逐步调用单脚本当编排器**：
 
-**输入识别**：B站链接（bilibili.com / b23.tv）用 fetch.py 直接下载（实测可用）；抖音 / 小红书 / 快手 / 视频号**不支持**（实测下载路径不可用或文档不可靠），fetch.py 会拒绝并给出原因，此时请用户手动下载后改用本地文件；音频直链交给 transcribe.py；已有转写稿（.srt/.txt）直接放入 `$OUT/transcript.*`，跳过步骤 1。
+| 档位 | 命令 |
+| --- | --- |
+| L1 | `python $S/pipeline.py <输入> --tier L1 --output-dir $OUT [--domain finance] [--screen-mode ocr]` |
+| L2 | `python $S/pipeline.py <输入> --tier L2 --output-dir $OUT [--domain finance] [--screen-mode ocr]` |
+| 批量（0.6.0） | `python $S/pipeline.py <输入1> <输入2> ... --tier <档位> [--jobs N] [--output-dir <批根>]`；或 `--batch 清单.txt`（每行一个输入，# 注释）。详见 §2.2 |
+
+- **输入**：视频/音频文件、B站链接、或已有转写稿（.srt/.txt，自动拷入 `$OUT/transcript.*` 并跳过转写）。
+- **`--screen-mode`**：无口播分支的精读方式——`frames`（默认，抓每屏一帧由你读图成稿，多模态主路线）/ `ocr`（无读图能力时，OCR 后自动组装 `transcript.screen.srt/.json`，整条分支零模型介入）。
+- **幂等**：失败修复后重跑同一条命令，已完成步骤（manifest 记 ok / transcribe 记 no_speech）自动跳过；`manifest.json` 仍是权威状态账本。
+- **收尾报告**（stdout 一份 JSON）：`branch`（voiced / no_speech / transcript_only）、`steps`、`ready`（就绪文件清单）、`stats`（时长/字数/语速，或屏数/每屏停留——已算好直接引用）、`ai_next`（按本文件节号指路）、`notes`（b0 告知门与 b1 目检纠偏提醒）。任一步失败时报告 `failed_step` 与原因，修好重跑即可。
+
+**分工边界**：pipeline 只做机械采集；确认门（§0）、读图成稿（§2.1 frames 路径 b4）、L1/L2 内容分析（§3/§4）、定帧时刻与取色区域等视觉决策仍由模型做。**确认门前禁止调用 pipeline**（它属于分析命令，doctor 是门前唯一例外）。
+
+**单步命令（仅排查与补采）**：修复失败步骤、或模型决策类的定点采集才单步调用——`grab_frames.py --at "t1,t2" [--crop WxH+X+Y --zoom 6]`（定帧/放大）、`palette.py --at T --crop WxH+X+Y`（取色）、`audio_probe.py [--range 起:止]`（补音频段）、`extract_frames.py [--strip-crop ...]`（非默认字幕带布局）、`screen_ocr.py --segments ...`（重跑 OCR）、`doctor.py --workdir <目录>`（复检环境）。单步产物照常记入 manifest。
+
+**输入识别**：B站链接（bilibili.com / b23.tv）pipeline 自动经 fetch.py 下载（实测可用）；抖音 / 小红书 / 快手 / 视频号**不支持**（实测下载路径不可用或文档不可靠），fetch.py 会拒绝并给出原因，此时请用户手动下载后改用本地文件；音频直链交给 pipeline（转写段处理）；已有转写稿见上。
 **领域热词**：从内容判断 finance / education / tech；金融术语漏了热词必错（"筹码峰""诱多"零错误的唯一原因就是热词）。判断不了就并入 §0 确认门同轮问一句，或 `--domain none`。
 **缺 Key 引导配置**（交互模式）：doctor 报缺 `VOLC_BIGMODEL_API_KEY` 且用户选择口播 L1 → 给控制台链接（见 README「API Key 配置」），用户粘贴 Key 后写入本 skill 目录 `.env`（已 gitignore，不入库）→ 复跑 doctor 确认后继续；用户不配 → 改走已有转写稿 / 无口播分支等可行路径。`PADDLEOCR_ACCESS_TOKEN` 同款处理。
 
 ### 2.1 无口播分支 · 画面文案提取
 
 **触发**（任一）：
-- 步骤 1 输出 `no_speech: true`（无音轨，或 ASR 正常跑完但零文本——纯 BGM 无人声的客观信号）；
+- pipeline 报告 `branch: no_speech`（无音轨，或 ASR 正常跑完但零文本——纯 BGM 无人声的客观信号；pipeline 已自动切换并直通跑完 b1~b3）；
 - 用户开局就说明是纯 BGM / 无口播视频、文案在画面上；
 - 有口播但用户点名「提取画面文案 / 画面文字」——同走本分支，成稿与 transcript 对照（漏字/删改类问题恰来自这里）。
 
-| 步骤 | 命令 | 产出 |
-| --- | --- | --- |
-| b0 确认门 | 告知判定证据与模式切换（见下） | — |
-| b1 粗筛 | `python $S/extract_frames.py <视频> --output-dir $OUT [--fps 0.5]` | evidence/overview 拼版 → 确认文字卡形态、文案区域（居中/底部/多区）、估屏数 |
-| b2 时间轴 | `python $S/detect_changes.py <视频> --output-dir $OUT` 然后 `python $S/screen_segments.py $OUT/data/changes.json --output-dir $OUT` | data/screen_segments.json：每屏起止 + 建议定帧时刻（帧差实测；文案卡切换=事件、停留=静止期） |
-| b3 精读 | 自己能读图：`python $S/grab_frames.py <视频> --at "<各屏 grab_at>" --output-dir $OUT [--crop ... --zoom 6 --flags neighbor]`；不能读图：`python $S/screen_ocr.py <视频> --segments $OUT/data/screen_segments.json --output-dir $OUT` | evidence/keyframes 每屏一帧（读不清先放大）或 data/screen_ocr.json（逐屏文本+置信度） |
-| b4 成稿 | （模型工作）逐屏读帧图或读 OCR JSON → 写 `transcript.screen.srt` + `transcript.screen.json` | 每屏 t_start/t_end/文案/证据帧路径/可读度（清晰·放大后可读·不可读） |
-| b5 分析 | （模型工作）读 transcript.screen.* 按 §3 做 01（画面文案稿形态）/02 | analysis/01、02 |
+pipeline 自动完成：b1 粗筛（0.5fps overview 拼版）→ b2 时间轴（帧差 + `screen_segments.py` 逐屏区间：换屏=事件、停留=静止期）→ b3 精读（`frames`：每屏一帧抓到 evidence/keyframes/；`ocr`：screen_ocr + 自动组装成稿）。`suspect_no_speech`、uniform 兜底等信号在报告 notes 里提示。剩余步骤：
 
-**b0 告知门（告知即走，矛盾才停）**：客观证据（无音轨 / ASR 零文本）→ 告知「检测为无口播视频（证据：ASR 零文本产出 / 无音轨），文案在画面上，改用画面文案提取，成本预估 60–150 万 token」后**继续，不等许可**，manifest `declaration` 块记录该切换（无人值守同样声明）。**矛盾证据才是硬停点**：粗筛显示说话头/采访嫌疑、或 `suspect_no_speech: true` → 停下呈报矛盾证据，等用户定夺（检查音频质量 / 换转写配置 / 仍走画面分支）——客观判定无替代路径（文案只能来自画面），问许可是过度门禁；矛盾证据才有真选择。
-**粗筛纠偏（b0 硬停点的执行层）**：b1 拼版若显示画面其实是说话头/采访（ASR 可能漏检），**不硬切**——停下呈报，等用户定夺。`suspect_no_speech: true`（ASR 只吐了零星幻听字）同样在粗筛时留意此情形。
-**精度与合并**：屏起止来自帧差（实测）；b3 uniform 兜底模式（连续动画、无静止期）的时间一律写「约」；打字机/逐行浮现被拆成相邻屏且文案相同时，成稿合并并注明；读不清的字如实标「不可读」，禁止猜写。
+| 步骤 | 执行者 | 产出 |
+| --- | --- | --- |
+| b0 告知门 | 模型（事后告知） | 见下 |
+| b1 目检纠偏 | 模型（事后抽查） | 见下 |
+| b4 成稿 | frames：模型逐屏读帧图；ocr：pipeline 已组装 | transcript.screen.srt/.json |
+| b5 分析 | 模型，读 transcript.screen.* 按 §3 | analysis/01、02 |
+
+**b0 告知门（告知即走，矛盾才停）**：看到 `branch: no_speech` 后向用户告知「检测为无口播视频（证据：<reason>），文案在画面上，已改用画面文案提取，成本预估 60–150 万 token」后**继续，不等许可**（客观判定无替代路径——文案只能来自画面，问许可是过度门禁；manifest `declaration` 块的 `no_speech_switch` 已由 pipeline 记录，无人值守同样告知内容写入报告头部）。**矛盾证据才是硬停点**：粗筛显示说话头/采访嫌疑、或 `suspect_no_speech: true` → 停下呈报矛盾证据，等用户定夺（检查音频质量 / 换转写配置 / 仍走画面分支）。
+**b1 事后目检纠偏（0.5.0 起时点后移：原为切换前目测，现为采集后抽查）**：读 evidence/overview/ 拼版确认文字卡形态、文案区域（居中/底部/多区）、估屏数——若显示画面其实是说话头/采访（ASR 可能漏检），**不硬切**，按矛盾证据停下呈报等用户定夺。pipeline 直通意味着异常场景下 b2/b3 的采集成本已花掉，但远低于省下的模型编排轮次，属可接受代价。
+**精度与合并**：屏起止来自帧差（实测）；uniform 兜底模式（连续动画、无静止期）的时间一律写「约」（报告 notes 会标注）；ocr 组装稿已合并同文相邻屏（打字机拆屏，`merged_from` 可回溯）并按置信度三档标注可读度（清晰 ≥0.90 / 低置信 0.50–0.90 / 不可读 <0.50，阈值待实测校准）；frames 路径成稿时可读度用模型读图三档（清晰 / 放大后可读 / 不可读），同文屏合并由模型做，读不清的字如实标「不可读」，禁止猜写。
+
+### 2.2 多视频任务（0.6.0）
+
+用户一次给多条视频（本地文件 / B站链接 / 转写稿混排），或要求「都分析」「对比这几条」时：
+
+**① 确认门一次覆盖整批**：档位与交付形态仍走 §0，但批内同档时**一次确认整批**——确认门说明条数与总成本（单条成本 × N），不逐条问。用户要拆档（如「前 3 条 L1、后 2 条 L2」）→ 分两次 pipeline 调用，各跑各的子集；领域热词混杂（finance + tech）同理拆批。禁止「逐条过一遍确认门」的假勤奋。
+
+**② 采集一条命令全批**：`pipeline.py <输入1> <输入2> ... --tier <档位>` 或 `--batch 清单.txt`（长清单先落文件再引用，避免超长命令行）。要点：
+
+- 每条独立归档在 `<批根>/<slug>/`（默认批根 `<cwd>/video-insight/`，同名输入自动加 `-2` 后缀），manifest 各自独立；
+- **失败隔离**：单条失败不阻塞其余，批报告 `results[]` 列明每条状态与失败原因；修复后**重跑同一条命令**，幂等只补失败条目；
+- `--jobs N` 可选并发（默认 1 串行，对 ASR 配额友好；转写是轮询等待型，并发能显著缩墙钟时间）；
+- 收尾输出**批报告**（stdout 一份 + 落盘 `<批根>/batch-report.json`）：每条的 branch / stats / ready / ai_next 一屏总览——不要逐条重读各 OUT 的 manifest 汇总。
+
+**③ 分析逐条、横向可选**：逐视频按 §3 / §2.1 / §4 分析，各 OUT 独立产出 01/02（03-05）。用户要「对比 / 找共同点 / 差异 / 哪条更好」时，追加跨视频对比文档（结构骨架差异、话术模板复用、钩子与节奏对比、数据一屏矩阵），**落 `<批根>/`（如 `<批根>/06-跨视频对比.md`），不塞进单视频 OUT**——批级产物与单视频产物分层。
+
+**④ 交付两层**：批任务默认两层交付——批级总览（各条一句话结论 + 关键数据矩阵 + 分报告索引）+ 各视频自己的 analysis/。对话内摘要交付时同样先给总览再按需展开单条。
 
 ## 3. L1 怎么做（读 transcript.*；无口播视频读 transcript.screen.*）
 
 1. **术语校对**：对照热词表与领域常识逐句核对，产出 01-转写校对.md（改了哪些词、为什么）；无口播形态改为 01-画面文案稿.md（逐屏文案 + 可读度标注 + 合并记录，模板见 references/输出模板.md）。
 2. **语义分段**：按话题/悬念/转折切段，标注每段时间码（无口播形态按文案屏分段）。
-3. **口播数据**：字数、语速（字/秒）、停顿分布（有音频时用 data/audio.json）；无口播形态改为屏数、每屏字数、每屏停留时长（t_end−t_start，实测）。
+3. **口播数据**：时长/字数/语速直接引用 pipeline 报告 `stats`（不心算）；停顿分布（有音频时用 data/audio.json）；无口播形态改为屏数、每屏字数、每屏停留时长（t_end−t_start，实测——`stats.dwell_s` 已给出）。
 4. **逻辑骨架**：钩子→展开→结论→CTA 各在第几秒、占比多少；话术模板是什么（对仗、设问、二选一……）。
 5. **主张与准确性核查**：逐个主张标注 属实/存疑/违规（金融类必查合规：承诺收益、确定性结论、诱导开户）。
 6. 按 `references/输出模板.md` 的 L1 骨架写 02-内容分析.md。
 
 ## 4. L2 怎么做（读 evidence/ + data/*.json）
 
+L2 基础证据（overview 拼版、字幕带、帧差、音频）已由 `pipeline.py --tier L2` 采集完毕；以下是你的分析工作。
+
 1. **通览**：读 overview 拼版（时间戳在 data/frames_overview.json），先看信息增长节奏与模板复用痕迹。
 2. **圈关键节点**：用 changes.json 的事件表定位每次画面变化，与文案分段对齐——"画面何时动、动了多大、和口播搭不搭"。
-3. **拼版检查点（交互模式）**：定帧 / 放大 / 取色等重投入步骤前，把 overview 拼版图 + changes 事件表摘要 + 计划精读的节点清单呈报用户（一句话 + 证据），确认方向后再继续——L2 全程 30–40 分钟，方向跑偏要等交付才发现就太晚了。用户可显式跳过（「跑完直接给」，manifest 记录 `skipped_checkpoint`）；无人值守自动跳过并在 declaration 声明。
+3. **拼版检查点（交互模式）**：定帧 / 放大 / 取色等重投入步骤前，把 overview 拼版图 + changes 事件表摘要 + 计划精读的节点清单呈报用户（一句话 + 证据），确认方向后再继续——L2 全程 30–40 分钟，方向跑偏要等交付才发现就太晚了（时点自然落在 pipeline 采集完成后、你的第一个定点调用前）。用户可显式跳过（「跑完直接给」，manifest 记录 `skipped_checkpoint`）；无人值守自动跳过并在 declaration 声明。
 4. **下断言前必回查**：任何时间断言，落笔前用 grab_frames 定帧或 JSON 数据支撑一次；字幕逐字核对用 subtitle-strip + 局部放大。
-5. **音频三层交叉**（单一手段不足以判断有无 BGM）：停顿 RMS vs 噪声底 vs 频谱图，三层一致才写。
+5. **音频三层交叉**（单一手段不足以判断有无 BGM）：停顿 RMS vs 噪声底 vs 频谱图，三层一致才写（无音轨视频此层跳过，steps.audio_probe 为 skipped_no_audio_track）。
 6. **取色只信区域众数**：palette.py，禁止 1×1 采样——单像素取到白底就会给出误导色。
 7. 按 `references/画面分析手册.md` 的清单过一遍画面元素，写 03/04/05。
 8. 收尾：抽查 evidence/ 文件与 manifest 一致；临时目录已由脚本清理；把证据文件索引附在报告末尾。
@@ -122,7 +143,7 @@ metadata:
 ## 5. 判断纪律（详见 references/证据纪律.md，此处只列要点）
 
 - 表述分三档并强制标注：**实测**（有 JSON/定帧支撑）、**约**（1s 抽帧 ±0.5s 精度）、**推断**（显式标注，不得混入实测）。
-- 画面文案（§2.1 产物）的表述映射：屏起止时间=帧差/定帧（实测档）；文案内容=模型读图（清晰/放大后可读/不可读三档标注）或 OCR 置信度；uniform 兜底模式的时间一律「约」；读不清的字如实标「不可读」，禁止猜写。
+- 画面文案（§2.1 产物）的表述映射：屏起止时间=帧差/定帧（实测档）；文案内容=模型读图（清晰/放大后可读/不可读三档标注）或 OCR 组装稿的置信度三档（清晰/低置信/不可读，阈值见 §2.1）；uniform 兜底模式的时间一律「约」；读不清的字如实标「不可读」，禁止猜写。
 - 交付形态没对齐、分析深度没确认，都不动手（无人值守按 §0 声明式执行）；交互会话中**禁止以「用户无法实时回答」为由跳过档位提问**（§0 交互模式判定）。客观结论被用户质疑时，给一次带数据的说明，然后把表述改写成对两种可能都成立，继续推进——赢了检测输了进度。
 - **交付后回路**（标准出口，一句话，不占轮）：报告末尾附「如需画面层结论可升级 L2（附成本）；存疑主张可点名核查；结论有质疑按证据纪律 R4 处理」。
 - 追求"结论可信、可回溯、可重复"，不追求"分析得更多"。
