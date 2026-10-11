@@ -12,7 +12,7 @@ A collection of [Agent Skills](https://agentskills.io)（SKILL.md 开放格式�
 | [ddgs-web-access](skills/ddgs-web-access/) | 0.2.2 | Python CLI | 基于[ddgs](https://github.com/deedy5/ddgs) 的联网搜索与网页抓取（`ddgs-web-search` / `ddgs-web-fetch`）             |
 | [theme-commit](skills/theme-commit/)       | 0.1.1 | 纯提示词   | 工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交                                                               |
 | [deep-research](skills/deep-research/)     | 0.2.0 | 纯提示词   | 先校准问题再调研：环境检查→理解确认→档位推荐→确认门→research/ 目录交付 REPORT.md + REFERENCES.md 双文件         |
-| [zero-coding](skills/zero-coding/)         | 0.3.0 | 纯提示词   | 从零启动个人项目并维持稳定开发：最小文档集（ZERO/SPEC/DECISIONS/AGENTS/README），按"捕获→固化→骨架→稳定开发"推进；MVP 垂直切片、未知三通道（查/问/试）、非常规切片开工对齐 |
+| [zero-coding](skills/zero-coding/)         | 0.4.0 | 纯提示词   | 从零启动个人项目的轻量工作流：按会话容量分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片；最小文档集（SPEC/DECISIONS/AGENTS），事实自查、决策问人，方案确认委托平台 Plan Mode |
 | [video-insight](skills/video-insight/)     | 0.6.0 | Python 脚本  | 视频内容与画面深度分析（L1 文案档 / L2 画面档）：转写结构与话术、帧证据排版与节奏、音画对齐与字幕核查；pipeline 一键机械采集（支持多视频批量），无口播视频的画面文案提取（帧差逐屏 + 读图/OCR 回退） |
 
 各 skill 的调用方法、参数与排障见其目录内的 SKILL.md / README.md。
