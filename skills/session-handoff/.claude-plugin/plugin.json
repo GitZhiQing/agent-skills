@@ -1,0 +1,6 @@
+{
+  "name": "session-handoff",
+  "description": "会话收尾时把接手所需上下文打包成一段可粘贴的交接提示词，让新会话的 Coding Agent 无历史上下文即可恢复状态、继续开发",
+  "version": "0.1.0",
+  "author": { "name": "QING" }
+}

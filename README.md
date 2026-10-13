@@ -14,6 +14,7 @@ A collection of [Agent Skills](https://agentskills.io)（SKILL.md 开放格式�
 | [deep-research](skills/deep-research/)     | 0.2.0 | 纯提示词   | 先校准问题再调研：环境检查→理解确认→档位推荐→确认门→research/ 目录交付 REPORT.md + REFERENCES.md 双文件         |
 | [zero-coding](skills/zero-coding/)         | 0.4.0 | 纯提示词   | 从零启动个人项目的轻量工作流：按会话容量分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片；最小文档集（SPEC/DECISIONS/AGENTS），事实自查、决策问人，方案确认委托平台 Plan Mode |
 | [video-insight](skills/video-insight/)     | 0.6.0 | Python 脚本  | 视频内容与画面深度分析（L1 文案档 / L2 画面档）：转写结构与话术、帧证据排版与节奏、音画对齐与字幕核查；pipeline 一键机械采集（支持多视频批量），无口播视频的画面文案提取（帧差逐屏 + 读图/OCR 回退） |
+| [session-handoff](skills/session-handoff/) | 0.1.0 | 纯提示词   | 会话收尾时把整个会话打包成一段可粘贴的交接提示词，让下一段全新会话的 Coding Agent 无历史上下文即可恢复状态、继续开发 |
 
 各 skill 的调用方法、参数与排障见其目录内的 SKILL.md / README.md。
 
@@ -32,7 +33,7 @@ npx skills add GitZhiQing/agent-skills/theme-commit # 单个 skill
 
 ```
 /plugin marketplace add GitZhiQing/agent-skills
-/plugin install ddgs-web-access@agent-skills         # 或 theme-commit / deep-research / zero-coding / video-insight
+/plugin install ddgs-web-access@agent-skills         # 或 theme-commit / deep-research / zero-coding / video-insight / session-handoff
 ```
 
 **手动**（clone 后用仓库自带脚本链接到本机各 agent 的 skills 目录，Windows junction / Unix symlink，单一来源改一处全端生效）：
