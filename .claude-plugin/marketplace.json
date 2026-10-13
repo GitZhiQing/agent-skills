@@ -4,7 +4,7 @@
     "name": "QING",
     "url": "https://github.com/GitZhiQing"
   },
-  "description": "个人 AI coding agent skills 集合：联网搜索抓取、主题分批提交、深度调研、从零启动项目、视频内容与画面分析（遵循 Agent Skills 开放规范）",
+  "description": "个人 AI coding agent skills 集合：联网搜索抓取、主题分批提交、深度调研、从零启动项目、视频内容与画面分析、会话交接（遵循 Agent Skills 开放规范）",
   "plugins": [
     {
       "name": "ddgs-web-access",
@@ -88,6 +88,23 @@
         "video-analysis",
         "transcript",
         "ffmpeg"
+      ]
+    },
+    {
+      "name": "session-handoff",
+      "source": "./skills/session-handoff",
+      "skills": [
+        "./"
+      ],
+      "description": "会话收尾时把接手所需上下文打包成一段可粘贴的交接提示词，让下一段全新会话的 Coding Agent 无历史上下文即可恢复状态、继续开发（7 节骨架 + AGENTS.md 未覆盖项条件补充）",
+      "version": "0.1.0",
+      "author": {
+        "name": "QING"
+      },
+      "keywords": [
+        "handoff",
+        "session",
+        "context"
       ]
     }
   ]

@@ -6,7 +6,7 @@
 
 ## 怎么跑起来 / 验证
 
-- 纯提示词 skill（theme-commit、deep-research、zero-coding）：无运行时，直接读 SKILL.md。
+- 纯提示词 skill（theme-commit、deep-research、zero-coding、session-handoff）：无运行时，直接读 SKILL.md。
 - ddgs-web-access 需要 uv >= 0.5，命令不依赖当前工作目录：
 
 ```bash
@@ -33,6 +33,7 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 - deep-research：纯 SKILL.md 提示词（先校准再调研：环境检查 → 预检索校准 → 选项式澄清 → 档位推荐 → 强制确认门 → 增量登记落盘 research/ 目录 → REPORT.md + REFERENCES.md 双文件交付），0.2.0。
 - zero-coding：纯 SKILL.md 提示词（从零启动个人项目：按会话容量分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片；最小文档集 SPEC/DECISIONS/AGENTS 三个，事实自查、决策问人、说不清的做一次性原型，方案确认尽量委托平台 Plan Mode 与子 Agent，收尾对照走通路径收敛核验后删 SPEC），0.4.0。
 - video-insight：拉片级视频分析（L1 文案档 / L2 画面档，开工确认门——交互模式分级判定 + doctor 前置单轮确认 + 确认/调整/显式委托三回应 + L2 拼版检查点，实测/约/推断三档表述；pipeline.py 一键机械采集：幂等推进 + no_speech 自动切无口播分支（帧差逐屏 + 读图/OCR 回退，ocr 路径组装器自动成稿）+ 收尾 branch/stats/ai_next 报告，0.6.0 起支持多视频批量（--batch 清单、批内 slug 去重、失败隔离、批报告落盘、可选 --jobs 并发），模型专注确认门、读图与内容分析），Python 脚本纯标准库，外部依赖 ffmpeg/ffprobe（B站下载另需 yt-dlp），转写内置火山 Seed ASR 托管 API 客户端（VOLC_BIGMODEL_API_KEY，env/.env 双通道），OCR 回退可选（PADDLEOCR_ACCESS_TOKEN 接官方托管 API，纯标准库直连），0.6.0。
+- session-handoff：纯 SKILL.md 提示词（会话收尾把接手所需上下文打包成一段可粘贴的交接提示词：7 节骨架 + AGENTS.md 未覆盖项条件补充，项目基本面不重复搬运；只输出一个待粘贴代码块，一般 400–1200 字），0.1.0。
 - scripts/：bash + coreutils 维护脚本套件，公共函数在 `scripts/lib.sh`；退出码统一 0-1-2，状态走 stdout、错误走 stderr。
 
 ## 目录与约定
