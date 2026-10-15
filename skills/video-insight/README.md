@@ -24,6 +24,8 @@
 
 多视频（0.6.0 起，SKILL.md §2.2）：一次给多条时同一条命令直接批量——`pipeline.py <输入1> <输入2> ... --tier <档位>` 或 `--batch 清单.txt`；每条独立归档 `<批根>/<slug>/`，单条失败不阻塞其余，收尾批报告一屏总览（落盘 `batch-report.json`），`--jobs N` 可选并发（默认串行）；对比类需求产跨视频对比文档落批根。
 
+经验闭环（0.7.0 起，SKILL.md §5）：判断类经验沉淀在 `memory/`（INDEX.md 检索入口 + lessons 单条 JSON，git 追踪跨机共享）——开工 doctor 后按平台/形态检索并入确认门；任一步骤失败先查历史教训再诊断；分段统计与目检矛盾时由模型决策重分段（`screen_segments --mode` 三态 + `events_in_segment` 锚点 + `grab_frames --range` 扫窗定点补齐）；收尾自检三问写回新发现，反复验证的经验毕业进代码或文档。脚本层只做能力开关，场景判断一律归模型。
+
 ## 边界
 
 - 不做：独立于分析的转写/字幕服务（转写只作为内部分步）、非 B站 链接的视频下载、素材生成、剪辑、通用"图片转文字"（OCR 仅限无口播分支回退）；
@@ -64,5 +66,6 @@ cp .env.example .env   # 然后编辑 .env，填入 VOLC_BIGMODEL_API_KEY
 - [docs/需求与设计文档.md](docs/需求与设计文档.md) — 设计规格与决策理由
 - [docs/测试集.md](docs/测试集.md) — 行为协议断言与已知答案回归基准
 - [references/](references/) — 输出模板 / 证据纪律 / 画面分析手册
+- [memory/INDEX.md](memory/INDEX.md) — 经验层检索入口
 
 许可：MIT（仓库根 [LICENSE](../../LICENSE)）。
