@@ -113,6 +113,15 @@ def read_json(path: Path) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def fmt_ts(seconds: float) -> str:
+    """SRT timestamp HH:MM:SS,mmm (shared by transcript renderers)."""
+    ms = round(max(seconds, 0) * 1000)
+    h, rem = divmod(ms, 3600_000)
+    m, rem = divmod(rem, 60_000)
+    s, ms = divmod(rem, 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
 def update_manifest(
     output_dir: Path,
     script: str,

@@ -52,6 +52,38 @@ class TestHelpers(unittest.TestCase):
                     {"grab_at": 5.0}]
         self.assertEqual(pipeline.join_grab_ats(segments), "1,3.5,5")
 
+    def test_merge_event_anchors_fills_budget_in_time_order(self):
+        doc = {
+            "params": {"max_screens": 4},
+            "segments": [
+                {"grab_at": 1.0, "events_in_segment": [0.5]},
+                {"grab_at": 3.0, "events_in_segment": [2.5, 2.9]},
+                {"grab_at": 5.0, "events_in_segment": []},
+            ],
+        }
+        at_list, counts = pipeline.merge_event_anchors(doc)
+        # grab_at first (1,3,5), anchors fill the remaining 1 slot in time order
+        self.assertEqual(at_list, "0.5,1,3,5")
+        self.assertEqual(counts, {"anchors_added": 1, "anchors_skipped": 2})
+
+    def test_merge_event_anchors_respects_max_screens(self):
+        doc = {
+            "params": {"max_screens": 3},
+            "segments": [
+                {"grab_at": 1.0, "events_in_segment": [0.5]},
+                {"grab_at": 3.0, "events_in_segment": [2.5, 3.5, 3.9]},
+            ],
+        }
+        at_list, counts = pipeline.merge_event_anchors(doc)
+        self.assertEqual(at_list, "0.5,1,3")
+        self.assertEqual(counts, {"anchors_added": 1, "anchors_skipped": 3})
+
+    def test_merge_event_anchors_without_anchor_data(self):
+        at_list, counts = pipeline.merge_event_anchors(
+            {"segments": [{"grab_at": 2.0}]})
+        self.assertEqual(at_list, "2")
+        self.assertEqual(counts, {"anchors_added": 0, "anchors_skipped": 0})
+
     def test_run_step_raises_on_failure(self):
         with self.assertRaises(pipeline.StepFailure) as ctx:
             pipeline.run_step("pipeline", ["--help-missing"])  # argparse exits 2
@@ -194,6 +226,38 @@ class TestStats(unittest.TestCase):
         self.assertEqual(stats["dwell_s"], [2.0, 4.0])
         self.assertEqual(stats["mode"], "event")
         self.assertEqual(stats["total_text_chars"], 9 + 2)
+
+    def test_screen_stats_passthrough_summary_facts(self):
+        write_json(self.out / "data" / "screen_segments.json",
+                   {"mode": "uniform",
+                    "params": {"max_screens": 60},
+                    "segments": [
+                        {"i": 1, "t_start": 0.0, "t_end": 2.0, "grab_at": 1.0,
+                         "events_in_segment": [0.5]},
+                        {"i": 2, "t_start": 2.0, "t_end": 4.0, "grab_at": 3.0,
+                         "events_in_segment": []},
+                    ],
+                    "summary": {"n_screens": 2, "mode": "uniform",
+                                "n_events": 78, "n_stills": 0,
+                                "mean_screen_s": 2.0, "max_screen_s": 2.0,
+                                "longest_still_s": None}})
+        stats = pipeline.screen_stats(self.out)
+        self.assertEqual(stats["n_events"], 78)
+        self.assertEqual(stats["n_stills"], 0)
+        self.assertEqual(stats["mean_screen_s"], 2.0)
+        self.assertEqual(stats["max_screen_s"], 2.0)
+        self.assertIsNone(stats["longest_still_s"])
+
+    def test_screen_stats_without_summary_stays_clean(self):
+        write_json(self.out / "data" / "screen_segments.json",
+                   {"mode": "event",
+                    "segments": [
+                        {"i": 1, "t_start": 0.0, "t_end": 2.0, "grab_at": 1.0},
+                    ]})
+        stats = pipeline.screen_stats(self.out)
+        for key in ("n_events", "n_stills", "mean_screen_s", "max_screen_s",
+                    "longest_still_s"):
+            self.assertNotIn(key, stats)
 
 
 def run_pipeline(*argv, timeout=600):
