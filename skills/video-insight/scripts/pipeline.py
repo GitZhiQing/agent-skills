@@ -50,6 +50,7 @@ SKILL_DIR = SCRIPTS_DIR.parent
 sys.path.insert(0, str(SCRIPTS_DIR))
 from _common import (  # noqa: E402
     default_output_dir,
+    fmt_ts,
     read_json,
     update_manifest,
     write_json,
@@ -145,15 +146,6 @@ def _norm_text(text: str) -> str:
     return "".join(text.split()).casefold()
 
 
-def fmt_ts(seconds: float) -> str:
-    """SRT timestamp HH:MM:SS,mmm."""
-    ms = round(max(seconds, 0) * 1000)
-    h, rem = divmod(ms, 3600_000)
-    m, rem = divmod(rem, 60_000)
-    s, ms = divmod(rem, 1000)
-    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-
-
 def readability_from_confidence(conf: float | None) -> str:
     if conf is None or conf < CONF_UNREADABLE:
         return "不可读"
@@ -170,6 +162,39 @@ def join_grab_ats(segments: list[dict]) -> str:
         if t not in seen:
             seen.append(t)
     return ",".join(f"{t:g}" for t in seen)
+
+
+def merge_event_anchors(segments_doc: dict) -> tuple[str, dict]:
+    """Extend the per-screen grab list with events_in_segment anchors.
+
+    Per-screen grab_at moments are kept first; event peak anchors then fill
+    the remaining frame budget (--max-screens from the segments doc) in time
+    order. Pure data plumbing — counts land in stats, nothing is judged.
+    """
+    segments = segments_doc.get("segments", [])
+    max_screens = int((segments_doc.get("params") or {}).get("max_screens", 60))
+    ats: list[float] = []
+    for seg in segments:
+        t = float(seg["grab_at"])
+        if t not in ats:
+            ats.append(t)
+    candidates = sorted({
+        round(float(t), 2)
+        for seg in segments
+        for t in (seg.get("events_in_segment") or [])
+    })
+    added = skipped = 0
+    for t in candidates:
+        if len(ats) >= max_screens:
+            skipped += 1
+            continue
+        if t not in ats:
+            ats.append(t)
+            added += 1
+    return ",".join(f"{t:g}" for t in sorted(ats)), {
+        "anchors_added": added,
+        "anchors_skipped": skipped,
+    }
 
 
 def assemble_screen_transcript(out_dir: Path) -> list[Path]:
@@ -281,6 +306,11 @@ def screen_stats(out_dir: Path) -> dict:
     stats["dwell_s"] = [round(s["t_end"] - s["t_start"], 2) for s in segments]
     if segs.get("mode"):
         stats["mode"] = segs["mode"]
+    # screen_segments summary counting facts, passed through untouched.
+    for key in ("n_events", "n_stills", "mean_screen_s", "max_screen_s",
+                "longest_still_s"):
+        if key in (segs.get("summary") or {}):
+            stats[key] = segs["summary"][key]
     try:
         doc = read_json(out_dir / "transcript.screen.json")
         stats["total_text_chars"] = sum(
@@ -297,7 +327,8 @@ def _transcript_ready(out_dir: Path) -> bool:
 
 
 def collect(input_arg: str, out_dir: Path, tier: str, domain: str,
-            screen_mode: str, quiet: bool = False) -> tuple[dict | None, int, dict | None]:
+            screen_mode: str, quiet: bool = False,
+            include_event_anchors: bool = False) -> tuple[dict | None, int, dict | None]:
     """Collect one input into out_dir.
 
     Returns (report, exit_code, error). Prints the final report (or the error
@@ -321,6 +352,8 @@ def collect(input_arg: str, out_dir: Path, tier: str, domain: str,
             return None, 1, error
 
     steps: dict[str, str] = {}
+    extra_notes: list[str] = []
+    anchor_info: dict | None = None
     video: Path | None = None
 
     if transcript_input:
@@ -427,11 +460,22 @@ def collect(input_arg: str, out_dir: Path, tier: str, domain: str,
                 steps["screen_transcript"] = "skipped"
         else:
             if not step_done(out_dir, "grab_frames"):
-                run_step("grab_frames",
-                         [str(video), "--at", join_grab_ats(segments),
-                          "--label", "screen", "--output-dir", str(out_dir)])
+                segments_doc = read_json(
+                    out_dir / "data" / "screen_segments.json")
+                grab_argv = [str(video), "--at", join_grab_ats(segments),
+                             "--label", "screen", "--output-dir", str(out_dir)]
+                if include_event_anchors:
+                    at_list, anchor_info = merge_event_anchors(segments_doc)
+                    grab_argv[grab_argv.index("--at") + 1] = at_list
+                run_step("grab_frames", grab_argv)
                 steps["grab_frames"] = "ok"
             else:
+                if include_event_anchors:
+                    # Idempotent skip: anchors are not backfilled retroactively.
+                    extra_notes.append(
+                        "grab_frames 已完成，--include-event-anchors 不回溯补抓；"
+                        "需锚点补抓时单步重跑 grab_frames（--at 列表含 "
+                        "events_in_segment 锚点）")
                 steps["grab_frames"] = "skipped"
 
     if branch is None:
@@ -469,6 +513,10 @@ def collect(input_arg: str, out_dir: Path, tier: str, domain: str,
 
     report = _final_report(out_dir, tier, branch, screen_mode, steps, video,
                            transcribe_info, no_speech_reason)
+    if extra_notes:
+        report["notes"].extend(extra_notes)
+    if anchor_info:
+        report["stats"].update(anchor_info)
     update_manifest(out_dir, "pipeline", status="ok",
                     extra={"tier": tier, "branch": branch,
                            "screen_mode": screen_mode})
@@ -525,6 +573,10 @@ def _final_report(out_dir: Path, tier: str, branch: str, screen_mode: str,
         else:
             ai_next.append("逐屏读 evidence/keyframes/screen_*.jpg 按 §2.1 b4 成稿 transcript.screen.srt/.json（可读度三档、同文屏合并、不可读不猜写）")
             ai_next.append("成稿后按 §3 做 01-画面文案稿、02-内容分析")
+        ai_next.append(
+            "分段统计（stats 的 n_events/n_screens/mean_screen_s 等）与 overview 目检矛盾时 "
+            "→ screen_segments --mode uniform（或 event/调 --min-screen-gap）重分段后单步重跑对应精读步骤，"
+            "uniform 段的 events_in_segment 是补抓锚点（§2.1）")
         if stats.get("mode") == "uniform":
             notes.append("uniform 兜底：屏时间为均匀采样，表述一律带「约」")
     else:
@@ -573,12 +625,13 @@ def read_batch_file(path: Path) -> list[str]:
 
 
 def _batch_item(item: str, out_dir: Path, tier: str, domain: str,
-                screen_mode: str) -> dict:
+                screen_mode: str, include_event_anchors: bool = False) -> dict:
     """Run one batch item and flatten its outcome into a summary entry."""
     entry: dict = {"input": item, "output_dir": str(out_dir)}
     try:
         report, code, error = collect(item, out_dir, tier, domain,
-                                      screen_mode, quiet=True)
+                                      screen_mode, quiet=True,
+                                      include_event_anchors=include_event_anchors)
     except StepFailure as failure:
         entry.update({
             "status": "failed",
@@ -605,7 +658,8 @@ def _batch_item(item: str, out_dir: Path, tier: str, domain: str,
 
 
 def run_batch(inputs: list[str], batch_root: Path, tier: str, domain: str,
-              screen_mode: str, jobs: int) -> tuple[dict, int]:
+              screen_mode: str, jobs: int,
+              include_event_anchors: bool = False) -> tuple[dict, int]:
     """Collect every input under batch_root/<slug>/; one summary at the end."""
     batch_root.mkdir(parents=True, exist_ok=True)
     items = [(item, slug, batch_root / out_name)
@@ -617,11 +671,12 @@ def run_batch(inputs: list[str], batch_root: Path, tier: str, domain: str,
         with ThreadPoolExecutor(max_workers=jobs) as pool:
             entries = list(pool.map(
                 lambda triple: _batch_item(triple[0], triple[2], tier, domain,
-                                           screen_mode),
+                                           screen_mode, include_event_anchors),
                 items,
             ))
     else:
-        entries = [_batch_item(item, out_dir, tier, domain, screen_mode)
+        entries = [_batch_item(item, out_dir, tier, domain, screen_mode,
+                               include_event_anchors)
                    for item, _, out_dir in items]
 
     for (item, slug, _), entry in zip(items, entries):
@@ -675,6 +730,10 @@ def main(argv: list[str] | None = None) -> int:
                         default="frames",
                         help="no-speech branch: grab frames for the model to "
                              "read (default) or run the OCR fallback")
+    parser.add_argument("--include-event-anchors", action="store_true",
+                        help="frames mode: extend the grab list with "
+                             "events_in_segment anchors within --max-screens "
+                             "(default off; counters land in stats)")
     parser.add_argument("--jobs", type=int, default=1,
                         help="Batch concurrency (default 1 = serial; ASR "
                              "quota-friendly). Ignored for single input")
@@ -699,7 +758,8 @@ def main(argv: list[str] | None = None) -> int:
         out_dir.mkdir(parents=True, exist_ok=True)
         try:
             _, code, _ = collect(inputs[0], out_dir, args.tier, args.domain,
-                                 args.screen_mode)
+                                 args.screen_mode,
+                                 include_event_anchors=args.include_event_anchors)
         except StepFailure as failure:
             print(json.dumps({
                 "failed_step": failure.step,
@@ -717,7 +777,8 @@ def main(argv: list[str] | None = None) -> int:
         else Path.cwd() / "video-insight"
     )
     _, code = run_batch(inputs, batch_root, args.tier, args.domain,
-                        args.screen_mode, args.jobs)
+                        args.screen_mode, args.jobs,
+                        args.include_event_anchors)
     return code
 
 
