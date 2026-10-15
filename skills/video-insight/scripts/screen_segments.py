@@ -23,9 +23,23 @@ Segmentation rules (candidates, the model verifies by reading frames):
   Splitting errs on the generous side — adjacent screens with identical text
   are merged by the model when reading, missed content is not recoverable.
 
+Segmentation mode (--mode, default auto = the rules above):
+- event: anchor segmentation, never falls back to uniform; anchors beyond
+  --max-screens exit 2 with the counts (the caller decides: raise the cap,
+  merge more via --min-screen-gap, or switch to uniform);
+- uniform: even sampling right away; every segment additionally carries
+  events_in_segment (event peak times inside the segment) as candidate
+  anchors for targeted grab_frames follow-ups — data only, nothing consumes
+  it automatically.
+
+summary always reports the counting facts (n_events / n_stills /
+mean_screen_s / max_screen_s / longest_still_s) so contradictions with the
+model's own overview reading are visible in the data.
+
 Usage:
     python screen_segments.py <changes.json> --output-dir DIR
-        [--min-screen-gap 2.0] [--uniform-interval 2.0] [--max-screens 60]
+        [--mode auto|event|uniform] [--min-screen-gap 2.0]
+        [--uniform-interval 2.0] [--max-screens 60]
 
 Writes data/screen_segments.json; prints a compact segment list to stdout.
 """
@@ -50,6 +64,10 @@ from _common import (  # noqa: E402
 
 def _r2(value: float) -> float:
     return round(float(value), 2)
+
+
+class AnchorOverflow(ValueError):
+    """--mode event and anchors beyond --max-screens: refuse to fall back silently."""
 
 
 def cluster_events(events: list[dict], min_screen_gap: float) -> list[dict]:
@@ -99,69 +117,87 @@ def _uniform_segments(duration: float, interval: float, max_screens: int) -> lis
     ]
 
 
+def _events_in_segment(segment: dict, events: list[dict], is_last: bool) -> list[float]:
+    """Event peak times inside this segment (half-open, last segment inclusive)."""
+    times = []
+    for event in events:
+        t = _r2(event.get("peak_t", event["t_start"]))
+        inside = segment["t_start"] <= t < segment["t_end"] or (
+            is_last and t == segment["t_end"]
+        )
+        if inside:
+            times.append(t)
+    return times
+
+
 def build_segments(
     changes: dict,
     *,
     min_screen_gap: float = 2.0,
     uniform_interval: float = 2.0,
     max_screens: int = 60,
+    mode: str = "auto",
 ) -> dict:
+    if mode not in ("auto", "event", "uniform"):
+        raise ValueError(f"mode must be auto|event|uniform, got: {mode}")
     duration = _r2(changes.get("duration_s") or 0)
     if duration <= 0:
         raise ValueError("changes.json has no positive duration_s")
     events = sorted(changes.get("events") or [], key=lambda e: e["t_start"])
     stills = sorted(changes.get("stills") or [], key=lambda s: s["t_start"])
 
-    mode = "uniform"
+    resolved = "uniform"
     fallback_reason: str | None = None
     anchors: list[dict] = []
 
-    if stills:
-        mode = "event"
-        clusters = cluster_events(events, min_screen_gap)
-        leading = [c for c in clusters if c["t_end"] <= stills[0]["t_start"]]
-        trailing = [c for c in clusters if c["t_start"] >= stills[-1]["t_end"]]
-        for cluster in leading:
-            if cluster["t_end"] - cluster["t_start"] >= min_screen_gap or cluster["n_events"] > 1:
-                anchors.append({**cluster, "basis": "event_settle"})
-        for still in stills:
-            anchors.append({
-                "t_start": still["t_start"],
-                "t_end": still["t_end"],
-                "basis": "still_mid",
-                "still_s": still.get("duration_s"),
-            })
-        for cluster in trailing:
-            if cluster["t_end"] - cluster["t_start"] >= min_screen_gap or cluster["n_events"] > 1:
-                anchors.append({**cluster, "basis": "event_settle"})
+    if mode != "uniform":
+        if stills:
+            resolved = "event"
+            clusters = cluster_events(events, min_screen_gap)
+            leading = [c for c in clusters if c["t_end"] <= stills[0]["t_start"]]
+            trailing = [c for c in clusters if c["t_start"] >= stills[-1]["t_end"]]
+            for cluster in leading:
+                if cluster["t_end"] - cluster["t_start"] >= min_screen_gap or cluster["n_events"] > 1:
+                    anchors.append({**cluster, "basis": "event_settle"})
+            for still in stills:
+                anchors.append({
+                    "t_start": still["t_start"],
+                    "t_end": still["t_end"],
+                    "basis": "still_mid",
+                    "still_s": still.get("duration_s"),
+                })
+            for cluster in trailing:
+                if cluster["t_end"] - cluster["t_start"] >= min_screen_gap or cluster["n_events"] > 1:
+                    anchors.append({**cluster, "basis": "event_settle"})
+        elif events:
+            resolved = "event"
+            anchors = [
+                {**cluster, "basis": "event_settle"}
+                for cluster in cluster_events(events, min_screen_gap)
+            ]
         if len(anchors) > max_screens:
-            mode = "uniform"
+            if mode == "event":
+                raise AnchorOverflow(
+                    f"{len(anchors)} anchors exceed --max-screens {max_screens}; "
+                    "--mode event refuses to fall back silently — raise --max-screens, "
+                    "merge more via --min-screen-gap, or switch to --mode uniform"
+                )
+            resolved = "uniform"
             fallback_reason = (
                 f"{len(anchors)} anchors exceed --max-screens {max_screens}; "
                 "uniform sampling keeps coverage within the frame budget"
             )
             anchors = []
-    elif events:
-        mode = "event"
-        anchors = [
-            {**cluster, "basis": "event_settle"}
-            for cluster in cluster_events(events, min_screen_gap)
-        ]
-        if len(anchors) > max_screens:
-            mode = "uniform"
-            fallback_reason = (
-                f"{len(anchors)} event clusters exceed --max-screens {max_screens}; "
-                "uniform sampling keeps coverage within the frame budget"
-            )
-            anchors = []
-    if mode == "uniform" and not anchors:
+    if resolved == "uniform":
         anchors = [
             {**segment, "n_events": None}
             for segment in _uniform_segments(duration, uniform_interval, max_screens)
         ]
         if fallback_reason is None:
             fallback_reason = (
-                "no stable stills found (continuous animation); "
+                "forced via --mode uniform"
+                if mode == "uniform"
+                else "no stable stills found (continuous animation); "
                 "uniform sampling, timestamps at 约 precision"
             )
 
@@ -191,8 +227,17 @@ def build_segments(
             "still_s": anchor.get("still_s"),
         })
 
+    if resolved == "uniform":
+        last_idx = len(segments) - 1
+        for idx, segment in enumerate(segments):
+            segment["events_in_segment"] = _events_in_segment(
+                segment, events, is_last=(idx == last_idx)
+            )
+
+    screen_durs = [_r2(s["t_end"] - s["t_start"]) for s in segments]
+    still_durs = [s["duration_s"] for s in stills if s.get("duration_s") is not None]
     return {
-        "mode": mode,
+        "mode": resolved,
         "fallback_reason": fallback_reason,
         "params": {
             "min_screen_gap_s": min_screen_gap,
@@ -203,8 +248,13 @@ def build_segments(
         "segments": segments,
         "summary": {
             "n_screens": len(segments),
-            "mode": mode,
+            "mode": resolved,
             "bases": sorted({s["basis"] for s in segments}),
+            "n_events": len(events),
+            "n_stills": len(stills),
+            "mean_screen_s": _r2(sum(screen_durs) / len(screen_durs)) if screen_durs else 0.0,
+            "max_screen_s": max(screen_durs) if screen_durs else 0.0,
+            "longest_still_s": max(still_durs) if still_durs else None,
         },
     }
 
@@ -213,6 +263,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("changes", help="Path to data/changes.json (detect_changes.py output)")
     parser.add_argument("--output-dir", default=None)
+    parser.add_argument("--mode", choices=("auto", "event", "uniform"), default="auto",
+                        help="auto = anchor segmentation with uniform fallback (default); "
+                             "event = anchors only, overflow exits 2; "
+                             "uniform = even sampling + events_in_segment anchors")
     parser.add_argument("--min-screen-gap", type=float, default=2.0,
                         help="Event bursts closer than this merge into one screen (default 2.0)")
     parser.add_argument("--uniform-interval", type=float, default=2.0,
@@ -237,6 +291,7 @@ def main(argv: list[str] | None = None) -> int:
             "input": str(changes_path),
             **build_segments(
                 changes,
+                mode=args.mode,
                 min_screen_gap=args.min_screen_gap,
                 uniform_interval=args.uniform_interval,
                 max_screens=args.max_screens,
@@ -257,6 +312,10 @@ def main(argv: list[str] | None = None) -> int:
             ],
         }, ensure_ascii=False))
         return 0
+    except AnchorOverflow as exc:
+        fail_manifest(out_dir, "screen_segments", exc)
+        print(json.dumps({"error": str(exc)}))
+        return 2
     except Exception as exc:
         fail_manifest(out_dir, "screen_segments", exc)
         print(json.dumps({"error": str(exc)}, ensure_ascii=False))
