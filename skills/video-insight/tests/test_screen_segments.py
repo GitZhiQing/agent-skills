@@ -1,6 +1,10 @@
+import json
 import unittest
+from pathlib import Path
 
 from test_common import load_module
+
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 def ev(t0, t1, peak=1.0):
@@ -150,6 +154,150 @@ class TestBuildSegments(unittest.TestCase):
         for prev, nxt in zip(segments, segments[1:]):
             self.assertLessEqual(prev["t_start"], prev["t_end"])
             self.assertLessEqual(prev["t_end"], nxt["t_start"])
+
+
+class TestSummaryStats(unittest.TestCase):
+    """Counting facts only — visibility for model judgment, no verdicts."""
+
+    def setUp(self):
+        self.mod = load_module("screen_segments")
+
+    def test_stats_fields_present(self):
+        payload = self.mod.build_segments(
+            {
+                "duration_s": 6.0,
+                "events": [ev(1.95, 2.05), ev(3.95, 4.05)],
+                "stills": [still(0.1, 1.9), still(2.1, 3.9), still(4.1, 5.9)],
+            },
+            min_screen_gap=2.0, uniform_interval=2.0, max_screens=60,
+        )
+        summary = payload["summary"]
+        self.assertEqual(summary["n_events"], 2)
+        self.assertEqual(summary["n_stills"], 3)
+        self.assertEqual(summary["mean_screen_s"], 2.0)
+        self.assertEqual(summary["max_screen_s"], 2.05)
+        self.assertEqual(summary["longest_still_s"], 1.8)
+
+    def test_stats_without_stills(self):
+        payload = self.mod.build_segments(
+            {"duration_s": 7.0, "events": [ev(1.0, 1.1), ev(3.5, 3.6)], "stills": []},
+            min_screen_gap=2.0, uniform_interval=2.0, max_screens=60,
+        )
+        summary = payload["summary"]
+        self.assertEqual(summary["n_stills"], 0)
+        self.assertIsNone(summary["longest_still_s"])
+        self.assertGreater(summary["mean_screen_s"], 0.0)
+
+
+class TestModes(unittest.TestCase):
+    def setUp(self):
+        self.mod = load_module("screen_segments")
+        self.kwargs = dict(min_screen_gap=2.0, uniform_interval=2.0, max_screens=60)
+
+    def test_event_mode_refuses_fallback(self):
+        with self.assertRaises(self.mod.AnchorOverflow) as ctx:
+            self.mod.build_segments(
+                {
+                    "duration_s": 10.0,
+                    "events": [],
+                    "stills": [still(k, k + 0.5) for k in range(10)],
+                },
+                **{**self.kwargs, "max_screens": 3, "mode": "event"},
+            )
+        self.assertIn("10 anchors", str(ctx.exception))
+
+    def test_auto_mode_still_falls_back(self):
+        payload = self.mod.build_segments(
+            {
+                "duration_s": 10.0,
+                "events": [],
+                "stills": [still(k, k + 0.5) for k in range(10)],
+            },
+            **{**self.kwargs, "max_screens": 3, "mode": "auto"},
+        )
+        self.assertEqual(payload["mode"], "uniform")
+        self.assertIn("max-screens", payload["fallback_reason"])
+
+    def test_uniform_mode_forced(self):
+        payload = self.mod.build_segments(
+            {
+                "duration_s": 6.0,
+                "events": [ev(2.5, 2.6), ev(4.0, 4.1)],
+                "stills": [still(0.1, 1.9), still(2.7, 3.9), still(4.2, 5.9)],
+            },
+            **{**self.kwargs, "mode": "uniform"},
+        )
+        self.assertEqual(payload["mode"], "uniform")
+        self.assertIn("--mode uniform", payload["fallback_reason"])
+        segments = payload["segments"]
+        self.assertEqual(len(segments), 3)
+        for seg in segments:
+            self.assertEqual(seg["basis"], "sample")
+            self.assertIn("events_in_segment", seg)
+        # half-open: each event peak lands in exactly one segment
+        self.assertEqual(segments[0]["events_in_segment"], [])
+        self.assertEqual(segments[1]["events_in_segment"], [2.5])
+        self.assertEqual(segments[2]["events_in_segment"], [4.0])
+
+    def test_event_mode_keeps_event_segmentation(self):
+        payload = self.mod.build_segments(
+            {
+                "duration_s": 6.0,
+                "events": [ev(1.95, 2.05), ev(3.95, 4.05)],
+                "stills": [still(0.1, 1.9), still(2.1, 3.9), still(4.1, 5.9)],
+            },
+            **{**self.kwargs, "mode": "event"},
+        )
+        self.assertEqual(payload["mode"], "event")
+        self.assertEqual(len(payload["segments"]), 3)
+        self.assertNotIn("events_in_segment", payload["segments"][0])
+
+    def test_bad_mode_raises(self):
+        with self.assertRaises(ValueError):
+            self.mod.build_segments(
+                {"duration_s": 6.0, "events": [], "stills": []},
+                **{**self.kwargs, "mode": "magic"},
+            )
+
+
+class TestFixtureMicroAnim(unittest.TestCase):
+    """78 events / 0 stills over 60s: the collapse must be visible, and
+    uniform re-segmentation + events_in_segment must recover the timeline."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mod = load_module("screen_segments")
+        cls.changes = json.loads(
+            (FIXTURES / "changes_micro_anim.json").read_text(encoding="utf-8")
+        )
+
+    def build(self, **kw):
+        return self.mod.build_segments(
+            self.changes, min_screen_gap=2.0, uniform_interval=2.0, max_screens=60, **kw
+        )
+
+    def test_auto_mode_collapse_is_visible(self):
+        payload = self.build(mode="auto")
+        self.assertEqual(payload["mode"], "event")
+        self.assertEqual(payload["summary"]["n_screens"], 1)
+        self.assertEqual(payload["summary"]["n_events"], 78)
+        self.assertEqual(payload["summary"]["n_stills"], 0)
+        self.assertEqual(payload["summary"]["max_screen_s"], 60.0)
+
+    def test_uniform_mode_recovers_timeline(self):
+        payload = self.build(mode="uniform")
+        summary = payload["summary"]
+        self.assertEqual(summary["n_screens"], 30)
+        self.assertAlmostEqual(summary["mean_screen_s"], 2.0, places=1)
+        self.assertLessEqual(summary["max_screen_s"], 2.01)
+        segments = payload["segments"]
+        self.assertTrue(all("events_in_segment" in s for s in segments))
+        self.assertEqual(sum(len(s["events_in_segment"]) for s in segments), 78)
+
+    def test_event_mode_no_overflow_with_single_cluster(self):
+        payload = self.build(mode="event")
+        self.assertEqual(payload["mode"], "event")
+        self.assertEqual(payload["summary"]["n_screens"], 1)
 
 
 if __name__ == "__main__":
