@@ -571,7 +571,7 @@ def _final_report(out_dir: Path, tier: str, branch: str, screen_mode: str,
         if screen_mode == "ocr":
             ai_next.append("读 transcript.screen.*（组装器已合并同文屏、标注可读度）按 §3 做 01-画面文案稿、02-内容分析")
         else:
-            ai_next.append("逐屏读 evidence/keyframes/screen_*.jpg 按 §2.1 b4 成稿 transcript.screen.srt/.json（可读度三档、同文屏合并、不可读不猜写）")
+            ai_next.append("逐屏读 evidence/keyframes/screen_*.jpg 按 §2.1 b4 成稿 transcript.screen.json（可读度三档、同文屏合并、不可读不猜写），SRT 用 screen_srt.py 渲染")
             ai_next.append("成稿后按 §3 做 01-画面文案稿、02-内容分析")
         ai_next.append(
             "分段统计（stats 的 n_events/n_screens/mean_screen_s 等）与 overview 目检矛盾时 "
