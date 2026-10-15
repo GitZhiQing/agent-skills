@@ -51,27 +51,40 @@ def grab(
     zoom: int,
     flags: str,
 ) -> dict:
-    cmd = ["ffmpeg", "-hide_banner", "-nostats", "-ss", f"{t:.3f}", "-i", str(input_path)]
-    if crop:
-        w, h, x, y = crop
-        cmd += [
-            "-frames:v", "1",
-            "-vf", f"crop={w}:{h}:{x}:{y},scale=iw*{zoom}:ih*{zoom}:flags={flags}",
-            "-y", str(target),
-        ]
-        kind = "crop"
-    else:
-        cmd += ["-frames:v", "1", "-q:v", "2", "-y", str(target)]
-        kind = "keyframe"
-    run(cmd)
-    return {
-        "type": kind,
-        "t": t,
-        "file": str(target),
-        "crop": "x".join(map(str, crop[:2])) + "+" + "+".join(map(str, crop[2:])) if crop else None,
-        "zoom": zoom if crop else None,
-        "flags": flags if crop else None,
-    }
+    # mjpeg 拒绝有限色域 YUV（ffmpeg 8+ 需要 strict unofficial）；t 越过最后一帧时
+    # input seek 取不到帧，向前回退 0.2s 重试一次。
+    last_err: Exception | None = None
+    for attempt, t_eff in enumerate((t, max(0.0, round(t - 0.2, 3)))):
+        cmd = ["ffmpeg", "-hide_banner", "-nostats", "-ss", f"{t_eff:.3f}", "-i", str(input_path)]
+        if crop:
+            w, h, x, y = crop
+            cmd += [
+                "-frames:v", "1",
+                "-vf", f"crop={w}:{h}:{x}:{y},scale=iw*{zoom}:ih*{zoom}:flags={flags}",
+                "-strict", "unofficial",
+                "-y", str(target),
+            ]
+            kind = "crop"
+        else:
+            cmd += ["-frames:v", "1", "-q:v", "2", "-strict", "unofficial", "-y", str(target)]
+            kind = "keyframe"
+        try:
+            run(cmd)
+            if target.exists():
+                record = {
+                    "type": kind,
+                    "t": t,
+                    "file": str(target),
+                    "crop": "x".join(map(str, crop[:2])) + "+" + "+".join(map(str, crop[2:])) if crop else None,
+                    "zoom": zoom if crop else None,
+                    "flags": flags if crop else None,
+                }
+                if attempt:
+                    record["t_effective"] = t_eff
+                return record
+        except Exception as exc:
+            last_err = exc
+    raise last_err or RuntimeError(f"no frame produced at t={t} (past last frame?)")
 
 
 def main(argv: list[str] | None = None) -> int:
