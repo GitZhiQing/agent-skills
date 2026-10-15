@@ -1,0 +1,13 @@
+{
+  "id": "L-003",
+  "created": "2026-10-16",
+  "scope": "general",
+  "type": "env_quirk",
+  "trigger": "grab_frames/ffmpeg 报 Non full-range YUV 或 mjpeg 编码器错误",
+  "finding": "新版 ffmpeg（8+）mjpeg 编码器默认拒绝有限色域 YUV 输入",
+  "action": "确认 grab_frames.py 已含 -strict unofficial（已毕业进代码，commit 9209782）；技能被拷贝到旧 checkout 时先跑 doctor 抽一帧自检",
+  "evidence": "BV19WJy6PEkb 复盘（2026-10-15）；修复 commit 9209782",
+  "status": "graduated",
+  "superseded_by": null,
+  "used": 0
+}

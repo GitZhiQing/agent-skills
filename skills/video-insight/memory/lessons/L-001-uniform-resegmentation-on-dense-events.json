@@ -1,0 +1,13 @@
+{
+  "id": "L-001",
+  "created": "2026-10-16",
+  "scope": "general",
+  "type": "data_pattern",
+  "trigger": "screen_segments summary 出现 stills: 0 且事件密集，或分段 n_screens 明显少于 overview 拼版目检屏数",
+  "finding": "微动画背景（粒子/光效/镜头缓动）让帧差永不落回静止阈值，事件全并成一簇，event 锚点分段塌缩成极少数屏",
+  "action": "screen_segments --mode uniform 重分段（或调 --min-screen-gap），与 overview 拼版核对屏数后再读图",
+  "evidence": "BV19WJy6PEkb 复盘（2026-10-15）：78 事件/0 静止塌缩成 1 屏；合成 fixture tests/fixtures/changes_micro_anim.json",
+  "status": "active",
+  "superseded_by": null,
+  "used": 0
+}
