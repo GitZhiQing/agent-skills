@@ -6,8 +6,14 @@ grabs — "looked right in the mosaic" is not evidence.
 
 Usage:
     python grab_frames.py <input> --at "5.0,10.5" [--output-dir DIR] [--label NAME]
+    python grab_frames.py <input> --range "4.0:5.3" --step 0.5
+        [--output-dir DIR]                  even-step scan window (inclusive end),
+                                            expands to the equivalent --at list
     python grab_frames.py <input> --at "20.5" --crop 720x80+0+930 --zoom 6
         [--flags neighbor|lanczos] [--output-dir DIR]
+
+--at and --range are mutually exclusive; exactly one is required. A scan
+window should stay narrow — frame count is (T2-T1)/step + 1 ffmpeg calls.
 
 Outputs:
     evidence/keyframes/<label>_<t>s.jpg    full-resolution frame (default)
@@ -40,6 +46,30 @@ def parse_crop(spec: str) -> tuple[int, int, int, int]:
     if not match:
         raise ValueError(f"crop must look like 720x120+0+915, got: {spec}")
     return tuple(int(g) for g in match.groups())  # type: ignore[return-value]
+
+
+def parse_range(spec: str) -> tuple[float, float]:
+    parts = spec.split(":")
+    if len(parts) != 2:
+        raise ValueError(f"range must look like 4.0:5.3, got: {spec}")
+    return float(parts[0]), float(parts[1])
+
+
+def expand_range(t1: float, t2: float, step: float) -> list[float]:
+    """Expand an even-step scan window into explicit timestamps (end inclusive)."""
+    if step <= 0:
+        raise ValueError(f"step must be > 0, got: {step}")
+    if t2 < t1:
+        raise ValueError(f"range end before start: {t1}:{t2}")
+    times: list[float] = []
+    i = 0
+    while True:
+        t = round(t1 + i * step, 3)
+        if t > t2 + 1e-9:
+            break
+        times.append(t)
+        i += 1
+    return times
 
 
 def grab(
@@ -90,8 +120,13 @@ def grab(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("input")
-    parser.add_argument("--at", required=True,
+    parser.add_argument("--at", default=None,
                         help="Comma-separated timestamps in seconds, e.g. \"5.0,10.5,20.37\"")
+    parser.add_argument("--range", dest="range_spec", default=None,
+                        help="Even-step scan window T1:T2 (end inclusive); expands to the "
+                             "equivalent --at list. Keep the window narrow.")
+    parser.add_argument("--step", type=float, default=0.5,
+                        help="Scan step for --range in seconds (default 0.5)")
     parser.add_argument("--crop", default=None, help="Region crop WxH+X+Y; switches to crop mode")
     parser.add_argument("--zoom", type=int, default=4, help="Crop upscale factor (default 4; 4-8 recommended)")
     parser.add_argument("--flags", choices=("neighbor", "lanczos"), default="neighbor",
@@ -99,6 +134,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--label", default=None, help="Filename prefix (default: input slug)")
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args(argv)
+
+    if bool(args.at) == bool(args.range_spec):
+        parser.error("exactly one of --at / --range is required")
 
     input_path = Path(args.input).expanduser().resolve()
     if not input_path.exists():
@@ -118,9 +156,13 @@ def main(argv: list[str] | None = None) -> int:
     target_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        times = [float(x) for x in args.at.split(",") if x.strip()]
-    except ValueError:
-        print(json.dumps({"error": f"bad --at list: {args.at}"}))
+        if args.range_spec:
+            t1, t2 = parse_range(args.range_spec)
+            times = expand_range(t1, t2, args.step)
+        else:
+            times = [float(x) for x in args.at.split(",") if x.strip()]
+    except ValueError as exc:
+        print(json.dumps({"error": f"bad time spec: {exc}"}))
         return 1
 
     records = []
