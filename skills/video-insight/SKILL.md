@@ -9,7 +9,7 @@ description: >-
 license: MIT
 compatibility: 需要 Python 3.9+ 与 ffmpeg/ffprobe；B站链接下载需 yt-dlp（或 uvx）；转写内置火山引擎 Seed ASR 托管 API（纯标准库直连），设 VOLC_BIGMODEL_API_KEY 为环境变量或复制 .env.example 为 .env（无口播分支 / 已有转写稿 / L2 不需要）；OCR 回退（无读图能力时）设 PADDLEOCR_ACCESS_TOKEN 接官方托管 API，或本地安装 paddleocr
 metadata:
-  version: 0.6.0
+  version: 0.7.0
   category: media
 ---
 
@@ -23,7 +23,7 @@ metadata:
 - **交互模式**：请求来自人类用户的会话消息，且用户未明说「别问 / 直接跑 / 不用确认」→ 必须提问并等回应。**禁止以「用户无法实时回答」为由跳过提问**；判定不明时一律按交互模式处理——宁可多问一轮，不替用户做预算决策。
 - **无人值守**：子代理任务、批处理脚本、用户明确免问 → 不提问，声明式执行（见⑤）。
 
-**② doctor 前置**：环境事实并入确认门，让选项自带可行性——缺 `VOLC_BIGMODEL_API_KEY` 时 L1 选项标注「需先配 Key（可现场引导配置）/ 或走已有转写稿」；ffmpeg/ffprobe 为 missing 时诚实终止，不进确认门。
+**② doctor 前置**：环境事实并入确认门，让选项自带可行性——缺 `VOLC_BIGMODEL_API_KEY` 时 L1 选项标注「需先配 Key（可现场引导配置）/ 或走已有转写稿」；ffmpeg/ffprobe 为 missing 时诚实终止，不进确认门。doctor 之后顺手检索经验层：按输入平台/形态关键词 `grep -i` 本技能 `memory/INDEX.md` 与 `memory/lessons/*.json`，命中条目并入环境事实句（「历史教训 N 条：<finding> → <action>」），未命中一行带过——不占额外轮次。
 
 **③ 确认门（单轮合并呈现，以等待用户回应结束）**，一次回复包含：
 1. 环境事实一句话（doctor 结论：就绪 / 缺什么、怎么补）；
@@ -75,7 +75,9 @@ metadata:
 
 **分工边界**：pipeline 只做机械采集；确认门（§0）、读图成稿（§2.1 frames 路径 b4）、L1/L2 内容分析（§3/§4）、定帧时刻与取色区域等视觉决策仍由模型做。**确认门前禁止调用 pipeline**（它属于分析命令，doctor 是门前唯一例外）。
 
-**单步命令（仅排查与补采）**：修复失败步骤、或模型决策类的定点采集才单步调用——`grab_frames.py --at "t1,t2" [--crop WxH+X+Y --zoom 6]`（定帧/放大）、`palette.py --at T --crop WxH+X+Y`（取色）、`audio_probe.py [--range 起:止]`（补音频段）、`extract_frames.py [--strip-crop ...]`（非默认字幕带布局）、`screen_ocr.py --segments ...`（重跑 OCR）、`doctor.py --workdir <目录>`（复检环境）。单步产物照常记入 manifest。
+**单步命令（仅排查与补采）**：修复失败步骤、或模型决策类的定点采集才单步调用——`grab_frames.py --at "t1,t2" / --range "T1:T2" --step 0.5`（定帧/放大/等步扫窗补采）、`palette.py --at T --crop WxH+X+Y`（取色）、`audio_probe.py [--range 起:止]`（补音频段）、`extract_frames.py [--strip-crop ...]`（非默认字幕带布局）、`screen_ocr.py --segments ...`（重跑 OCR）、`screen_srt.py transcript.screen.json`（成稿 SRT 机械渲染）、`doctor.py --workdir <目录>`（复检环境）。单步产物照常记入 manifest。
+
+**失败先检索再诊断（硬顺序）**：任一步骤报错，先拿报错签名 `grep -i` 本技能 `memory/lessons/`（trigger 字段），命中即按条目 action 行动，未命中才从头诊断。数据形态异常同理：统计反直觉、机械结论与目检矛盾时，先按形态关键词查 memory 再动手。
 
 **输入识别**：B站链接（bilibili.com / b23.tv）pipeline 自动经 fetch.py 下载（实测可用）；抖音 / 小红书 / 快手 / 视频号**不支持**（实测下载路径不可用或文档不可靠），fetch.py 会拒绝并给出原因，此时请用户手动下载后改用本地文件；音频直链交给 pipeline（转写段处理）；已有转写稿见上。
 **领域热词**：从内容判断 finance / education / tech；金融术语漏了热词必错（"筹码峰""诱多"零错误的唯一原因就是热词）。判断不了就并入 §0 确认门同轮问一句，或 `--domain none`。
@@ -94,11 +96,12 @@ pipeline 自动完成：b1 粗筛（0.5fps overview 拼版）→ b2 时间轴（
 | --- | --- | --- |
 | b0 告知门 | 模型（事后告知） | 见下 |
 | b1 目检纠偏 | 模型（事后抽查） | 见下 |
-| b4 成稿 | frames：模型逐屏读帧图；ocr：pipeline 已组装 | transcript.screen.srt/.json |
+| b4 成稿 | frames：模型逐屏读帧图写成 transcript.screen.json，SRT 交给 `screen_srt.py` 渲染；ocr：pipeline 已组装 | transcript.screen.srt/.json |
 | b5 分析 | 模型，读 transcript.screen.* 按 §3 | analysis/01、02 |
 
 **b0 告知门（告知即走，矛盾才停）**：看到 `branch: no_speech` 后向用户告知「检测为无口播视频（证据：<reason>），文案在画面上，已改用画面文案提取，成本预估 60–150 万 token」后**继续，不等许可**（客观判定无替代路径——文案只能来自画面，问许可是过度门禁；manifest `declaration` 块的 `no_speech_switch` 已由 pipeline 记录，无人值守同样告知内容写入报告头部）。**矛盾证据才是硬停点**：粗筛显示说话头/采访嫌疑、或 `suspect_no_speech: true` → 停下呈报矛盾证据，等用户定夺（检查音频质量 / 换转写配置 / 仍走画面分支）。
 **b1 事后目检纠偏（0.5.0 起时点后移：原为切换前目测，现为采集后抽查）**：读 evidence/overview/ 拼版确认文字卡形态、文案区域（居中/底部/多区）、估屏数——若显示画面其实是说话头/采访（ASR 可能漏检），**不硬切**，按矛盾证据停下呈报等用户定夺。pipeline 直通意味着异常场景下 b2/b3 的采集成本已花掉，但远低于省下的模型编排轮次，属可接受代价。
+**统计与目检矛盾 → 模型决策重分段（0.7.0）**：stats 里的分段统计事实（n_events / n_stills / n_screens / mean_screen_s 等）与 overview 目检屏数对不上时，不要硬读图——决策重分段：连续动画吃掉静止期（典型：stills 为 0 且事件密集）→ `screen_segments --mode uniform`；锚点超限被拒（`--mode event` 会 exit 2 报计数，不静默降级）→ 调 `--min-screen-gap` 或升 `--max-screens`。uniform 段的 `events_in_segment` 是补抓候选锚点：疑有整屏被采样跳过时 `grab_frames --range` 定点补齐，再拼版复核。
 **精度与合并**：屏起止来自帧差（实测）；uniform 兜底模式（连续动画、无静止期）的时间一律写「约」（报告 notes 会标注）；ocr 组装稿已合并同文相邻屏（打字机拆屏，`merged_from` 可回溯）并按置信度三档标注可读度（清晰 ≥0.90 / 低置信 0.50–0.90 / 不可读 <0.50，阈值待实测校准）；frames 路径成稿时可读度用模型读图三档（清晰 / 放大后可读 / 不可读），同文屏合并由模型做，读不清的字如实标「不可读」，禁止猜写。
 
 ### 2.2 多视频任务（0.6.0）
@@ -146,6 +149,7 @@ L2 基础证据（overview 拼版、字幕带、帧差、音频）已由 `pipeli
 - 画面文案（§2.1 产物）的表述映射：屏起止时间=帧差/定帧（实测档）；文案内容=模型读图（清晰/放大后可读/不可读三档标注）或 OCR 组装稿的置信度三档（清晰/低置信/不可读，阈值见 §2.1）；uniform 兜底模式的时间一律「约」；读不清的字如实标「不可读」，禁止猜写。
 - 交付形态没对齐、分析深度没确认，都不动手（无人值守按 §0 声明式执行）；交互会话中**禁止以「用户无法实时回答」为由跳过档位提问**（§0 交互模式判定）。客观结论被用户质疑时，给一次带数据的说明，然后把表述改写成对两种可能都成立，继续推进——赢了检测输了进度。
 - **交付后回路**（标准出口，一句话，不占轮）：报告末尾附「如需画面层结论可升级 L2（附成本）；存疑主张可点名核查；结论有质疑按证据纪律 R4 处理」。
+- **收尾写回（经验闭环，0.7.0 起）**：交付前自检三问——有无环境坑？有无数据形态新知？有无流程摩擦？有则按 schema 写一条 `memory/lessons/NNN-slug.json` 并在 `memory/INDEX.md` 加一行（写回时机：修复失败步骤之后、统计与目检矛盾靠手工补齐之后、收尾三问）；条目实际改变动作时 `used` +1。反规范：单视频内容结论、未验证猜测、用户隐私不写回。同一经验 `used ≥ 3` 或 action 多次验证稳定 → 毕业：env_quirk 修代码、data_pattern 收敛成纪律进证据纪律加一行、workflow 并进 SKILL.md 对应步骤，条目标 `graduated` 并指向去处。
 - 追求"结论可信、可回溯、可重复"，不追求"分析得更多"。
 
 ## 6. 边界
@@ -160,3 +164,4 @@ L2 基础证据（overview 拼版、字幕带、帧差、音频）已由 `pipeli
 - `references/输出模板.md` — 报告固定骨架（L1/L2），保证多次运行产物一致
 - `references/证据纪律.md` — 三档表述 + 硬规则 + 交付前自检清单
 - `references/画面分析手册.md` — 画面元素检查清单、layout.json 口径、BGM 三层判断法
+- `memory/INDEX.md` — 经验层检索入口（判断类经验的唯一案例载体；SKILL.md 只留机制不留案例）
