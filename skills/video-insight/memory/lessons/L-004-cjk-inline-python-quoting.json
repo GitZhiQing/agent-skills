@@ -1,0 +1,13 @@
+{
+  "id": "L-004",
+  "created": "2026-10-16",
+  "scope": "general",
+  "type": "workflow",
+  "trigger": "python -c 内联含中文引号（“”「」）或多字节字符串的脚本在 Git Bash 报 SyntaxError 或产出乱码",
+  "finding": "Git Bash 的 shell 转义在传参时破坏 CJK 引号与多字节字符",
+  "action": "一律写临时 .py 文件执行；transcript.screen.json → SRT 一类机械渲染用 screen_srt.py，不再手搓",
+  "evidence": "BV19WJy6PEkb 复盘（2026-10-15）：成稿 SRT 手搓被转义搞坏后退回临时脚本",
+  "status": "active",
+  "superseded_by": null,
+  "used": 0
+}

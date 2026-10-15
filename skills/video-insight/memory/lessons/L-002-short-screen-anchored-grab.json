@@ -1,0 +1,13 @@
+{
+  "id": "L-002",
+  "created": "2026-10-16",
+  "scope": "general",
+  "type": "data_pattern",
+  "trigger": "uniform 采样后拼版可见屏数 > n_screens，或 dwell_s 出现异常长的段",
+  "finding": "短于采样间隔的屏可能整屏落在两个采样点之间被跳过",
+  "action": "读段上 events_in_segment 候选锚点，grab_frames --range T1:T2 --step 0.5 定点补齐，再拼版复核",
+  "evidence": "BV19WJy6PEkb 复盘（2026-10-15）：1.3s 短屏漏检，手工 3 轮 11 帧才定位，--range 一步可达",
+  "status": "active",
+  "superseded_by": null,
+  "used": 0
+}
