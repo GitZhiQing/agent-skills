@@ -14,6 +14,13 @@ bash skills/ddgs-web-access/bin/ddgs-web-search "smoke test" -m 1
 bash skills/ddgs-web-access/bin/ddgs-web-fetch "https://example.com"
 ```
 
+- md2pdf 需要 uv >= 0.5 与系统 Edge（Playwright 复用打印，零浏览器下载），首次使用先联网 fetch 一次（字体切片 + Paged.js + KaTeX，~15MB）：
+
+```bash
+bash skills/md2pdf/bin/md2pdf --help    # CLI 可用性冒烟（依赖由 uv 首次自动安装）
+bash skills/md2pdf/bin/md2pdf fetch     # 首次：下载运行资源
+```
+
 - 仓库级维护脚本（纯 bash，零依赖）：
 
 ```bash
@@ -24,6 +31,7 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 
 - 改动 ddgs-web-access 代码后按 `skills/ddgs-web-access/docs/测试集.md` 回归；搜索/抓取调用间隔 ≥2 秒（ddgs 多引擎聚合，过频会限流）。
 - 改动 video-insight 代码后按 `skills/video-insight/docs/测试集.md` 回归：`python -m unittest discover -s skills/video-insight/tests`（163 条，含合成视频、无口播文字卡与 pipeline 幂等/组装器/批量/事件锚点并入、分段三模式与 SRT 渲染测试，纯标准库无第三方依赖；真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过）。
+- 改动 md2pdf 代码后按 `skills/md2pdf/docs/测试集.md` 回归（核心基线 S-3：canary 双版式转换质量门全绿；fetch/preview/convert 需网络与 Edge）。
 - 等价形式：`uv run --project skills/ddgs-web-access <命令>`；Windows 用 `bin/*.cmd`。
 
 ## 技术栈
@@ -34,6 +42,7 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 - zero-coding：纯 SKILL.md 提示词（从零启动个人项目：按会话容量分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片；最小文档集 SPEC/DECISIONS/AGENTS 三个，事实自查、决策问人、说不清的做一次性原型，方案确认尽量委托平台 Plan Mode 与子 Agent，收尾对照走通路径收敛核验后删 SPEC），0.4.0。
 - video-insight：拉片级视频分析（L1 文案档 / L2 画面档，开工确认门——交互模式分级判定 + doctor 前置单轮确认 + 确认/调整/显式委托三回应 + L2 拼版检查点，实测/约/推断三档表述；pipeline.py 一键机械采集：幂等推进 + no_speech 自动切无口播分支（帧差逐屏 + 读图/OCR 回退，ocr 路径组装器自动成稿，screen_srt.py 机械渲染 SRT）+ 收尾 branch/stats/ai_next 报告，0.6.0 起支持多视频批量（--batch 清单、批内 slug 去重、失败隔离、批报告落盘、可选 --jobs 并发），0.7.0 起工具层能力开关（screen_segments --mode 三态/统计事实字段/events_in_segment 锚点、grab_frames --range 扫窗、--include-event-anchors）+ memory 经验闭环（失败先检索、收尾写回三问、used≥3 毕业进代码/文档），模型专注确认门、读图、内容分析与重分段决策），Python 脚本纯标准库，外部依赖 ffmpeg/ffprobe（B站下载另需 yt-dlp），转写内置火山 Seed ASR 托管 API 客户端（VOLC_BIGMODEL_API_KEY，env/.env 双通道），OCR 回退可选（PADDLEOCR_ACCESS_TOKEN 接官方托管 API，纯标准库直连），0.7.0。
 - session-handoff：纯 SKILL.md 提示词（会话收尾把接手所需上下文打包成一段可粘贴的交接提示词：7 节骨架 + AGENTS.md 未覆盖项条件补充，项目基本面不重复搬运；只输出一个待粘贴代码块，一般 400–1200 字），0.1.0。
+- md2pdf：Markdown → 排版精良 PDF（双版式 report/article × 四主题 kimi/deepseek/gemini/anthropic，色值取自 AI 厂商品牌调研；Playwright 复用系统 Edge 打印 + Paged.js 分页 + KaTeX 公式；preview 四主题对比图选主题的 Human-in-the-loop 流；任务文件夹 source.md + config.yaml + pdf/双版式可复现，convert 内置质量门断言空白页/孤悬标题/字体集/目录页码；来源支持本地/远程直链/网页 trafilatura 抽正文/会话内容落盘），uv 托管 Python 包（src 布局）+ `bin/` 位置无关启动器，首次使用需 fetch 下载字体与运行资源（~15MB），0.1.0（自 notes 仓库迁入，设计史见 docs/DECISIONS.md D1–D15）。
 - scripts/：bash + coreutils 维护脚本套件，公共函数在 `scripts/lib.sh`；退出码统一 0-1-2，状态走 stdout、错误走 stderr。
 
 ## 目录与约定

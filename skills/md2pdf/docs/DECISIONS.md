@@ -1,0 +1,17 @@
+# DECISIONS
+
+- D1 · 2026-10-16 · 打印引擎统一为 Playwright，优先 `channel="msedge"` 复用系统 Edge，无可用浏览器时下载自带 Chromium 兜底 · 为什么：系统浏览器 headless CLI（`--print-to-pdf`）无法与 Paged.js 的异步分页握手（budget 60s 仍出空页），Playwright 可显式等待分页完成信号（页数稳定 600ms + 字体就绪）
+- D2 · 2026-10-16 · 布局变体用「构建时物理删除节点」实现，不用 display:none · 为什么：隐藏的封面/目录在 Paged.js 下仍触发 named-page 切换与 break-after，产生整页空白（report 版 p1 空页、article 版两张空页均由此而来）；删除节点后 Paged.js 分页才正确
+- D3 · 2026-10-16 · 章首保护用「h1+h2+首段包 .keep-head + break-inside: avoid」，不用 break-after: avoid · 为什么：Paged.js 只有 `break-inside: avoid` 的实现（源码仅挂 breakInsideAvoidParentNode），`break-after: avoid` 不生效，会出章标题孤悬页底
+- D4 · 2026-10-16 · 列表标记用 CSS 绘制实心圆点（墨色 55% 透明、直径 1.3mm、悬挂缩进），不用 em dash（—）或方块（■）· 为什么：em dash 前缀是「AI 生成文档」的典型观感特征，方块+品牌色则过装饰；圆点中性且与正文色阶统一
+- D5 · 2026-10-16 · 色彩体系：主题色只作用于标题/三线/hairline/编号点缀，正文统一近黑墨；涨跌红绿语义色独立于主题固定（#B5483C / #2E7D5B）；代码高亮＝品牌色关键字 + 灰阶字符串/注释 · 为什么：单色主基调 + 少量语义色是 AI 头部厂商官网的共同做法（OpenAI/Anthropic/DeepSeek 均如此），彩色泛滥显廉价
+- D6 · 2026-10-16 · 四套主题预设（kimi 双蓝 #002F5B/#007CFF 默认、deepseek #4D6BFE/#1A1615、gemini #4285F4/#34A853、anthropic 墨 #1A1A1A/陶土 #CC785C/象牙纸底 #F4F3EE），色值全部取自各家官方品牌手册或官网设计系统分析 · 为什么：用户要求高级蓝绿系且参考 AI 头部厂商，调研后确认各家真实色值可直接复用，避免臆造
+- D7 · 2026-10-16 · 双布局：article（纯正文，无封面/目录/页眉/页脚/页码）与 report（封面整页+目录+页眉页脚页码），正文同为连续文档流（章节不强制分页） · 为什么：用户明确要「纯内容」与「完整报告」两种交付形态；连续流让内容连贯，章节靠 hairline+间距区分
+- D8 · 2026-10-16 · 已知项（待修）：Chromium 打印可变字体（Variable woff2）时中文字形退化为 Type3 嵌入；静态字重切片经实验验证可产出标准 Type0 嵌入 · 为什么：Type3 对部分 PDF 阅读器与印刷流程兼容性较差；修复方向为改用静态字重切片（400/600/700）并保留打印前字体断言，留待切片 2/3 实施
+- D9 · 2026-10-16 · 验证前移：管线固定为 build → print → check（程序断言）→ 视觉验收；check.py 断言空白页/孤悬标题/孤字/字体集（须含 Noto、禁 Type3 与系统 CJK 字体）/目录页码对齐，FAIL 即止 · 为什么：本次 8 类故障中字体三连（路径/子集/可变字体）全部是「验证缺失」型，视觉验收在 110dpi 下无法区分 Noto 与系统宋体；程序断言便宜且决定性强，视觉验收只保留美感判断
+- D10 · 2026-10-16 · 字体切静态字重（落地 D8）：fontsource 静态包 serif 400/700 + sans 400/600/700，下载清单从各档 CSS 解析（单一事实源），合并 CSS 统一 url(files/) 前缀；mono 栈补 Noto Sans SC 兜代码块中文注释 · 为什么：可变字体被 Chromium 打印降级为 Type3；静态切片子集嵌入后 PDF 从 ~1.4MB 降至 ~0.4MB 且文本层字体正常
+- D11 · 2026-10-16 · 金丝雀样张 canary.html 常驻 prototype/：覆盖三级标题/双列表/跨页长表/公式/代码（含中文注释）/引用/语义色，任何管线改动先过 canary 双布局 + check 再动真实文档 · 为什么：本轮 check 的两处 F2 误报（封面 meta 行、跨页表格行）只有金丝雀这种全元素样本才能暴露；固化后回归成本一次构建+打印+断言（<1 分钟）
+- D12 · 2026-10-16 · 标题层级归一：全文唯一 h1 视为文档标题（进封面/题头，从正文移除），h2 层升格为章节（h3/h4 依序上移）；自带编号（一、/（一）/1. 等）的章节不加自动章号 · 为什么：真实业务文档（AI 落地实施方案类）普遍单 h1 + 中文序号 h2 结构，直接转换会出现「文档标题占一章」「01 一、双重编号」两类错位
+- D13 · 2026-10-16 · 正式管线落位 .agents/skills/md2pdf/（uv 项目，源码即安装目录）：convert_md（markdown-it-py + Pygments class 高亮）+ builder（base.css/themes 数据文件/Jinja2 模板，版式模板层物化）+ printer（KaTeX 先渲染后分页的时序）+ checker + preview（四主题双行样本拼图）+ cli（fetch/preview/convert/check）· 为什么：用户工作流拍板——三来源、预览选主题、任务文件夹（source.md + config.yaml + pdf/ 双版式）可复现
+- D14 · 2026-10-16 · 原型冻结：prototype/ 只留 demo-finreport.html（样式母本，base.css 的来源参照）、canary.html、ai-plan-source.md（真实样例输入）与 out/ 下两个交付任务文件夹；原型脚本（build_standalone/print/check/fetch_assets/debug_fonts）与 assets 已删，职责全部由正式管线接管 · 为什么：两份实现必然漂移（skill 版 checker 白名单已领先原型版）；金丝雀的管线形态迁移为 skill examples/canary.md（md 输入，走正式 CLI）
+- D15 · 2026-10-16 · 迁移至 agent-skills 仓库（`skills/md2pdf/`，首版 0.1.0）：实现（src/templates/themes/examples/pyproject）原样并入，设计文档（SPEC/DECISIONS）与新建测试集移入 `docs/`，新增 `bin/md2pdf(.cmd)` 位置无关启动器（uv run --project，适配 junction 分发），SKILL.md 调用方式由「cd 到 .agents/skills/md2pdf」改为位置无关形式并补三段式 frontmatter；notes 仓库旧位置（ai/项目/md2pdf 与 .agents/skills/md2pdf）冻结保留不再演进 · 为什么：个人 skills 集中单一仓库统一分发（junction 到各 agent、lint/doctor 巡检），避免两处实现漂移；交付产物与原型历史留在笔记仓库原位
