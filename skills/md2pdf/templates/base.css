@@ -1,0 +1,169 @@
+/* ================= 基础变量（字体与灰阶；主题色见内联主题组） ================= */
+:root {
+  --ink-rgb: 31, 30, 27;
+  --ink: rgb(var(--ink-rgb));
+  --gray: rgba(var(--ink-rgb), 0.62);
+  --gray-light: rgba(var(--ink-rgb), 0.42);
+  --line: rgba(var(--ink-rgb), 0.16);
+  --line-strong: rgba(var(--ink-rgb), 0.32);
+  --bg-soft: rgba(var(--ink-rgb), 0.028);
+  --bg-code: rgba(var(--ink-rgb), 0.045);
+  --red: #b5483c;
+  --green: #2e7d5b;
+  --font-serif: Georgia, "Noto Serif SC", "SimSun", serif;
+  --font-sans: "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-mono: Consolas, "Cascadia Mono", "Courier New", "Noto Sans SC", monospace;
+  --font-kai: KaiTi, "楷体", "Noto Serif SC", serif;
+}
+
+/* —— 四套主题预设（色值均来自各家官方设计系统的真实调研） —— */
+body.theme-deepseek  { --brand: #4D6BFE; --brand-2: #1A1615; --paper: #ffffff; }  /* DeepSeek 官网 */
+body.theme-gemini    { --brand: #4285F4; --brand-2: #34A853; --paper: #ffffff; }  /* Google 官方四主色 */
+body.theme-anthropic { --brand: #1A1A1A; --brand-2: #CC785C; --paper: #F4F3EE; }  /* Anthropic 官网色板 */
+
+/* ================= 页面（report/article 共用边距；页眉页脚由布局层控制显隐） ================= */
+@page {
+  size: A4;
+  margin: 20mm 16mm 18mm 16mm;
+  @top-left  { content: string(chapter); font-family: "Segoe UI", "Noto Sans SC", sans-serif; font-size: 7.5pt; color: rgba(31,30,27,0.42); letter-spacing: 0.08em; margin-bottom: 4mm; }
+  @top-right { content: "__HEADER_LABEL__"; font-family: "Segoe UI", "Noto Sans SC", sans-serif; font-size: 7.5pt; color: rgba(31,30,27,0.42); letter-spacing: 0.08em; margin-bottom: 4mm; }
+  @bottom-center { content: "— " counter(page) " —"; font-family: "Segoe UI", "Noto Sans SC", sans-serif; font-size: 8pt; color: rgba(31,30,27,0.62); margin-top: 4mm; }
+}
+@page cover { margin: 0; @top-left { content: none; } @top-right { content: none; } @bottom-center { content: none; } }
+
+/* layout-article：隐藏页眉页脚（Paged.js margin box 是真实 DOM；
+   封面/目录/doc-title 的取舍由构建时物理删节点完成，display:none 会与
+   Paged.js 的 named-page 切换和 break-after 冲突产生空白页） */
+body.layout-article .pagedjs_margin-top-left,
+body.layout-article .pagedjs_margin-top-right,
+body.layout-article .pagedjs_margin-bottom-center { display: none; }
+
+/* 章首保护：标题块与首段同页（Paged.js 不支持 break-after: avoid，
+   靠 build 阶段包 .keep-head + break-inside: avoid 实现） */
+.keep-head { break-inside: avoid; }
+
+/* ================= 基础 ================= */
+html { font-variant-numeric: tabular-nums; }
+body {
+  font-family: var(--font-serif);
+  font-size: 10pt;
+  line-height: 1.75;
+  color: var(--ink);
+  margin: 0;
+  hyphens: none;
+  background: var(--paper);
+}
+.pagedjs_page { background: var(--paper); }
+p { margin: 0 0 2.2mm; text-align: justify; orphans: 2; widows: 2; }
+h2, h3 { break-after: avoid; }
+strong { font-weight: 700; }
+em { font-style: normal; font-family: var(--font-kai); }
+a { color: inherit; text-decoration: none; }
+
+/* article 版文档题头（Markdown 文档标题的等价物） */
+.doc-title { margin-bottom: 7mm; padding-bottom: 4mm; border-bottom: 0.8pt solid var(--line-strong); }
+.doc-title .dt-kicker { font-family: var(--font-sans); font-size: 8pt; color: var(--brand-2); letter-spacing: 0.2em; margin-bottom: 3mm; }
+.doc-title .dt-title { font-size: 20pt; font-weight: 700; color: var(--brand); line-height: 1.45; margin: 0 0 2.5mm; }
+.doc-title .dt-sub { font-size: 11pt; color: var(--gray); margin-bottom: 3mm; }
+.doc-title .dt-meta { font-family: var(--font-sans); font-size: 8pt; color: var(--gray-light); letter-spacing: 0.08em; }
+
+/* ================= 封面（纯排版式，report 专用） ================= */
+.cover { page: cover; break-after: page; height: 297mm; position: relative; padding: 22mm 20mm; box-sizing: border-box; }
+.cover-brand { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-sans); font-size: 9.5pt; letter-spacing: 0.22em; font-weight: 600; color: var(--ink); padding-bottom: 4mm; border-bottom: 0.8pt solid var(--line-strong); }
+.cover-brand .zh { letter-spacing: 0.5em; }
+.cover-main { padding-top: 48mm; }
+.cover-title { font-size: 26pt; font-weight: 700; color: var(--brand); line-height: 1.45; margin: 0 0 5mm; }
+.cover-sub { font-size: 12.5pt; color: var(--gray); font-weight: 400; margin-bottom: 9mm; }
+.cover-abstract { margin-top: 14mm; font-size: 9pt; color: var(--gray); line-height: 1.9; max-width: 150mm; }
+.cover-meta { position: absolute; bottom: 20mm; left: 20mm; right: 20mm; border-top: 0.5pt solid var(--line); padding-top: 4mm; display: flex; justify-content: space-between; font-family: var(--font-sans); font-size: 8.5pt; color: var(--gray); letter-spacing: 0.1em; }
+
+/* ================= 目录 ================= */
+.toc { break-after: page; }
+.toc h2 { font-size: 15pt; color: var(--brand); margin: 0 0 7mm; padding-bottom: 3mm; border-bottom: 1pt solid var(--brand); }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc li { margin-bottom: 4mm; }
+.toc a { display: flex; align-items: baseline; font-size: 10.5pt; }
+.toc .t-no { font-family: var(--font-sans); color: var(--brand-2); font-size: 9pt; margin-right: 4mm; letter-spacing: 0.05em; }
+.toc .t-title { font-weight: 600; }
+.toc .t-dots { flex: 1; margin: 0 2.5mm; border-bottom: 0.5pt dotted var(--line-strong); transform: translateY(-1mm); }
+.toc .t-page::after { content: target-counter(attr(href), page); font-family: var(--font-sans); color: var(--gray); }
+
+/* ================= 章节（连续文档流，不整页分隔） ================= */
+h1.chapter {
+  string-set: chapter content(text);
+  break-after: avoid;
+  font-size: 15pt; font-weight: 700; color: var(--brand);
+  margin: 11mm 0 5mm; padding-top: 4.5mm; border-top: 0.8pt solid var(--line-strong);
+}
+main > section:first-child h1.chapter, main > h1.chapter:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+h1 .ch-no { font-family: var(--font-sans); font-size: 9.5pt; color: var(--brand-2); letter-spacing: 0.1em; margin-right: 4mm; vertical-align: 2pt; }
+h2 { font-size: 11.5pt; font-weight: 700; color: var(--brand); margin: 6.5mm 0 3mm; }
+h2 .sn { color: var(--brand-2); font-family: var(--font-sans); font-size: 9pt; margin-right: 2.5mm; }
+h3 { font-size: 10.5pt; font-weight: 700; margin: 5mm 0 2mm; }
+
+/* ================= 表格（三线表） ================= */
+table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 3mm 0 4mm; font-family: var(--font-sans); }
+thead th {
+  font-weight: 600; color: var(--brand); text-align: right; padding: 2mm 2.5mm 1.8mm;
+  border-top: 1.2pt solid var(--brand); border-bottom: 0.5pt solid var(--line-strong); white-space: nowrap;
+}
+thead th:first-child, tbody td:first-child { text-align: left; }
+tbody td { padding: 1.8mm 2.5mm; border-bottom: 0.4pt solid var(--line); text-align: right; color: var(--ink); }
+tbody tr:nth-child(even) { background: var(--bg-soft); }
+.tbl-note { font-family: var(--font-sans); font-size: 7.2pt; color: var(--gray-light); margin-top: -2mm; }
+.pos { color: var(--red); } .neg { color: var(--green); }
+
+/* ================= 引用 ================= */
+blockquote { margin: 4mm 0; padding: 1mm 0 1mm 5mm; border-left: 1pt solid var(--line-strong); }
+blockquote p { font-family: var(--font-kai); font-size: 9.5pt; color: var(--gray); margin: 0 0 1.5mm; }
+blockquote .src { font-family: var(--font-sans); font-size: 7.5pt; color: var(--gray-light); letter-spacing: 0.05em; }
+
+/* ================= 公式 ================= */
+.formula { display: flex; align-items: baseline; margin: 4.5mm 0; }
+.formula .math { flex: 1; text-align: center; font-family: "Times New Roman", Georgia, var(--font-serif); font-size: 11.5pt; letter-spacing: 0.02em; }
+.formula .math i { font-style: italic; padding: 0 0.4mm; }
+.formula .math sub, .formula .math sup { font-size: 7.5pt; }
+.math .rm { font-style: normal; padding: 0 1mm; }
+.f-no { font-family: var(--font-sans); font-size: 9pt; color: var(--gray); }
+
+/* ================= 代码（浅底圆角，品牌色关键字） ================= */
+pre.code {
+  font-family: var(--font-mono); font-size: 8.2pt; line-height: 1.62;
+  background: var(--bg-code); border-radius: 1.5mm;
+  padding: 3mm 4mm; margin: 3mm 0 4mm; white-space: pre-wrap; color: rgba(var(--ink-rgb), 0.88);
+}
+/* code 标签的 UA monospace 会打断继承，导致中文注释回落系统字体 */
+pre.code code { font-family: inherit; font-size: inherit; background: none; padding: 0; border-radius: 0; }
+/* 行内代码：显式走 mono 栈（含中文回退），浅底微圆角 */
+:not(pre) > code {
+  font-family: var(--font-mono); font-size: 0.9em;
+  background: var(--bg-code); padding: 0 1mm; border-radius: 0.8mm;
+}
+.kw { color: var(--brand); font-weight: 700; }           /* 关键字：品牌色 */
+.st { color: rgba(var(--ink-rgb), 0.48); }               /* 字符串 */
+.cm { color: rgba(var(--ink-rgb), 0.42); font-style: italic; }  /* 注释 */
+.fn { color: var(--brand-2); }                           /* 函数/内置 */
+.nu { color: rgba(var(--ink-rgb), 0.95); font-weight: 600; }    /* 数字 */
+.fig-cap { font-family: var(--font-sans); font-size: 7.8pt; color: var(--gray); margin: 2mm 0 4mm; }
+.fig-cap b { color: var(--brand); }
+
+/* ================= 列表（悬挂缩进圆点，无名牌标记） ================= */
+ul.points { list-style: none; margin: 2.8mm 0; padding: 0; }
+ul.points li { padding-left: 6mm; position: relative; margin-bottom: 2mm; }
+ul.points li::before {
+  content: ""; position: absolute; left: 1.6mm; top: 2.45mm;
+  width: 1.3mm; height: 1.3mm; border-radius: 50%;
+  background: rgba(var(--ink-rgb), 0.55);
+}
+
+/* ================= 免责 ================= */
+.disclaimer p { font-size: 8.5pt; color: var(--gray); line-height: 1.9; text-align: justify; }
+.disclaimer h2 { font-size: 10.5pt; color: var(--gray); }
+
+/* ================= Pygments 代码高亮 → 主题色映射 ================= */
+.hl .k, .hl .kn, .hl .ow { color: var(--brand); font-weight: 700; }
+.hl .s, .hl .s1, .hl .s2, .hl .sd { color: rgba(var(--ink-rgb), 0.48); }
+.hl .c, .hl .c1, .hl .cm { color: rgba(var(--ink-rgb), 0.42); font-style: italic; }
+.hl .nf, .hl .nc, .hl .nb { color: var(--brand-2); }
+.hl .m, .hl .mi, .hl .mf { color: rgba(var(--ink-rgb), 0.95); font-weight: 600; }
+.hl .o { color: rgba(var(--ink-rgb), 0.7); }

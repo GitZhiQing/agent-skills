@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+assets/fonts/files/
+assets/katex/
+assets/paged.polyfill.js
+uv.lock
+assets/fonts/*.css

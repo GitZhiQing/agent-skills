@@ -4,7 +4,7 @@
     "name": "QING",
     "url": "https://github.com/GitZhiQing"
   },
-  "description": "个人 AI coding agent skills 集合：联网搜索抓取、主题分批提交、深度调研、从零启动项目、视频内容与画面分析、会话交接（遵循 Agent Skills 开放规范）",
+  "description": "个人 AI coding agent skills 集合：联网搜索抓取、主题分批提交、深度调研、从零启动项目、视频内容与画面分析、会话交接、Markdown 转 PDF（遵循 Agent Skills 开放规范）",
   "plugins": [
     {
       "name": "ddgs-web-access",
@@ -105,6 +105,24 @@
         "handoff",
         "session",
         "context"
+      ]
+    },
+    {
+      "name": "md2pdf",
+      "source": "./skills/md2pdf",
+      "skills": [
+        "./"
+      ],
+      "description": "把 Markdown 转成排版精良的 PDF：双版式（报告版/正文版）× 多主题（kimi/deepseek/gemini/anthropic），Playwright+Paged.js 渲染，preview 选主题 + 内置质量门断言",
+      "version": "0.1.0",
+      "author": {
+        "name": "QING"
+      },
+      "keywords": [
+        "pdf",
+        "markdown",
+        "pagedjs",
+        "typography"
       ]
     }
   ]

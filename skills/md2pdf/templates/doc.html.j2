@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{ title }}</title>
+<style>
+{{ base_css }}
+:root {
+{{ theme_vars }}
+}
+{{ font_css }}
+{{ katex_css }}
+</style>
+</head>
+<body class="theme-{{ theme }} layout-{{ layout }}">
+{% if layout == "article" %}
+<header class="doc-title">
+  <div class="dt-kicker">{{ kicker }}</div>
+  <div class="dt-title">{{ title }}</div>
+  {% if subtitle %}<div class="dt-sub">{{ subtitle }}</div>{% endif %}
+  <div class="dt-meta">{{ meta }}</div>
+</header>
+{% else %}
+<section class="cover">
+  <div class="cover-brand"><span class="zh">{{ brand_zh }}</span><span>{{ brand_en }}</span></div>
+  <div class="cover-main">
+    <h1 class="cover-title">{{ cover_title }}</h1>
+    {% if subtitle %}<p class="cover-sub">{{ subtitle }}</p>{% endif %}
+    {% if abstract %}<p class="cover-abstract">{{ abstract }}</p>{% endif %}
+  </div>
+  <div class="cover-meta">
+    <span>{{ meta }}</span>
+    <span>{{ org }}</span>
+  </div>
+</section>
+<nav class="toc">
+  <h2>目 录</h2>
+  <ol>
+  {% for c in chapters %}
+    <li><a href="#{{ c.id }}"><span class="t-no">{{ c.no }}</span><span class="t-title">{{ c.title }}</span><span class="t-dots"></span><span class="t-page" href="#{{ c.id }}"></span></a></li>
+  {% endfor %}
+  </ol>
+</nav>
+{% endif %}
+<main>
+{{ body_html }}
+</main>
+<script>
+window.PagedConfig = { auto: false };
+</script>
+<script>
+{{ katex_js }}
+</script>
+<script>
+{{ katex_auto }}
+</script>
+<script>
+{{ paged_js }}
+</script>
+<script>
+// 先公式后分页：KaTeX 替换改变版面高度，必须在 Paged.js 之前完成（DECISIONS 教训：时序即正确性）
+document.addEventListener("DOMContentLoaded", function () {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false },
+      ],
+      throwOnError: false,
+    });
+  }
+  window.PagedPolyfill.preview();
+});
+</script>
+</body>
+</html>
