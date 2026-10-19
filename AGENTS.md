@@ -38,7 +38,7 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 
 - ddgs-web-access：Python >= 3.10（uv 托管虚拟环境），依赖 ddgs + markdownify，单文件 CLI（`ddgs_web_access.py`）+ `bin/` 位置无关启动器；stdout 结果 / stderr 提示与错误 / 退出码 0-1-2。
 - theme-commit：纯 SKILL.md 提示词（git 按主题分组提交），0.1.1。
-- deep-research：纯 SKILL.md 提示词（先校准再调研：环境检查 → 预检索校准 → 选项式澄清 → 调研目标与计划确认门（低/中/高档位，含源码获取计划）→ 增量登记落盘 research/<YYMMDD>-<主题>/ → REPORT.md + REFERENCES.md 双文件交付；源码调研先 clone 到 sources/ 并固定 commit SHA，再基于本地源码分析、用 [C#:path:line] 引用），0.4.0。
+- deep-research：纯 SKILL.md 提示词（先校准再调研：环境检查（含工作区/输出目录探测）→ 预检索校准 → 选项式澄清 → 调研目标与计划确认门（低/中/高档位，含输出目录候选+推荐与源码获取计划）→ 增量登记落盘所选输出目录下 `<YYMMDD>-<主题>/` → REPORT.md + REFERENCES.md 双文件交付；源码调研先 clone 到 sources/ 并固定 commit SHA，再基于本地源码分析、用 [C#:path:line] 引用），0.5.0。
 - zero-coding：纯 SKILL.md 提示词（从零启动个人项目：按会话容量分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片；最小文档集 SPEC/DECISIONS/AGENTS 三个，事实自查、决策问人、说不清的做一次性原型，方案确认尽量委托平台 Plan Mode 与子 Agent，收尾对照走通路径收敛核验后删 SPEC），0.4.0。
 - video-insight：拉片级视频分析（L1 文案档 / L2 画面档，开工确认门——交互模式分级判定 + doctor 前置单轮确认 + 确认/调整/显式委托三回应 + L2 拼版检查点，实测/约/推断三档表述；pipeline.py 一键机械采集：幂等推进 + no_speech 自动切无口播分支（帧差逐屏 + 读图/OCR 回退，ocr 路径组装器自动成稿，screen_srt.py 机械渲染 SRT）+ 收尾 branch/stats/ai_next 报告；多视频批量（--batch 清单、批内 slug 去重、失败隔离、批报告落盘、可选 --jobs 并发）；工具层能力开关（screen_segments --mode 三态/统计事实字段/events_in_segment 锚点、grab_frames --range 扫窗、--include-event-anchors）+ memory 经验闭环（失败先检索、收尾写回三问、used≥3 毕业进代码/文档），模型专注确认门、读图、内容分析与重分段决策），Python 脚本纯标准库，外部依赖 ffmpeg/ffprobe（B站下载另需 yt-dlp），转写内置火山 Seed ASR 托管 API 客户端（VOLC_BIGMODEL_API_KEY，env/.env 双通道），OCR 回退可选（PADDLEOCR_ACCESS_TOKEN 接官方托管 API，纯标准库直连），0.7.0。
 - session-handoff：纯 SKILL.md 提示词（会话收尾把接手所需上下文打包成一段可粘贴的交接提示词：7 节骨架 + AGENTS.md 未覆盖项条件补充，项目基本面不重复搬运；只输出一个待粘贴代码块，一般 400–1200 字），0.1.0。

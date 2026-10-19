@@ -11,7 +11,7 @@ A collection of [Agent Skills](https://agentskills.io)（SKILL.md 开放格式�
 | -------------------------------------------- | ------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
 | [ddgs-web-access](skills/ddgs-web-access/) | 0.2.2 | Python CLI | 基于[ddgs](https://github.com/deedy5/ddgs) 的联网搜索与网页抓取（`ddgs-web-search` / `ddgs-web-fetch`）             |
 | [theme-commit](skills/theme-commit/)       | 0.1.1 | 纯提示词   | 工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交                                                               |
-| [deep-research](skills/deep-research/)     | 0.4.0 | 纯提示词   | 先校准问题再调研：环境检查→预检索校准→目标与计划确认门→research/<YYMMDD>-<主题>/ 交付 REPORT.md + REFERENCES.md 双文件（低/中/高档位）；源码调研先 clone 到 sources/ 固定 commit 再本地分析 |
+| [deep-research](skills/deep-research/)     | 0.5.0 | 纯提示词   | 先校准问题再调研：环境检查（含工作区/输出目录探测）→预检索校准→目标与计划确认门（输出目录候选+推荐）→所选目录下 `<YYMMDD>-<主题>/` 交付 REPORT.md + REFERENCES.md 双文件（低/中/高档位）；源码调研先 clone 到 sources/ 固定 commit 再本地分析 |
 | [zero-coding](skills/zero-coding/)         | 0.4.0 | 纯提示词   | 从零启动个人项目的轻量工作流：按会话容量分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片；最小文档集（SPEC/DECISIONS/AGENTS），事实自查、决策问人，方案确认委托平台 Plan Mode |
 | [video-insight](skills/video-insight/)     | 0.7.0 | Python 脚本  | 视频内容与画面深度分析（L1 文案档 / L2 画面档）：转写结构与话术、帧证据排版与节奏、音画对齐与字幕核查；pipeline 一键机械采集（支持多视频批量），无口播视频的画面文案提取（帧差逐屏 + 读图/OCR 回退）；memory 经验闭环（失败先检索、收尾写回、毕业进代码） |
 | [session-handoff](skills/session-handoff/) | 0.1.0 | 纯提示词   | 会话收尾时把整个会话打包成一段可粘贴的交接提示词，让下一段全新会话的 Coding Agent 无历史上下文即可恢复状态、继续开发 |
