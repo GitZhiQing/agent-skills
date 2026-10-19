@@ -1,6 +1,6 @@
 {
   "name": "theme-commit",
-  "description": "工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交",
-  "version": "0.1.1",
+  "description": "工作区混杂多主题变更时，先给提交计划预览，再按逻辑主题分批提交；消息遵循 type(scope): 摘要 + 列表式 body，显式暂存、提交前检查、提交后验证",
+  "version": "0.2.0",
   "author": { "name": "QING" }
 }

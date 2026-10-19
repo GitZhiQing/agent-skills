@@ -7,7 +7,7 @@
 | Skill | 类型 | 说明 |
 | --- | --- | --- |
 | [ddgs-web-access](skills/ddgs-web-access/) | Python CLI | 联网搜索与网页抓取 |
-| [theme-commit](skills/theme-commit/) | 纯提示词 | 按主题分组、分批提交 |
+| [theme-commit](skills/theme-commit/) | 纯提示词 | 先计划预览并用提问工具确认，再按主题分组提交；遵循 Conventional Commits 与提交前检查 |
 | [deep-research](skills/deep-research/) | 纯提示词 | 先校准再调研，交付 REPORT + REFERENCES；支持源码调研 |
 | [zero-coding](skills/zero-coding/) | 纯提示词 | 从零启动个人项目的轻量工作流 |
 | [video-insight](skills/video-insight/) | Python 脚本 | 拉片级视频内容与画面分析 |
