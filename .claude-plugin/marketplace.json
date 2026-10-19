@@ -30,7 +30,7 @@
         "./"
       ],
       "description": "工作区混杂多主题变更时，先给提交计划预览，再按逻辑主题分批提交；消息遵循 type(scope): 摘要 + 列表式 body，显式暂存、提交前检查、提交后验证",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "QING"
       },
@@ -45,8 +45,8 @@
       "skills": [
         "./"
       ],
-      "description": "先校准问题、再消耗调研资源的深度调研：调研目标、计划与输出目录经用户确认后执行，在所选目录的 <YYMMDD>-<主题>/ 下产出 REPORT.md + REFERENCES.md 双文件（低/中/高档位）；源码调研先 clone 到 sources/ 固定 commit 再本地分析",
-      "version": "0.5.0",
+      "description": "先校准问题、再消耗调研资源的深度调研：调研目标、计划与输出目录经用户确认后执行，在所选目录的 YYMMDD-主题/ 下产出 REPORT.md + REFERENCES.md 双文件（低/中/高档位）；源码调研先 clone 到 sources/ 固定 commit 再本地分析",
+      "version": "0.6.0",
       "author": {
         "name": "QING"
       },
@@ -62,7 +62,7 @@
         "./"
       ],
       "description": "从零启动个人项目的轻量工作流：先判规模分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片，维护最小文档集（SPEC / DECISIONS / AGENTS），方案确认尽量委托平台 Plan Mode 与子 Agent",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "author": {
         "name": "QING"
       },
@@ -79,7 +79,7 @@
         "./"
       ],
       "description": "视频内容与画面深度分析（拉片级）：L1 文案档 / L2 画面档，结论带帧证据与精度声明；pipeline.py 一键机械采集（单条或批量：--batch 清单、失败隔离、批报告），模型专注确认门与分析；无口播视频画面文案提取（帧差逐屏 + 读图/OCR 回退）",
-      "version": "0.7.0",
+      "version": "0.8.0",
       "author": {
         "name": "QING"
       },
@@ -114,7 +114,7 @@
         "./"
       ],
       "description": "把 Markdown 转成排版精良的 PDF：双版式（报告版/正文版）× 多主题（kimi/deepseek/gemini/anthropic），Playwright+Paged.js 渲染，preview 选主题 + 内置质量门断言",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "QING"
       },
