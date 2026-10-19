@@ -4,12 +4,13 @@ description: >-
   从零启动一个个人项目的轻量工作流：先判规模分路——小活一轮对齐直接做，
   立项走 SPEC 范围契约 + 垂直切片；全程维护最小文档集（SPEC / DECISIONS /
   AGENTS），事实自查、决策问人，方案确认尽量委托平台 Plan Mode 与子 Agent。
-  当用户带着新想法从空目录开始（“我想做个……”）、需要固化需求或搭建项目骨架时使用。
+  当用户带着新想法从空目录开始（“我想做个……”）、需要固化需求或搭建项目骨架时使用；
+  英文触发词包括 "new project" "bootstrap" "scaffold" "project setup"。
   当项目已有成熟的文档体系与开发规范、或用户只是临时求助并不打算立项时，
   不要使用本 skill。
 license: MIT
 metadata:
-  version: 0.4.0
+  version: 0.4.1
   category: workflow
 ---
 

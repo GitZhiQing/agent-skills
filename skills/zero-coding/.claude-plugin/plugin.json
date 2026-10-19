@@ -1,7 +1,7 @@
 {
   "name": "zero-coding",
   "description": "从零启动个人项目的轻量工作流：先判规模分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片，维护最小文档集（SPEC / DECISIONS / AGENTS），方案确认尽量委托平台 Plan Mode 与子 Agent",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "author": {
     "name": "QING"
   }
