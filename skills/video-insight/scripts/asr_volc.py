@@ -246,7 +246,7 @@ def transcribe_audio(audio: str | Path, *, language: str | None = None,
     """Submit + poll + normalize in one call.
 
     Returns {"srt", "txt", "raw", "request_id"}; an empty txt means the ASR
-    completed but found no speech (BGM-only input, SKILL.md §2.1).
+    completed but found no speech (BGM-only input, references/无口播与批量.md §1).
     """
     cfg = api_config()
     request_id = submit(audio, language=language, hotwords=hotwords, cfg=cfg)

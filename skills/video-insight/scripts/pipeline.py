@@ -202,7 +202,7 @@ def assemble_screen_transcript(out_dir: Path) -> list[Path]:
 
     Adjacent screens with identical text (typewriter splits) merge into one
     row with merged_from kept for traceability; uniform-fallback timing is
-    flagged so the report can say "约" (SKILL.md §2.1).
+    flagged so the report can say "约" (references/无口播与批量.md §1).
     """
     segs_doc = read_json(out_dir / "data" / "screen_segments.json")
     ocr_doc = read_json(out_dir / "data" / "screen_ocr.json")
@@ -421,7 +421,7 @@ def collect(input_arg: str, out_dir: Path, tier: str, domain: str,
             return None, 1, error
         record_declaration(out_dir, "no_speech_switch", {
             "detected": no_speech_reason,
-            "switched_to": "screen_text_branch (SKILL.md §2.1)",
+            "switched_to": "screen_text_branch (references/无口播与批量.md §1)",
         })
         if not step_done(out_dir, "extract_frames"):
             run_step("extract_frames",
@@ -566,17 +566,17 @@ def _final_report(out_dir: Path, tier: str, branch: str, screen_mode: str,
         if stats.get("suspect_no_speech"):
             notes.append("suspect_no_speech=true：ASR 只吐零星文本，L1 分析前先复核是否真有口播（可能需走无口播分支）")
     elif branch == "no_speech":
-        notes.append(f"b0 告知门：向用户告知无口播判定（证据：{no_speech_reason}）与模式切换、成本预估 60–150 万 token——告知即走，不等许可（§2.1）")
-        notes.append("事后目检纠偏：读 evidence/overview/ 拼版，若显示说话头/采访嫌疑 → 矛盾证据，停下呈报等用户定夺（§2.1）")
+        notes.append(f"b0 告知门：向用户告知无口播判定（证据：{no_speech_reason}）与模式切换、成本预估 60–150 万 token——告知即走，不等许可（references/无口播与批量.md §1）")
+        notes.append("事后目检纠偏：读 evidence/overview/ 拼版，若显示说话头/采访嫌疑 → 矛盾证据，停下呈报等用户定夺（references/无口播与批量.md §1）")
         if screen_mode == "ocr":
             ai_next.append("读 transcript.screen.*（组装器已合并同文屏、标注可读度）按 §3 做 01-画面文案稿、02-内容分析")
         else:
-            ai_next.append("逐屏读 evidence/keyframes/screen_*.jpg 按 §2.1 b4 成稿 transcript.screen.json（可读度三档、同文屏合并、不可读不猜写），SRT 用 screen_srt.py 渲染")
+            ai_next.append("逐屏读 evidence/keyframes/screen_*.jpg 按 references/无口播与批量.md §1 b4 成稿 transcript.screen.json（可读度三档、同文屏合并、不可读不猜写），SRT 用 screen_srt.py 渲染")
             ai_next.append("成稿后按 §3 做 01-画面文案稿、02-内容分析")
         ai_next.append(
             "分段统计（stats 的 n_events/n_screens/mean_screen_s 等）与 overview 目检矛盾时 "
             "→ screen_segments --mode uniform（或 event/调 --min-screen-gap）重分段后单步重跑对应精读步骤，"
-            "uniform 段的 events_in_segment 是补抓锚点（§2.1）")
+            "uniform 段的 events_in_segment 是补抓锚点（references/无口播与批量.md §1）")
         if stats.get("mode") == "uniform":
             notes.append("uniform 兜底：屏时间为均匀采样，表述一律带「约」")
     else:
@@ -686,14 +686,14 @@ def run_batch(inputs: list[str], batch_root: Path, tier: str, domain: str,
     n_failed = len(entries) - n_ok
     branches = sorted({e.get("branch") for e in entries if e.get("branch")})
     ai_next = [
-        "逐条读 results[].ready/ai_next 按各自分支分析（§3 / §2.1 / §4）——每条 output_dir 独立归档",
-        "对比类需求按 SKILL.md §2.2 产跨视频对比文档，落 <批根>/ 而非单视频目录",
+        "逐条读 results[].ready/ai_next 按各自分支分析（§3 / references/无口播与批量.md §1 / §4）——每条 output_dir 独立归档",
+        "对比类需求按 references/无口播与批量.md §2 产跨视频对比文档，落 <批根>/ 而非单视频目录",
     ]
     notes = [
         f"{n_ok} 条就绪" + (f"，{n_failed} 条失败（已继续跑完其余；修复后重跑同一条命令，幂等只补失败条目）" if n_failed else ""),
     ]
     if "no_speech" in branches:
-        notes.append("含 no_speech 条目：逐条执行 b0 事后告知与 overview 目检纠偏（§2.1）")
+        notes.append("含 no_speech 条目：逐条执行 b0 事后告知与 overview 目检纠偏（references/无口播与批量.md §1）")
     report = {
         "batch": {
             "n": len(entries), "ok": n_ok, "failed": n_failed,

@@ -17,7 +17,7 @@ The API key resolves via env var or the skill's .env (see .env.example).
 A video without an audio track, or an ASR run that completes but produces no
 text, is NOT an error: the script records manifest status "no_speech" and
 prints {"no_speech": true, "reason": "no_audio_track"|"asr_empty"} — the
-caller switches to the screen-text branch (SKILL.md §2.1). An API failure
+caller switches to the screen-text branch (references/无口播与批量.md §1). An API failure
 (network/auth/quota) remains fatal.
 """
 
@@ -231,11 +231,11 @@ def main(argv: list[str] | None = None) -> int:
         if result.get("no_speech"):
             reason = result["reason"]
             if reason == "no_audio_track":
-                hint = "输入视频无音轨：走无口播分支，用画面文案提取（SKILL.md §2.1）"
+                hint = "输入视频无音轨：走无口播分支，用画面文案提取（references/无口播与批量.md §1）"
             elif result["info"].get("input_kind") == "audio":
                 hint = "输入为纯音频且 ASR 无文本：无画面可提取文案，请与用户确认输入或检查转写后端配置"
             else:
-                hint = "ASR 正常完成但无文本：疑似纯 BGM 无口播；读 overview 拼版确认后走无口播分支（SKILL.md §2.1）"
+                hint = "ASR 正常完成但无文本：疑似纯 BGM 无口播；读 overview 拼版确认后走无口播分支（references/无口播与批量.md §1）"
             record = update_manifest(out_dir, "transcribe", status="no_speech",
                                      extra={"no_speech": True, "reason": reason})
             print(json.dumps({"no_speech": True, "reason": reason,

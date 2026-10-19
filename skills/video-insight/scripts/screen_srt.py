@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render transcript.screen.srt from a transcript.screen.json — mechanically.
 
-The frames path of the no-speech branch (SKILL.md §2.1 b4) has the model
+The frames path of the no-speech branch (references/无口播与批量.md §1 b4) has the model
 author transcript.screen.json (per-screen text, readability grades, merges);
 this script turns that JSON into the SRT. Generating SRT by hand — especially
 via inline `python -c` snippets — breaks on shell quoting of CJK quotes, so
