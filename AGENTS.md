@@ -2,7 +2,7 @@
 
 个人 AI coding agent skills 集合：每个 skill 位于 `skills/` 子目录下，一个 skill 一个目录，通过 junction/软链分发到各 agent 的 skills 目录（目标 = 内置主流清单 ⊕ `agents.local.conf` 本地自定义，目录存在才生效，清单见 `docs/开发与维护规范.md` §6）。
 
-维护标准见 `docs/开发与维护规范.md`（目录结构、frontmatter、版本规则、台账格式、分发与回归流程）；执行细则见 `docs/维护脚本测试集.md`。
+维护标准见 `docs/开发与维护规范.md`（目录结构、frontmatter、版本规则、台账格式、分发与回归流程、Git 提交信息规范见 §10）；执行细则见 `docs/维护脚本测试集.md`。
 
 ## 怎么跑起来 / 验证
 
