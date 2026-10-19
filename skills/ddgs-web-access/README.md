@@ -72,11 +72,11 @@ uv run --project "<skill_dir>" ddgs-web-search "..." --proxy "http://127.0.0.1:7
 
 约定：结果只写 stdout（纯文本块，或 `--format json`），错误写 stderr；退出码 `0` 成功（含空结果）、`1` 运行错误、`2` 参数错误。
 
-稳定性行为（v0.2.0 起，向原生 WebSearch/WebFetch 的"一次调用就成功"看齐）：
+稳定性行为（向原生 WebSearch/WebFetch 的"一次调用就成功"看齐）：
 
 - 搜索遇瞬时异常（超时等）自动重试一次（间隔 2s）；空结果仍为 exit 0；
 - 抓取失败自动改用系统 curl 重试（404/410 死链除外，此时 curl 结果相同没有意义）；`--curl` 保留为强制模式；
-- 超时默认 10s（原 5s，偏激进）；`--start N` 与 `--max-chars` 配合可分段读长文，截断提示会给出续读参数。
+- 超时默认 10s；`--start N` 与 `--max-chars` 配合可分段读长文，截断提示会给出续读参数。
 
 ## 代理
 

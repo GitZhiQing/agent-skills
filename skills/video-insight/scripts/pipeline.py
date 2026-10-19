@@ -13,7 +13,7 @@ Usage (single input):
     python pipeline.py <input> --tier L1|L2 --output-dir DIR
         [--domain finance|education|tech|none] [--screen-mode frames|ocr]
 
-Usage (batch, 0.6.0):
+Usage (batch):
     python pipeline.py <input1> <input2> ... --tier L1|L2
     python pipeline.py --batch list.txt --tier L1|L2 [--jobs N]
         (list.txt: one input per line; blank lines and # comments skipped)

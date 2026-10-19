@@ -27,7 +27,7 @@ BLOCK_AFTER_H1 = re.compile(
     r'(<div class="keep-head">.*?</h1>)\s*(<(?:p|h2|blockquote|table|pre|ul|ol)\b.*?</(?:p|h2|blockquote|table|pre|ul|ol)>)',
     re.S,
 )
-# 自带编号的标题（一、/（一）/1./1.1 等）不再叠加自动章号
+# 自带编号的标题（一、/（一）/1./1.1 等）不叠加自动章号
 SELF_NUMBERED = re.compile(r"^[（(]?[一二三四五六七八九十\d]+[）)、.．]\s*")
 
 
