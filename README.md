@@ -1,65 +1,40 @@
 # agent-skills
 
-A collection of [Agent Skills](https://agentskills.io)（SKILL.md 开放格式）for AI coding agents —— 个人 AI coding agent skills 集合。
-
-全部 skill 遵循 [Agent Skills 开放规范](https://agentskills.io/specification)：一个 skill 一个目录，`SKILL.md` 为唯一入口；可被 Claude Code、Codex、Cursor 等支持该格式的 agent 加载。
+个人 AI coding agent skills 集合，遵循 [Agent Skills 开放规范](https://agentskills.io/specification)：一个 skill 一个目录，`SKILL.md` 为入口，可被 Claude Code、Codex、Cursor 等支持该格式的 agent 加载。
 
 ## Skills
 
+| Skill | 类型 | 说明 |
+| --- | --- | --- |
+| [ddgs-web-access](skills/ddgs-web-access/) | Python CLI | 联网搜索与网页抓取 |
+| [theme-commit](skills/theme-commit/) | 纯提示词 | 按主题分组、分批提交 |
+| [deep-research](skills/deep-research/) | 纯提示词 | 先校准再调研，交付 REPORT + REFERENCES；支持源码调研 |
+| [zero-coding](skills/zero-coding/) | 纯提示词 | 从零启动个人项目的轻量工作流 |
+| [video-insight](skills/video-insight/) | Python 脚本 | 拉片级视频内容与画面分析 |
+| [session-handoff](skills/session-handoff/) | 纯提示词 | 生成跨会话交接提示词 |
+| [md2pdf](skills/md2pdf/) | Python CLI | Markdown 转精美 PDF |
 
-| Skill                                      | 版本  | 类型       | 说明                                                                                                                |
-| -------------------------------------------- | ------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| [ddgs-web-access](skills/ddgs-web-access/) | 0.2.2 | Python CLI | 基于[ddgs](https://github.com/deedy5/ddgs) 的联网搜索与网页抓取（`ddgs-web-search` / `ddgs-web-fetch`）             |
-| [theme-commit](skills/theme-commit/)       | 0.1.1 | 纯提示词   | 工作区混杂多主题变更时，按逻辑主题分组、分批 git 提交                                                               |
-| [deep-research](skills/deep-research/)     | 0.5.0 | 纯提示词   | 先校准问题再调研：环境检查（含工作区/输出目录探测）→预检索校准→目标与计划确认门（输出目录候选+推荐）→所选目录下 `<YYMMDD>-<主题>/` 交付 REPORT.md + REFERENCES.md 双文件（低/中/高档位）；源码调研先 clone 到 sources/ 固定 commit 再本地分析 |
-| [zero-coding](skills/zero-coding/)         | 0.4.0 | 纯提示词   | 从零启动个人项目的轻量工作流：按会话容量分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片；最小文档集（SPEC/DECISIONS/AGENTS），事实自查、决策问人，方案确认委托平台 Plan Mode |
-| [video-insight](skills/video-insight/)     | 0.7.0 | Python 脚本  | 视频内容与画面深度分析（L1 文案档 / L2 画面档）：转写结构与话术、帧证据排版与节奏、音画对齐与字幕核查；pipeline 一键机械采集（支持多视频批量），无口播视频的画面文案提取（帧差逐屏 + 读图/OCR 回退）；memory 经验闭环（失败先检索、收尾写回、毕业进代码） |
-| [session-handoff](skills/session-handoff/) | 0.1.0 | 纯提示词   | 会话收尾时把整个会话打包成一段可粘贴的交接提示词，让下一段全新会话的 Coding Agent 无历史上下文即可恢复状态、继续开发 |
-| [md2pdf](skills/md2pdf/)                     | 0.1.0 | Python CLI | Markdown → 精美 PDF：双版式（报告版=封面+目录+页眉页脚；正文版=纯内容）× 四主题（kimi/deepseek/gemini/anthropic），preview 选主题 + 内置质量门断言 |
-
-各 skill 的调用方法、参数与排障见其目录内的 SKILL.md / README.md。
+各 skill 的用法、参数与排障见其目录内的 `README.md` / `SKILL.md`；版本号以各 skill 的 `SKILL.md` frontmatter 为准，本表不展示。
 
 ## 安装
 
 四种方式任选其一：
 
-**skills CLI**（跨 agent，支持 20+ 平台，自动 symlink）：
+- **skills CLI**：`npx skills add GitZhiQing/agent-skills`（单个 skill 用 `npx skills add GitZhiQing/agent-skills/<name>`）
+- **Claude Code marketplace**：`/plugin marketplace add GitZhiQing/agent-skills`，再 `/plugin install <name>@agent-skills`
+- **手动**：克隆后执行 `bash scripts/skills-link.sh --all`，再 `bash scripts/skills-doctor.sh` 巡检
 
-```bash
-npx skills add GitZhiQing/agent-skills              # 全部 skill
-npx skills add GitZhiQing/agent-skills/theme-commit # 单个 skill
-```
-
-**Claude Code plugin marketplace**（托管安装，随版本更新）：
-
-```
-/plugin marketplace add GitZhiQing/agent-skills
-/plugin install ddgs-web-access@agent-skills         # 或 theme-commit / deep-research / zero-coding / video-insight / session-handoff / md2pdf
-```
-
-**手动**（clone 后用仓库自带脚本链接到本机各 agent 的 skills 目录，Windows junction / Unix symlink，单一来源改一处全端生效）：
-
-```bash
-git clone https://github.com/GitZhiQing/agent-skills.git
-cd agent-skills
-bash scripts/skills-link.sh --all      # 卸载：bash scripts/skills-unlink.sh --all
-bash scripts/skills-doctor.sh          # 巡检链接健康
-```
-
-默认覆盖本机已安装的主流 agent（目录存在才生效）：zcode、agents（Codex 新版 / Zed / Goose / Amp 等跨端通用目录）、claude、cursor、codex、copilot、gemini、opencode、windsurf、cline、roo、qwen、kilo、junie、trae。增删目标：仓库根写 `agents.local.conf`（每行「名称 路径」新增/覆盖、「!名称」禁用）；或一次性指定 `--agent <name>` / `--agent <name>=<path>`（任意目录，含其他项目的 `.agents/skills`）。详见 [docs/开发与维护规范.md](docs/开发与维护规范.md) §6。
-
-**让 Agent 代装**（把下面这段发给任意支持 Agent Skills 的 coding agent，它会替你完成克隆、链接与验证）：
+**让 Agent 代装**：把下面这段发给 agent：
 
 ```text
-帮我安装 GitHub 仓库 GitZhiQing/agent-skills 的全部 skills：
-1. 把 https://github.com/GitZhiQing/agent-skills.git 克隆到本地并记住位置
-2. 进入仓库根目录执行 bash scripts/skills-link.sh --all（链接到你所在 agent 的 skills 目录，幂等可重跑）
-3. 执行 bash scripts/skills-doctor.sh 确认各 skill 显示 linked
+Run `npx skills add "https://github.com/GitZhiQing/agent-skills"` and follow the generated instructions now. Read its complete output, redirecting it to a temporary file first if necessary. Resolve relative paths from the supporting-files directory it provides.
 ```
+
+分发目标、`agents.local.conf` 与脚本用法见 [docs/开发与维护规范.md](docs/开发与维护规范.md) §6。
 
 ## 快速使用
 
-以 ddgs-web-access 为例（需 [uv](https://docs.astral.sh/uv/) >= 0.5，首次调用自动安装依赖）：
+以 ddgs-web-access 为例（需 [uv](https://docs.astral.sh/uv/) >= 0.5）：
 
 ```bash
 npx skills add GitZhiQing/agent-skills/ddgs-web-access
@@ -67,11 +42,12 @@ bash ~/.claude/skills/ddgs-web-access/bin/ddgs-web-search "python 3.13 asyncio" 
 bash ~/.claude/skills/ddgs-web-access/bin/ddgs-web-fetch "https://example.com"
 ```
 
-## 仓库维护（面向贡献者/维护者）
+## 文档
 
-- 仓库结构、frontmatter 标准、版本与台账规则见 [docs/开发与维护规范.md](docs/开发与维护规范.md)。
-- 改动后跑 `bash scripts/skills-lint.sh` 校验；维护脚本自身的测试用例见 [docs/维护脚本测试集.md](docs/维护脚本测试集.md)。
-- 新增 skill：`bash scripts/skills-new.sh my-skill` 生成规范骨架。
+- [AGENTS.md](AGENTS.md) — 面向 agent 的入口：运行、验证、技术栈与目录约定
+- [docs/开发与维护规范.md](docs/开发与维护规范.md) — 目录结构、版本、分发、提交信息规范
+- [docs/维护脚本测试集.md](docs/维护脚本测试集.md) — 维护脚本测试用例
+- 各 skill 目录内的 `README.md` / `docs/` — 用法、设计与测试集
 
 ## 许可与安全
 

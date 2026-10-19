@@ -6,8 +6,8 @@
 #                  一致，description 非空（过短仅 warn）
 #   L-readme-file  每个 skill 目录含 README.md（面向人的导览，规范 §2）
 #   L-version      metadata.version 必须存在且为 semver；若 skill 带
-#                  pyproject.toml 则两处一致；与 README 目录表版本列一致
-#   L-readme       README Skills 目录表 ↔ 磁盘双向一致
+#                  pyproject.toml 则两处一致；本地台账版本列一致（README 不展示版本号）
+#   L-readme       README Skills 目录表 ↔ 磁盘双向一致（不校验版本列）
 #   L-ledger       本机存在 SKILLS.local.md 时：本地台账总览 ↔ 磁盘双向一致，
 #                  总览每行有对应明细小节，明细无孤儿小节；无本地台账则跳过
 #                  （外部克隆视角全绿）
@@ -31,10 +31,10 @@ err()  { printf 'ERROR: %s\n' "$*" >&2; errors=$((errors + 1)); }
 
 semver_re='^[0-9]+\.[0-9]+\.[0-9]+$'
 
-# --- 目录表解析（README Skills 表 / 本地台账总览，两者同构） ------------------
+# --- 目录表解析（本地台账总览 / README Skills 表） ----------------------------
 
 # catalog_rows <file> <section-regex>：目录表每行输出 "name<TAB>version"。
-# 列位置固定 $2=Skill、$3=版本；Skill 列可为 [name](link) 或裸目录名。
+# 列位置固定 $2=Skill、$3=版本；用于本地台账总览。
 catalog_rows() {
   awk -F'|' -v sec="$2" '
     /^## / { in_ov = ($0 ~ sec) }
@@ -50,8 +50,20 @@ catalog_rows() {
   ' "$1"
 }
 
-# readme_rows：README `## Skills` 公开目录表，lint 强制。
-readme_rows() { catalog_rows "$README_FILE" '^## Skills'; }
+# readme_names：README `## Skills` 公开目录表，只取 Skill 列（不展示版本号）。
+readme_names() {
+  awk -F'|' '
+    /^## / { in_ov = ($0 ~ /^## Skills/) }
+    in_ov && /^\|/ && NF >= 4 {
+      s = $2
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
+      if (s ~ /^[-: ]+$/ || s == "Skill") next
+      if (s ~ /^\[/) { sub(/^\[/, "", s); sub(/\].*$/, "", s) }
+      else { sub(/\/$/, "", s) }
+      print s
+    }
+  ' "$README_FILE"
+}
 
 # ledger_rows / ledger_details：维护者本地台账，存在时才校验。
 ledger_rows() { catalog_rows "$LEDGER" '^## 总览'; }
@@ -60,7 +72,7 @@ ledger_details() {
        in_det && /^### / { s = $2; sub(/\/$/, "", s); print s }' "$LEDGER"
 }
 
-readme_name_list="$(readme_rows | cut -f1)"
+readme_name_list="$(readme_names)"
 
 # --- 逐 skill 检查 -----------------------------------------------------------
 
@@ -120,15 +132,7 @@ for skill in $skills_list; do
   fi
 
   if printf '%s\n' "$readme_name_list" | grep -qx "$skill"; then
-    # frontmatter 版本本身有问题时跳过比对，避免重复报错
-    if [ -n "$ver" ] && printf '%s' "$ver" | grep -Eq "$semver_re"; then
-      row_ver="$(readme_rows | awk -F'\t' -v s="$skill" '$1 == s { print $2; exit }')"
-      if [ "$row_ver" != "$ver" ]; then
-        err "$skill: README 目录表版本「$row_ver」与 frontmatter「$ver」不一致"
-      else
-        ok "$skill: README 目录表版本一致（$ver）"
-      fi
-    fi
+    ok "$skill: README Skills 目录表包含该 skill"
   else
     err "$skill: README Skills 目录表缺少该 skill 的行"
   fi

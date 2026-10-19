@@ -47,10 +47,10 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 
 ## 目录与约定
 
-- 一个 skill 一个目录，SKILL.md 为入口；frontmatter 需含 `name`（== 目录名）、三段式 `description`、`metadata.version`（semver）；版本权威来源是 frontmatter，pyproject.toml 与 README Skills 表跟随同步，lint 强制。
+- 一个 skill 一个目录，SKILL.md 为入口；frontmatter 需含 `name`（== 目录名）、三段式 `description`、`metadata.version`（semver）；版本权威来源是 frontmatter，pyproject.toml 与本地台账跟随同步，lint 强制；README Skills 表不展示版本号。
 - 公开 skill 目录以 README Skills 表为准；维护者个人的台账、分发状态与下一步计划记录在 `SKILLS.local.md`（gitignore `*.local.md`，不入库）。
 - 每个 skill 带 README.md（面向人的目录导览：定位、触发、工作方式、安装；lint 强制存在，不写版本号）；复杂 skill 另带 docs/（设计文档、测试集）；测试集编号用「类别前缀-序号」。
-- 分发与卸载统一用 `bash scripts/skills-link.sh` / `skills-unlink.sh`（`[--agent <name|name=path>]...` 可限定或临时指定目标；在内置清单 ∪ `agents.local.conf` 的目录建/删指向本仓库的 junction，单一来源）；ddgs-web-access 自带的 `scripts/install.sh` 仅供该 skill 独立拷走时使用。链接变更后跑 `skills-doctor.sh` 并回填本地台账（SKILLS.local.md）"分发状态"列。
+- 分发与卸载统一用 `bash scripts/skills-link.sh` / `skills-unlink.sh`（`[--agent <name|name=path>]...` 可限定或临时指定目标；在内置清单 ∪ `agents.local.conf` 的目录建/删指向本仓库的 junction，单一来源）；ddgs-web-access 自带的 `scripts/install.sh` 仅供该 skill 独立拷走时使用。链接变更后跑 `skills-doctor.sh` 并回填本地台账（SKILLS.local.md）"分发状态"列；Agent 代装提示见 `docs/开发与维护规范.md` §6.4。
 - 内置目标清单（15 个主流 agent 全局位）的权威实现是 `scripts/lib.sh` 的 `builtin_agent_targets()`，与 ddgs-web-access 独立安装脚本同步维护。
 - 运行产物（`.venv/`、`.cache/`、`__pycache__/`、`*.egg-info/`）已 gitignore，不纳入版本管理，lint 会检查。
 - `.zcode/`（会话计划产物）在根 .gitignore 中排除。
