@@ -2,17 +2,21 @@
 # skills-lint.sh — 仓库结构与元数据一致性校验。
 #
 # 检查项（标准见 docs/开发与维护规范.md）：
-#   L-frontmatter  每个 skill 有 SKILL.md + 合法 frontmatter，name 与目录名
-#                  一致，description 非空（过短仅 warn）
+#   L-frontmatter  每个 skill 有 SKILL.md + 合法 frontmatter
+#   L-spec         name 符合官方约束（字符集 / 长度 / 连字符）且与目录名一致
+#   L-description  description 非空、<=1024 字符、不含 <>；过短（<30）warn
+#   L-category     metadata.category 缺失时 warn
 #   L-readme-file  每个 skill 目录含 README.md（面向人的导览，规范 §2）
-#   L-version      metadata.version 必须存在且为 semver；若 skill 带
-#                  pyproject.toml 则两处一致；本地台账版本列一致（README 不展示版本号）
-#   L-readme       README Skills 目录表 ↔ 磁盘双向一致（不校验版本列）
-#   L-ledger       本机存在 SKILLS.local.md 时：本地台账总览 ↔ 磁盘双向一致，
+#   L-version      metadata.version 必须存在且为 semver；与 pyproject.toml、
+#                  .claude-plugin/plugin.json、marketplace.json、本地台账一致
+#   L-plugin       每个 skill 有 plugin.json，且被 marketplace 收录、source 正确
+#   L-readme       README Skills 目录表 <-> 磁盘双向一致（不校验版本列）
+#   L-ledger       本机存在 SKILLS.local.md 时：总览 <-> 磁盘双向一致，
 #                  总览每行有对应明细小节，明细无孤儿小节；无本地台账则跳过
-#                  （外部克隆视角全绿）
-#   L-layout       skill 必须位于 skills/ 子目录（skills/<name>/SKILL.md），
-#                  根级不允许出现 skill 目录
+#   L-size         SKILL.md 超过 500 行或 16KB 时 warn（规范 §2.1）
+#   L-refs         SKILL.md 引用的 references/ 路径必须存在
+#   L-docs         缺少 docs/测试集.md 时 warn
+#   L-layout       skill 必须位于 skills/ 子目录（skills/<name>/SKILL.md）
 #   L-artifacts    运行产物（.venv/ .cache/ __pycache__/ *.egg-info/）未入库
 #
 # 退出码：0 全部通过 / 1 存在失配 / 2 用法错误。
@@ -30,6 +34,8 @@ warn() { printf 'warn: %s\n' "$*"; warns=$((warns + 1)); }
 err()  { printf 'ERROR: %s\n' "$*" >&2; errors=$((errors + 1)); }
 
 semver_re='^[0-9]+\.[0-9]+\.[0-9]+$'
+name_re='^[a-z0-9]+(-[a-z0-9]+)*$'
+MARKETPLACE="$REPO_ROOT/.claude-plugin/marketplace.json"
 
 # --- 目录表解析（本地台账总览 / README Skills 表） ----------------------------
 
@@ -65,6 +71,32 @@ readme_names() {
   ' "$README_FILE"
 }
 
+# marketplace_rows：marketplace.json 每个 plugin 输出 "name<TAB>version<TAB>source"。
+# 依赖当前 2 空格缩进的受控格式；author 内的 name 会被下一个 plugin 的 name 覆盖。
+marketplace_rows() {
+  [ -f "$MARKETPLACE" ] || return 0
+  awk -F'"' '
+    /^[[:space:]]*"name":[[:space:]]*"/ { name = $4 }
+    /^[[:space:]]*"source":[[:space:]]*"/ { src = $4 }
+    /^[[:space:]]*"version":[[:space:]]*"/ {
+      if (name != "") print name "\t" $4 "\t" src
+    }
+  ' "$MARKETPLACE"
+}
+
+marketplace_row_for() {
+  printf '%s\n' "$marketplace_list" | awk -F'\t' -v s="$1" '$1 == s { print; exit }'
+}
+
+# plugin_field <skill> <name|version>：读取 skill 的 plugin.json 顶层字段。
+plugin_field() {
+  local f="$SKILLS_DIR/$1/.claude-plugin/plugin.json" key="$2"
+  [ -f "$f" ] || return 1
+  awk -F'"' -v k="$key" '
+    $0 ~ "^[[:space:]]*\"" k "\":[[:space:]]*\"" { print $4; exit }
+  ' "$f"
+}
+
 # ledger_rows / ledger_details：维护者本地台账，存在时才校验。
 ledger_rows() { catalog_rows "$LEDGER" '^## 总览'; }
 ledger_details() {
@@ -73,6 +105,8 @@ ledger_details() {
 }
 
 readme_name_list="$(readme_names)"
+marketplace_list="$(marketplace_rows || true)"
+marketplace_name_list="$(printf '%s\n' "$marketplace_list" | cut -f1 | sed '/^$/d')"
 
 # --- 逐 skill 检查 -----------------------------------------------------------
 
@@ -90,21 +124,55 @@ for skill in $skills_list; do
   fi
 
   fm_name="$(fm_value "$skill" name)"
+  name_ok=1
   if [ -z "$fm_name" ]; then
     err "$skill: frontmatter 缺少 name"
+    name_ok=0
   elif [ "$fm_name" != "$skill" ]; then
     err "$skill: frontmatter name「$fm_name」与目录名不一致"
-  else
-    ok "$skill: name 与目录名一致"
+    name_ok=0
+  fi
+  if [ -n "$fm_name" ]; then
+    if [ "${#fm_name}" -gt 64 ]; then
+      err "$skill: name 超过 64 字符（官方规范）"
+      name_ok=0
+    fi
+    if ! printf '%s' "$fm_name" | grep -Eq "$name_re"; then
+      err "$skill: name「$fm_name」不符合官方字符集 / 连字符规则（$name_re）"
+      name_ok=0
+    fi
+  fi
+  if [ "$name_ok" -eq 1 ]; then
+    ok "$skill: name 合法且与目录名一致"
   fi
 
+  desc_text="$(fm_description_text "$skill")"
   desc_chars="$(fm_description_chars "$skill")"
+  desc_ok=1
   if [ "$desc_chars" -eq 0 ]; then
     err "$skill: description 为空"
-  elif [ "$desc_chars" -lt 30 ]; then
-    warn "$skill: description 仅 ${desc_chars} 字符，难以承载正向触发 + 反向不触发（规范 §3）"
-  else
+    desc_ok=0
+  fi
+  if [ "$desc_chars" -gt 0 ] && [ "$desc_chars" -lt 30 ]; then
+    warn "$skill: description 仅 ${desc_chars} 字符，难以承载正向触发 + 反向不触发（规范 §3.1）"
+  fi
+  if [ "$desc_chars" -gt 1024 ]; then
+    err "$skill: description ${desc_chars} 字符，超过官方上限 1024"
+    desc_ok=0
+  fi
+  if printf '%s' "$desc_text" | grep -q '[<>]'; then
+    err "$skill: description 含 < 或 >（官方规范禁止 XML 标签 / 尖括号）"
+    desc_ok=0
+  fi
+  if [ "$desc_ok" -eq 1 ]; then
     ok "$skill: description 非空（${desc_chars} 字符）"
+  fi
+
+  catv="$(fm_subvalue "$skill" metadata category)"
+  if [ -z "$catv" ]; then
+    warn "$skill: 缺少 metadata.category（规范 §3，建议填写领域标签）"
+  else
+    ok "$skill: metadata.category $catv"
   fi
 
   if [ -f "$SKILLS_DIR/$skill/README.md" ]; then
@@ -114,11 +182,15 @@ for skill in $skills_list; do
   fi
 
   ver="$(fm_subvalue "$skill" metadata version)"
+  ver_ok=1
   if [ -z "$ver" ]; then
     err "$skill: frontmatter 缺少 metadata.version（规范 §3：全部 skill 必须标注）"
+    ver_ok=0
   elif ! printf '%s' "$ver" | grep -Eq "$semver_re"; then
     err "$skill: metadata.version「$ver」不是 semver（X.Y.Z）"
-  else
+    ver_ok=0
+  fi
+  if [ "$ver_ok" -eq 1 ]; then
     ok "$skill: metadata.version $ver"
   fi
 
@@ -131,6 +203,71 @@ for skill in $skills_list; do
     fi
   fi
 
+  plugin_file="$SKILLS_DIR/$skill/.claude-plugin/plugin.json"
+  if [ ! -f "$plugin_file" ]; then
+    err "$skill: 缺少 .claude-plugin/plugin.json（规范 §2）"
+  else
+    p_name="$(plugin_field "$skill" name || true)"
+    p_ver="$(plugin_field "$skill" version || true)"
+    if [ "$p_name" != "$skill" ]; then
+      err "$skill: plugin.json name「$p_name」与目录名不一致"
+    else
+      ok "$skill: plugin.json 存在且 name 一致"
+    fi
+    if [ -n "$ver" ] && [ "$p_ver" != "$ver" ]; then
+      err "$skill: plugin.json 版本「$p_ver」与 frontmatter「$ver」不一致"
+    fi
+  fi
+
+  m_row="$(marketplace_row_for "$skill")"
+  if [ -z "$m_row" ]; then
+    err "$skill: 未出现在 .claude-plugin/marketplace.json（规范 §2）"
+  else
+    m_ver="$(printf '%s' "$m_row" | cut -f2)"
+    m_src="$(printf '%s' "$m_row" | cut -f3)"
+    m_ok=1
+    if [ "$m_src" != "./skills/$skill" ]; then
+      err "$skill: marketplace source「$m_src」应为「./skills/$skill」"
+      m_ok=0
+    fi
+    if [ -n "$ver" ] && [ "$m_ver" != "$ver" ]; then
+      err "$skill: marketplace 版本「$m_ver」与 frontmatter「$ver」不一致"
+      m_ok=0
+    fi
+    if [ "$m_ok" -eq 1 ]; then
+      ok "$skill: marketplace 条目与版本一致"
+    fi
+  fi
+
+  sk_lines="$(wc -l < "$SKILLS_DIR/$skill/SKILL.md" | tr -d ' ')"
+  sk_bytes="$(wc -c < "$SKILLS_DIR/$skill/SKILL.md" | tr -d ' ')"
+  if [ "$sk_lines" -gt 500 ] || [ "$sk_bytes" -gt 16384 ]; then
+    warn "$skill: SKILL.md ${sk_lines} 行 / ${sk_bytes} 字节，超过 500 行 / 16KB 预算，建议拆分到 references/（规范 §2.1）"
+  else
+    ok "$skill: SKILL.md 体积 ${sk_lines} 行 / ${sk_bytes} 字节"
+  fi
+
+  refs="$(grep -oE "references/[^ \`\"'()<>，。；：、）]+" "$SKILLS_DIR/$skill/SKILL.md" | sort -u || true)"
+  if [ -n "$refs" ]; then
+    refs_ok=1
+    while IFS= read -r ref; do
+      [ -n "$ref" ] || continue
+      if [ ! -e "$SKILLS_DIR/$skill/$ref" ]; then
+        err "$skill: SKILL.md 引用的 $ref 不存在"
+        refs_ok=0
+      fi
+    done <<< "$refs"
+    if [ "$refs_ok" -eq 1 ]; then
+      ok "$skill: references 链接可达"
+    fi
+  fi
+
+  if [ -f "$SKILLS_DIR/$skill/docs/测试集.md" ]; then
+    ok "$skill: docs/测试集.md 存在"
+  else
+    warn "$skill: 缺少 docs/测试集.md（规范 §2）"
+  fi
+
   if printf '%s\n' "$readme_name_list" | grep -qx "$skill"; then
     ok "$skill: README Skills 目录表包含该 skill"
   else
@@ -138,13 +275,27 @@ for skill in $skills_list; do
   fi
 done
 
-# --- README 目录表 ↔ 磁盘，双向一致 -------------------------------------------
+# --- README 目录表 <-> 磁盘，双向一致 ----------------------------------------
 
 for name in $readme_name_list; do
   if ! printf '%s\n' "$skills_list" | grep -qx "$name"; then
     err "README 目录表的「$name」在磁盘上不存在（目录缺失或无 SKILL.md）"
   fi
 done
+
+# --- marketplace <-> 磁盘，双向一致 ------------------------------------------
+
+for name in $marketplace_name_list; do
+  if ! printf '%s\n' "$skills_list" | grep -qx "$name"; then
+    err "marketplace.json 的「$name」在磁盘上不存在（目录缺失或无 SKILL.md）"
+  fi
+done
+m_dups="$(printf '%s\n' "$marketplace_name_list" | sort | uniq -d)"
+if [ -n "$m_dups" ]; then
+  while IFS= read -r name; do
+    err "marketplace.json 条目重复：$name"
+  done <<< "$m_dups"
+fi
 
 # --- 本地台账（可选）：存在时校验，外部克隆视角跳过 ---------------------------
 
@@ -189,9 +340,11 @@ fi
 
 for d in "$REPO_ROOT"/*/; do
   name="$(basename "$d")"
-  if [ -f "${d}SKILL.md" ]; then
+  if [ "$name" = template ]; then
+    :  # template/SKILL.md 是骨架，不是 skill
+  elif [ -f "${d}SKILL.md" ]; then
     err "skill「$name」不在 skills/ 下（规范 §2）"
-  elif [ "$name" = docs ] || [ "$name" = scripts ] || [ "$name" = skills ]; then
+  elif [ "$name" = docs ] || [ "$name" = scripts ] || [ "$name" = skills ] || [ "$name" = spec ]; then
     :
   else
     printf 'info: 非技能目录（无 SKILL.md）：%s\n' "$name"
@@ -209,7 +362,7 @@ else
   ok "无运行产物入库（.venv/.cache/__pycache__/*.egg-info）"
 fi
 
-# --- 汇总 ----------------------------------------------------------------------
+# --- 汇总 ---------------------------------------------------------------------
 
 printf '\nlint: %d ok, %d warn, %d error\n' "$oks" "$warns" "$errors"
 [ "$errors" -eq 0 ] || exit 1

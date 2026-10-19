@@ -189,22 +189,27 @@ fm_subvalue() {
   ' "$SKILLS_DIR/$1/SKILL.md"
 }
 
-# fm_description_chars <skill> — description 内容的字符数（行内值或折叠块累加），
-# 供 lint 判断是否过短。
-fm_description_chars() {
+# fm_description_text <skill> — description 的原始文本（行内值或折叠块），
+# 每行一条、去掉缩进；供 lint 检查字符数与尖括号。
+fm_description_text() {
   awk '
     NR == 1 { if ($0 !~ /^---[[:space:]]*$/) exit; fm = 1; next }
     fm && /^---[[:space:]]*$/ { exit }
     fm && index($0, "description:") == 1 {
       ind = 1
       line = $0; sub(/^description:[[:space:]]*/, "", line)
-      n += length(line)
+      if (line != "" && line !~ /^[>|][+-]?$/) print line
       next
     }
     fm && /^[A-Za-z0-9_-]+:/ { if (ind) exit }
-    ind { n += length($0) }
-    END { print n + 0 }
+    ind { line = $0; sub(/^[[:space:]]+/, "", line); print line }
   ' "$SKILLS_DIR/$1/SKILL.md"
+}
+
+# fm_description_chars <skill> — description 的字符数（按 UTF-8 字符计，不计换行），
+# 供 lint 判断过短 / 超上限。
+fm_description_chars() {
+  fm_description_text "$1" | tr -d '\n' | wc -m | tr -d ' '
 }
 
 # --- 链接管理（junction / symlink 统一抽象） ---------------------------------
