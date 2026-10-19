@@ -33,3 +33,15 @@ bash "<skill_dir>/bin/md2pdf" check out.pdf                        # 独立跑�
 - **找不到 Edge**：安装系统 Edge；无 Edge 时 Playwright 会尝试下载自带 Chromium 兜底。
 - **网页 URL 抽取失败**：trafilatura 对部分动态页无效，改为把内容贴给 Agent 落盘成 md 再转换。
 - **convert 报 check FAIL**：按错误列表（空白页 / 孤悬标题 / 字体集 / 目录页码）修复文档或样式后重跑。
+
+## 第三方资源与许可
+
+`fetch` 在运行时下载到 `assets/`（已 gitignore，不随仓库分发），来源均为 jsDelivr：
+
+| 资源 | 版本 | 许可 |
+| --- | --- | --- |
+| Noto Serif SC / Noto Sans SC（fontsource 静态字重切片） | 5.3.1 | SIL OFL 1.1 |
+| Paged.js | 0.4.3 | MIT |
+| KaTeX（含字体） | 0.16.11 | MIT |
+
+主题 CSS 与模板为本仓库原创，随根 [LICENSE](../../LICENSE) 以 MIT 发布。

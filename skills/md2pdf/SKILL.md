@@ -8,7 +8,7 @@ license: MIT
 compatibility: 需要 uv >= 0.5、Python >= 3.11 与系统 Edge（Playwright channel=msedge 打印，零浏览器下载）；首次使用需联网 fetch 一次下载字体切片 + Paged.js + KaTeX（~15MB）；网页来源经 trafilatura 抽正文
 allowed-tools: Bash(uv run *) Bash(bash *bin/md2pdf *)
 metadata:
-  version: 0.1.0
+  version: 0.1.1
   category: document
 ---
 
@@ -83,3 +83,10 @@ bash "<skill_dir>/bin/md2pdf" fetch    # 下载字体切片 + Paged.js + KaTeX�
 - 全文唯一 `# h1` 视为文档标题（进封面/题头，不进正文），`##` 升格为章节；自带「一、」等编号的章节不叠加自动章号
 - 布局变体在模板层物化（非 CSS 显隐）——Paged.js 的 display:none 分页冲突教训（DECISIONS D2）
 - 单美元 `$` 公式与货币符号可能误判，必要时转义 `\$`
+
+## 参考文档
+
+- [docs/SPEC.md](docs/SPEC.md) — 设计规范
+- [docs/DECISIONS.md](docs/DECISIONS.md) — 决策记录
+- [docs/测试集.md](docs/测试集.md) — 行为协议回归用例
+- [README.md](README.md) — 安装、用法、排障与第三方资源许可
