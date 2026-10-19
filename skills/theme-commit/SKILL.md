@@ -5,11 +5,12 @@ description: >-
   按逻辑主题分批提交；提交信息遵循仓库的 Conventional Commits 规范（type(scope): 摘要 + 列表式 body），
   显式暂存路径、提交前检查、提交后验证，不改写历史、不推送。
   当用户要求"提交一下""把改动分开提交""整理提交历史"且变更涉及多个主题时使用；
-  单主题常规提交可不用本 skill，用户明确要求直接提交时可跳过计划预览，
-  但消息格式与检查仍适用。明确要求改写历史、推送或只查看 diff 时不要使用本 skill。
+  英文触发词包括 "commit" "split commits" "organize commit history"；
+  单主题常规提交可不用本 skill，用户明确要求直接提交时可跳过计划预览，但消息格式与检查仍适用。
+  明确要求改写历史、推送或只查看 diff 时不要使用本 skill。
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   category: git
 ---
 
@@ -97,44 +98,24 @@ metadata:
 
 ## 提交信息规范
 
-默认格式；项目有更具体规范时以项目为准：
+默认 `type(scope): 摘要` + 空行 + `- ` 列表式 body；`type` 取 `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `build`；摘要中文声明式动词开头、≤50 字、不加句号、不写版本号；版本变更写 body。项目有 commitlint / 模板 / hook 时以项目为准。
 
-- **Subject**：`type(scope): 摘要`，ASCII 冒号。`type` 取 `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `build`（项目另有 `perf` / `ci` / `style` / `revert` 等时按项目规范）；`scope` 用 skill / 模块 / 目录，跨模块用 `repo`。
-- 摘要用中文声明式动词开头，≤50 字，不加句号，**不写版本号**。
-- **Body**：subject 后空一行，用 `- ` 列表逐条说明，每条一个变更；写清做了什么、为什么，版本变更放 body。
-- 可选 footer：`BREAKING CHANGE: <说明>`、`Closes #123`、`Refs: #123`。不自动添加 `Co-authored-by`。
-- 破坏性变更：subject 加 `!` 或 body / footer 写 `BREAKING CHANGE:`，并按项目版本规则升 major。
-- 禁止"更新代码""修复问题"这类零信息摘要。
-
-示例：
-
-```text
-feat(deep-research): 增加源码调研协议
-
-- 阶段 1 识别源码调研，确认门列出源码获取计划
-- 阶段 4 clone 到 sources/ 并固定完整 commit SHA
-- 版本升至 0.4.0
-```
+完整规范（scope 约定、footer、`BREAKING CHANGE`、示例）见 `references/提交信息规范.md`。
 
 ## 边界与失败处理
 
 - **不推送、不 PR**；不 amend / rebase / reset / force push，不改写已发布历史。
 - 不使用 `git add -A` / `git add .`、`--no-verify`、hunk 级拆分。
-- 合并 / 变基 / cherry-pick / 冲突 / detached HEAD：停止。
+- 合并 / 变基 / cherry-pick / 冲突 / detached HEAD：停止并报告。
 - 已有 staged 改动、敏感文件、大文件、生成物、主题归属不明：先问，不猜。
 - 检查 / hook / 提交失败：停止并报告；不自动回滚或改写历史。
 - 纯提示词只能"建议"安全扫描与检查；可靠拦截仍需项目的 hook / CI / secret scanning。
 
-## 失败处理表
+按场景的处理表见 `references/失败处理.md`。
 
-| 场景 | 处理 |
+## 按需读取
+
+| 场景 | 读取 |
 | --- | --- |
-| 已有 staged 改动 | 列出并询问；未处理前暂停，不静默混入 |
-| 主题为空 | `git diff --cached --quiet` 命中，跳过并说明 |
-| 快速检查失败 | 停止；修复后重新暂存并重跑 |
-| hook 失败 | 停止；commit-msg 格式问题按规范修正后重试；不使用 `--no-verify` |
-| hook 修改文件 | 重新暂存并重试本次提交 |
-| 提交中途失败 | 报告已提交 / 剩余 / index 状态；不自动 reset / amend |
-| 批次后完整测试失败 | 报告失败摘要与已提交内容；不自动改写历史 |
-| 敏感 / 大文件 | 停止并询问；不强行提交 |
-| 合并 / 变基 / 冲突 / detached HEAD | 停止并报告 |
+| 写提交信息，或处理 footer / `BREAKING CHANGE` / 项目规范覆盖 | `references/提交信息规范.md` |
+| 预检或提交中出现异常（staged、空提交、hook、敏感文件、合并中） | `references/失败处理.md` |
