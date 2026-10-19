@@ -1,6 +1,6 @@
 {
   "name": "deep-research",
-  "description": "先校准问题、再消耗调研资源的深度调研，方向与档位经用户确认后执行，产出 research/ 目录下 REPORT.md + REFERENCES.md 双文件",
-  "version": "0.2.0",
+  "description": "先校准问题、再消耗调研资源的深度调研：调研目标与计划经用户确认后执行，产出 research/<YYMMDD>-<主题>/ 下 REPORT.md + REFERENCES.md 双文件（低/中/高档位）",
+  "version": "0.3.0",
   "author": { "name": "QING" }
 }
