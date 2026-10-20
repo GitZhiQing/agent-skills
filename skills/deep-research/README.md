@@ -1,6 +1,6 @@
 # deep-research
 
-先校准、再消耗调研资源的深度调研 skill：开始检索前，调研目标、调研计划与输出目录必须经用户确认。产出双文件——**REPORT.md**（调研报告，结论层）+ **REFERENCES.md**（素材登记簿，证据层），落盘于所选输出根目录下的 `<YYMMDD>-<主题>/`。需要研究源码时，先把仓库 clone 到该目录的 `sources/` 并固定 commit SHA，再基于本地源码分析并给出文件:行号证据。
+先校准、再消耗调研资源的深度调研 skill：开始检索前，调研目标、调研计划与输出目录必须经用户确认。产出三文件——**REPORT.md**（调研报告，结论层）+ **REFERENCES.md**（素材登记簿，证据层）+ **META.md**（调研元信息，台账层），落盘于所选输出根目录下的 `<YYMMDD>-<主题>/`。需要研究源码时，先把仓库 clone 到该目录的 `sources/` 并固定 commit SHA，再基于本地源码分析并给出文件:行号证据。
 
 ## 何时触发
 
@@ -10,7 +10,7 @@
 
 ## 工作方式
 
-三个阶段门：校准（歧义 / 冷门 / 模糊时才预检索）→ 选项式澄清（≤3 轮）→ 目标与计划确认门（执行环境、工具组合、调研目标、输出目录候选、调研计划、档位建议一次呈现，等待确认）。确认后进入执行与交付：普通调研按来源分层与增量登记执行，源码调研先 clone 到 `sources/` 并固定 commit SHA；交付 `<OUT>/<YYMMDD>-<主题>/REPORT.md` + `REFERENCES.md`，报告头部记录经用户确认的执行环境（Agent + LLM）。
+三个阶段门：校准（歧义 / 冷门 / 模糊时才预检索）→ 选项式澄清（≤3 轮）→ 目标与计划确认门（执行环境、工具组合、调研目标、输出目录候选、调研计划、档位建议一次呈现，等待确认）。确认后进入执行与交付：普通调研按来源分层与增量登记执行，源码调研先 clone 到 `sources/` 并固定 commit SHA；交付 `<OUT>/<YYMMDD>-<主题>/REPORT.md` + `REFERENCES.md` + `META.md`，META.md 记录经用户确认的执行环境（Agent + LLM）与档位、目标、目录、假设等台账，报告正文直接以摘要开始。
 
 - 完整协议（阶段模板、档位表、确认门措辞）见 [SKILL.md](SKILL.md)。
 - 源码调研六步、来源分层与安全细则见 [references/执行纪律.md](references/执行纪律.md)。
@@ -49,7 +49,7 @@
 
 - [SKILL.md](SKILL.md) — 协议正文（权威来源，含档位参数表、确认门模板）
 - [references/执行纪律.md](references/执行纪律.md) — 源码调研六步、增量登记、来源分层、安全细则
-- [references/交付模板.md](references/交付模板.md) — REPORT.md 结构、REFERENCES.md 模板
+- [references/交付模板.md](references/交付模板.md) — REPORT.md 结构、REFERENCES.md 模板、META.md 字段
 - [docs/需求与设计文档.md](docs/需求与设计文档.md) — 设计与决策依据
 - [docs/测试集.md](docs/测试集.md) — 验证场景
 

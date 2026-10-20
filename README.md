@@ -7,7 +7,7 @@
 | Skill | 类型 | 说明 |
 | --- | --- | --- |
 | [ddgs-web-access](skills/ddgs-web-access/) | Python CLI | 联网搜索与网页抓取 |
-| [deep-research](skills/deep-research/) | 纯提示词 | 先校准再调研，交付 REPORT + REFERENCES；支持源码调研 |
+| [deep-research](skills/deep-research/) | 纯提示词 | 先校准再调研，交付 REPORT + REFERENCES + META；支持源码调研 |
 | [theme-commit](skills/theme-commit/) | 纯提示词 | 先计划预览并用提问工具确认，再按主题分组提交 |
 | [zero-coding](skills/zero-coding/) | 纯提示词 | 从零启动个人项目的轻量工作流 |
 | [session-handoff](skills/session-handoff/) | 纯提示词 | 生成跨会话交接提示词 |
