@@ -1,6 +1,6 @@
 {
   "name": "deep-research",
   "description": "先校准问题、再消耗调研资源的深度调研：调研目标、计划与输出目录经用户确认后执行，在所选目录的 YYMMDD-主题/ 下产出 REPORT.md + REFERENCES.md + META.md 三文件（低/中/高档位）；源码调研先 clone 到 sources/ 固定 commit 再本地分析",
-  "version": "0.8.0",
+  "version": "0.10.0",
   "author": { "name": "QING" }
 }
