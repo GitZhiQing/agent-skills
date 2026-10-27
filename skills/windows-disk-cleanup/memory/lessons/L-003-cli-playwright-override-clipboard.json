@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "L-003",
+  "title": "报告页→CLI 协议用 Playwright override clipboard 验证",
+  "kind": "success",
+  "scope": "report",
+  "trigger": [
+    "playwright",
+    "clipboard",
+    "selection"
+  ],
+  "finding": "直接读系统剪贴板不稳定；override navigator.clipboard.writeText 可捕获页面复制的 JSON。",
+  "action": "用 page.add_init_script 覆盖 writeText，保存 __copied，再跑 delete --dry-run。",
+  "evidence": {
+    "rule_ids": [],
+    "error_types": [],
+    "options": {},
+    "notes": ""
+  },
+  "used": 1,
+  "status": "active",
+  "privacy": "public",
+  "skill_version": "0.2.0",
+  "created_at": "2026-10-27T10:43:17+08:00",
+  "last_used_at": "2026-10-27T10:43:17+08:00",
+  "graduated_at": null,
+  "graduated_to": null
+}

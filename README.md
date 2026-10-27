@@ -13,6 +13,7 @@
 | [session-handoff](skills/session-handoff/) | 纯提示词 | 生成跨会话交接提示词 |
 | [video-insight](skills/video-insight/) | Python 脚本 | 拉片级视频内容与画面分析 |
 | [md2pdf](skills/md2pdf/) | Python CLI | Markdown 转精美 PDF |
+| [windows-disk-cleanup](skills/windows-disk-cleanup/) | Python CLI | Windows 磁盘/文件夹扫描、可勾选 HTML 报告、安全删除与经验闭环 |
 
 各 skill 的用法、依赖与排障见其目录内的 `README.md` / `SKILL.md`；版本号以 `SKILL.md` frontmatter 为准。
 
@@ -38,6 +39,7 @@ Run `npx skills add "https://github.com/GitZhiQing/agent-skills"` and follow the
 - “把这次改动按主题分开提交”
 - “分析这条视频的文案和画面节奏”
 - “把这份 Markdown 转成 PDF，用 kimi 主题”
+- “清理一下 C 盘，先扫描出报告让我勾选”
 
 具体用法见各 skill 目录的 `README.md`。
 
@@ -46,6 +48,7 @@ Run `npx skills add "https://github.com/GitZhiQing/agent-skills"` and follow the
 - **调研交付**：`deep-research` 检索与源码分析 → `md2pdf` 排版成 PDF；搜索工具缺失时由 `ddgs-web-access` 补位。
 - **项目启动**：`zero-coding` 立项与切片 → `theme-commit` 按主题提交 → `session-handoff` 换会话继续。
 - **内容复盘**：`video-insight` 产出分析报告 → `md2pdf` 排版归档。
+- **磁盘清理**：`windows-disk-cleanup` 扫描并生成勾选报告 → 用户选择 → 安全删除与清理报告。
 
 ## 文档
 

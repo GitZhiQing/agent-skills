@@ -4,7 +4,7 @@
     "name": "QING",
     "url": "https://github.com/GitZhiQing"
   },
-  "description": "个人 AI coding agent skills 集合：联网搜索抓取、主题分批提交、深度调研、从零启动项目、视频内容与画面分析、会话交接、Markdown 转 PDF（遵循 Agent Skills 开放规范）",
+  "description": "个人 AI coding agent skills 集合：联网搜索抓取、主题分批提交、深度调研、从零启动项目、视频内容与画面分析、会话交接、Markdown 转 PDF、Windows 磁盘清理（遵循 Agent Skills 开放规范）",
   "plugins": [
     {
       "name": "ddgs-web-access",
@@ -123,6 +123,23 @@
         "markdown",
         "pagedjs",
         "typography"
+      ]
+    },
+    {
+      "name": "windows-disk-cleanup",
+      "source": "./skills/windows-disk-cleanup",
+      "skills": [
+        "./"
+      ],
+      "description": "Windows 磁盘/文件夹只读扫描 → 可勾选 HTML 报告 → 用户选择 JSON → 二次校验安全删除 → 清理报告；内置 226 条目录规则，缓存叶子不展开；public/local 经验闭环",
+      "version": "0.2.0",
+      "author": {
+        "name": "QING"
+      },
+      "keywords": [
+        "windows",
+        "disk-cleanup",
+        "storage"
       ]
     }
   ]

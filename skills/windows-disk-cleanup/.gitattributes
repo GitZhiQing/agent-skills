@@ -1,0 +1,2 @@
+# The extensionless bash launcher must stay LF even when core.autocrlf=true.
+bin/windows-disk-cleanup text eol=lf

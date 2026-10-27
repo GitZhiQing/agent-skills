@@ -1,0 +1,9 @@
+# Machine-private experience layer: full paths allowed, never commit.
+memory/local/
+
+# Runtime artifacts (also covered by the repository root .gitignore).
+.venv/
+.cache/
+__pycache__/
+*.pyc
+*.egg-info/

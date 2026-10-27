@@ -1,0 +1,19 @@
+[project]
+name = "windows-disk-cleanup"
+version = "0.2.0"
+description = "Scan Windows drives/folders, produce an offline HTML selection report, and delete only user-confirmed items"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+windows-disk-cleanup = "disk_cleanup.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/disk_cleanup"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"assets" = "disk_cleanup/assets"

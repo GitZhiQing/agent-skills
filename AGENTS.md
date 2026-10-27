@@ -28,9 +28,14 @@ bash skills/md2pdf/bin/md2pdf fetch
 
 # video-insight（纯标准库；外部依赖 ffmpeg/ffprobe）
 python -m unittest discover -s skills/video-insight/tests
+
+# windows-disk-cleanup（纯标准库 + PowerShell 辅助；uv 可选）
+python -m unittest discover -s skills/windows-disk-cleanup/tests
+python skills/windows-disk-cleanup/scripts/memory.py check --json
+bash skills/windows-disk-cleanup/bin/windows-disk-cleanup doctor --root . --json
 ```
 
-视频单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。md2pdf 改动按 `skills/md2pdf/docs/测试集.md` 回归，核心质量门为 S-3 canary 双版式。
+视频单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 42 条，真实扫描/回收站用例需在 Windows 人工执行。md2pdf 改动按 `skills/md2pdf/docs/测试集.md` 回归，核心质量门为 S-3 canary 双版式。
 
 ## skill 矩阵
 
@@ -43,6 +48,7 @@ python -m unittest discover -s skills/video-insight/tests
 | session-handoff | 纯提示词 | `skills/session-handoff/SKILL.md` | `docs/测试集.md`（人工会话） |
 | video-insight | Python 脚本（标准库） | `skills/video-insight/SKILL.md` | unittest + `docs/测试集.md` |
 | md2pdf | Python CLI（uv） | `skills/md2pdf/SKILL.md` | `--help` + canary S-3 + `docs/测试集.md` |
+| windows-disk-cleanup | Python CLI（标准库 + PowerShell） | `skills/windows-disk-cleanup/SKILL.md` | unittest + memory check + `docs/测试集.md` |
 
 架构与依赖细节写在各 skill 的 `README.md` / `docs/需求与设计文档.md`（md2pdf 为 `docs/SPEC.md` + `docs/DECISIONS.md`），本文不重复。
 

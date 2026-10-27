@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>__TITLE__</title>
+<style>
+  :root {
+    --bg: #f4f6fa; --panel: #fff; --panel2: #fbfcff; --text: #172033; --muted: #667085;
+    --faint: #98a2b3; --line: #dfe5ef; --line2: #eef2f8; --accent: #2563eb;
+    --ok: #087443; --ok-bg: #e8f7ef; --warn: #9a5b00; --warn-bg: #fff4dc;
+    --bad: #b42318; --bad-bg: #feeceb; --shadow: 0 10px 30px rgba(23,32,51,.07), 0 2px 8px rgba(23,32,51,.04);
+    --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+    --sans: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1424; --panel: #141e33; --panel2: #111a2c; --text: #e7edf8; --muted: #9aa8bf;
+      --faint: #70809a; --line: #24324b; --line2: #1b2740; --accent: #6ea0ff;
+      --ok: #6ee7b7; --ok-bg: rgba(16,185,129,.13); --warn: #fbbf24; --warn-bg: rgba(245,158,11,.13);
+      --bad: #fda4af; --bad-bg: rgba(244,63,94,.14); --shadow: 0 16px 40px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: radial-gradient(800px 380px at 8% -8%, rgba(37,99,235,.12), transparent 60%), var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.55; }
+  .page { max-width: 1180px; margin: 0 auto; padding: 28px 24px 48px; }
+  .hero { padding: 26px; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(135deg, var(--panel), var(--panel2)); box-shadow: var(--shadow); }
+  .eyebrow { font-size: 11px; letter-spacing: .18em; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+  h1 { margin: 8px 0 6px; font-size: clamp(26px, 3vw, 36px); letter-spacing: -.02em; }
+  .rootline { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .tag { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--muted); }
+  .rootpath { font-family: var(--mono); font-size: 13px; padding: 5px 10px; border-radius: 9px; background: var(--line2); border: 1px solid var(--line); word-break: break-all; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); color: var(--muted); font-size: 12px; }
+  .chip strong { color: var(--text); }
+  .dashboard { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+  .stat { padding: 16px 17px; border: 1px solid var(--line); border-radius: 15px; background: var(--panel); position: relative; overflow: hidden; }
+  .stat::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--line); }
+  .stat.ok::after { background: var(--ok); } .stat.warn::after { background: var(--warn); } .stat.bad::after { background: var(--bad); } .stat.blue::after { background: var(--accent); }
+  .stat .label { color: var(--muted); font-size: 12px; font-weight: 650; }
+  .stat .value { font-size: 26px; font-weight: 750; letter-spacing: -.03em; margin: 5px 0 2px; }
+  .stat .sub { color: var(--faint); font-size: 11px; }
+  .volume { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 0 0 18px; }
+  .vcard { padding: 16px 18px; border: 1px solid var(--line); border-radius: 15px; background: var(--panel); }
+  .vcard h3 { margin: 0 0 10px; font-size: 12px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+  .vrow { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 12px; margin: 4px 0; }
+  .vrow strong { color: var(--text); }
+  .bar { height: 8px; border-radius: 99px; background: var(--line2); border: 1px solid var(--line); overflow: hidden; margin: 10px 0 6px; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #0ea5a4); }
+  .panel { border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: var(--shadow); overflow: hidden; }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--line); background: var(--panel2); flex-wrap: wrap; }
+  .panel-head h2 { margin: 0; font-size: 15px; }
+  .panel-head a { color: var(--accent); text-decoration: none; font-size: 12px; font-weight: 650; }
+  .panel-head a:hover { text-decoration: underline; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 760px; }
+  thead th { text-align: left; padding: 10px 14px; color: var(--faint); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; border-bottom: 1px solid var(--line); background: var(--panel2); }
+  thead th.num { text-align: right; }
+  tbody td { padding: 12px 14px; border-bottom: 1px solid var(--line2); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .path { font-family: var(--mono); font-size: 11.5px; word-break: break-all; }
+  .title { font-weight: 700; margin-bottom: 3px; }
+  .badge { display: inline-flex; padding: 2px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 750; border: 1px solid transparent; white-space: nowrap; }
+  .ok { color: var(--ok); background: var(--ok-bg); border-color: color-mix(in srgb, var(--ok) 18%, transparent); }
+  .warn { color: var(--warn); background: var(--warn-bg); border-color: color-mix(in srgb, var(--warn) 18%, transparent); }
+  .bad { color: var(--bad); background: var(--bad-bg); border-color: color-mix(in srgb, var(--bad) 18%, transparent); }
+  .muted { color: var(--muted); background: var(--line2); border-color: var(--line); }
+  .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .error { color: var(--bad); font-size: 11.5px; margin-top: 4px; word-break: break-word; }
+  .notes { margin-top: 18px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 15px; background: var(--panel); }
+  .notes h2 { margin: 0 0 8px; font-size: 14px; }
+  .notes ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 12.5px; }
+  .notes li { margin: 4px 0; }
+  .footer { margin-top: 18px; color: var(--faint); font-size: 11.5px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 860px) { .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); } .volume { grid-template-columns: 1fr; } .page { padding: 18px 14px 32px; } }
+  @media print { body { background: #fff; } .panel, .hero, .stat, .vcard { box-shadow: none; } .panel-head a { display: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div class="eyebrow">Windows Disk Cleanup · Cleanup Report</div>
+    <h1>清理报告</h1>
+    <div class="rootline"><span class="tag">ROOT</span><span class="rootpath" id="rootPath">—</span></div>
+    <div class="meta" id="metaChips"></div>
+  </header>
+
+  <section class="dashboard">
+    <div class="stat ok"><div class="label">已处理空间</div><div class="value" id="freedValue">—</div><div class="sub">按删除前逻辑大小统计；回收站清空后才真正释放</div></div>
+    <div class="stat blue"><div class="label">选中条目</div><div class="value" id="selectedValue">0</div><div class="sub">来自扫描报告的选择</div></div>
+    <div class="stat ok"><div class="label">成功删除 / 移入回收站</div><div class="value" id="deletedValue">0</div><div class="sub">完全移除的条目</div></div>
+    <div class="stat bad"><div class="label">失败 / 部分删除</div><div class="value" id="failedValue">0</div><div class="sub">需要人工处理</div></div>
+  </section>
+
+  <section class="volume">
+    <div class="vcard">
+      <h3>删除前磁盘</h3>
+      <div class="bar"><i id="barBefore"></i></div>
+      <div class="vrow"><span>可用</span><strong id="freeBefore">—</strong></div>
+      <div class="vrow"><span>已用 / 总量</span><strong id="usedBefore">—</strong></div>
+    </div>
+    <div class="vcard">
+      <h3>删除后磁盘</h3>
+      <div class="bar"><i id="barAfter"></i></div>
+      <div class="vrow"><span>可用</span><strong id="freeAfter">—</strong></div>
+      <div class="vrow"><span>已用 / 总量</span><strong id="usedAfter">—</strong></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>逐项结果</h2>
+      <a href="report.html">查看扫描报告 →</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>目录 / 文件</th><th>建议</th><th class="num">大小</th><th>结果</th><th class="num">释放 / 移入</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h2>说明</h2>
+    <ul id="notesList"></ul>
+  </section>
+
+  <div class="footer">
+    <span id="generated"></span>
+    <span>windows-disk-cleanup · 只删除用户在报告页勾选并确认的条目</span>
+  </div>
+</div>
+<script>
+const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const d = DATA;
+
+  function fmtBytes(v) {
+    if (v === null || v === undefined || Number.isNaN(v)) return "—";
+    const u = ["B","KB","MB","GB","TB"]; let n = Number(v), i = 0;
+    while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+    return i === 0 ? Math.round(n) + " B" : n.toFixed(1) + " " + u[i];
+  }
+  function fmtTime(v) {
+    if (!v) return "—";
+    const x = new Date(v);
+    return Number.isNaN(x.getTime()) ? v : x.toLocaleString("zh-CN", { hour12: false });
+  }
+  function chip(label, value) {
+    const el = document.createElement("span"); el.className = "chip";
+    el.appendChild(document.createTextNode(label + " "));
+    const b = document.createElement("strong"); b.textContent = value; el.appendChild(b);
+    return el;
+  }
+  function badge(text, cls) {
+    const el = document.createElement("span"); el.className = "badge " + cls; el.textContent = text; return el;
+  }
+  function setBar(id, v) {
+    const pct = (v && v.used_pct !== null && v.used_pct !== undefined) ? v.used_pct : 0;
+    $(id).style.width = Math.max(0, Math.min(100, pct)) + "%";
+  }
+
+  $("rootPath").textContent = d.root_display || d.root || "—";
+  const chips = $("metaChips");
+  chips.appendChild(chip("清理时间", fmtTime(d.started_at)));
+  chips.appendChild(chip("耗时", (d.duration_s || 0).toFixed(1) + " s"));
+  chips.appendChild(chip("方式", d.mode === "permanent" ? "彻底删除" : "移入回收站"));
+  chips.appendChild(chip("扫描 ID", d.scan_id || "—"));
+  chips.appendChild(chip("选择已确认", d.confirmed ? "是" : "否"));
+
+  const s = d.summary || {};
+  $("freedValue").textContent = s.moved_bytes_h || "—";
+  $("selectedValue").textContent = s.selected || 0;
+  $("deletedValue").textContent = s.deleted || 0;
+  $("failedValue").textContent = (s.failed || 0) + (s.partial || 0);
+
+  const before = d.volume_before || {}, after = d.volume_after || {};
+  setBar("barBefore", before); setBar("barAfter", after);
+  $("freeBefore").textContent = before.free_h || "—";
+  $("freeAfter").textContent = after.free_h || "—";
+  $("usedBefore").textContent = (before.used_h || "—") + " / " + (before.total_h || "—");
+  $("usedAfter").textContent = (after.used_h || "—") + " / " + (after.total_h || "—");
+
+  const tbody = $("tbody");
+  for (const item of (d.items || [])) {
+    const tr = document.createElement("tr");
+    const tdPath = document.createElement("td");
+    const title = document.createElement("div"); title.className = "title"; title.textContent = item.title || "目录";
+    const path = document.createElement("div"); path.className = "path"; path.textContent = item.path || "";
+    tdPath.appendChild(title); tdPath.appendChild(path);
+    if (item.error) {
+      const err = document.createElement("div"); err.className = "error"; err.textContent = item.error;
+      tdPath.appendChild(err);
+    }
+    tr.appendChild(tdPath);
+
+    const tdRec = document.createElement("td");
+    tdRec.appendChild(badge(item.recommendation_label || "—", "muted"));
+    tr.appendChild(tdRec);
+
+    const tdSize = document.createElement("td"); tdSize.className = "num"; tdSize.textContent = item.size_h || "—"; tr.appendChild(tdSize);
+
+    const tdStatus = document.createElement("td"); tdStatus.appendChild(badge(item.status_label || item.status || "—", item.status_class || "muted")); tr.appendChild(tdStatus);
+
+    const tdFreed = document.createElement("td"); tdFreed.className = "num"; tdFreed.textContent = item.freed_h || "—"; tr.appendChild(tdFreed);
+
+    tbody.appendChild(tr);
+  }
+
+  const notes = $("notesList");
+  const base = (d.notes || []).slice();
+  for (const n of base) {
+    const li = document.createElement("li"); li.textContent = n; notes.appendChild(li);
+  }
+  $("generated").textContent = "报告生成：" + fmtTime(d.generated_at) + " · 规则库：" + (d.rules_version || "—");
+})();
+</script>
+</body>
+</html>

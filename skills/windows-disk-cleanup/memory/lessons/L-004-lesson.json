@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "id": "L-004",
+  "title": "删除失败不要删父目录绕过锁定",
+  "kind": "failure",
+  "scope": "delete",
+  "trigger": [
+    "locked",
+    "permission",
+    "partial"
+  ],
+  "finding": "单个文件被占用时，父目录会 partial；删父目录会扩大影响并掩盖原因。",
+  "action": "报告 partial/failed，建议关闭程序或管理员重跑；不杀进程、不停服务、不改 ACL。",
+  "evidence": {
+    "rule_ids": [],
+    "error_types": [
+      "PermissionError"
+    ],
+    "options": {},
+    "notes": ""
+  },
+  "used": 0,
+  "status": "active",
+  "privacy": "public",
+  "skill_version": "0.2.0",
+  "created_at": "2026-10-27T10:43:18+08:00",
+  "last_used_at": null,
+  "graduated_at": null,
+  "graduated_to": null
+}

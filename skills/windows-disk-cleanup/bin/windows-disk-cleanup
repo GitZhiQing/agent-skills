@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# windows-disk-cleanup — location-independent launcher.
+#
+# Uses uv when available (stdlib only, so no project sync is needed) and falls
+# back to the system Python.  Works from any working directory and any install
+# spot (copy, junction or symlink).
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+if command -v cygpath >/dev/null 2>&1; then
+  PROJECT_DIR="$(cygpath -w "$PROJECT_DIR")"
+fi
+export PYTHONPATH="$PROJECT_DIR/src${PYTHONPATH:+;$PYTHONPATH}"
+
+if command -v uv >/dev/null 2>&1; then
+  exec uv run --no-project python -m disk_cleanup "$@"
+fi
+if command -v python >/dev/null 2>&1; then
+  exec python -m disk_cleanup "$@"
+fi
+if command -v python3 >/dev/null 2>&1; then
+  exec python3 -m disk_cleanup "$@"
+fi
+if command -v py >/dev/null 2>&1; then
+  exec py -3 -m disk_cleanup "$@"
+fi
+echo "ERROR: 找不到 uv/python/python3/py。请安装 uv（https://docs.astral.sh/uv/）或 Python 3.9+。" >&2
+exit 2

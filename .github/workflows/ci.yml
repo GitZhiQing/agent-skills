@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: skills-lint
         run: bash scripts/skills-lint.sh
+      - name: memory check
+        run: python3 skills/windows-disk-cleanup/scripts/memory.py check --json
       - name: link + doctor
         run: |
           mkdir -p "$HOME/.agents/skills"
@@ -33,3 +35,16 @@ jobs:
           sudo apt-get install -y ffmpeg
       - name: unittest
         run: python -m unittest discover -s skills/video-insight/tests
+
+  windows-disk-cleanup:
+    name: windows-disk-cleanup unit tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: unittest
+        run: python -m unittest discover -s skills/windows-disk-cleanup/tests
+      - name: memory check
+        run: python skills/windows-disk-cleanup/scripts/memory.py check --json

@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>__TITLE__</title>
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --bg2: #e9eef7;
+    --panel: #ffffff;
+    --panel2: #fbfcff;
+    --text: #172033;
+    --muted: #667085;
+    --faint: #98a2b3;
+    --line: #dfe5ef;
+    --line2: #eef2f8;
+    --accent: #2563eb;
+    --accent2: #0ea5a4;
+    --safe: #087443;
+    --safe-bg: #e8f7ef;
+    --caution: #9a5b00;
+    --caution-bg: #fff4dc;
+    --review: #1d4ed8;
+    --review-bg: #e8efff;
+    --keep: #475467;
+    --keep-bg: #eff2f7;
+    --danger: #b42318;
+    --danger-bg: #feeceb;
+    --shadow: 0 10px 30px rgba(23, 32, 51, .07), 0 2px 8px rgba(23, 32, 51, .04);
+    --radius: 18px;
+    --mono: ui-monospace, "Cascadia Code", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+    --sans: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1424;
+      --bg2: #111b2f;
+      --panel: #141e33;
+      --panel2: #111a2c;
+      --text: #e7edf8;
+      --muted: #9aa8bf;
+      --faint: #70809a;
+      --line: #24324b;
+      --line2: #1b2740;
+      --accent: #6ea0ff;
+      --accent2: #2dd4bf;
+      --safe: #6ee7b7;
+      --safe-bg: rgba(16, 185, 129, .13);
+      --caution: #fbbf24;
+      --caution-bg: rgba(245, 158, 11, .13);
+      --review: #93b4ff;
+      --review-bg: rgba(59, 130, 246, .15);
+      --keep: #b6c2d6;
+      --keep-bg: rgba(148, 163, 184, .12);
+      --danger: #fda4af;
+      --danger-bg: rgba(244, 63, 94, .14);
+      --shadow: 0 16px 40px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .2);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(900px 420px at 8% -8%, rgba(37, 99, 235, .12), transparent 60%),
+      radial-gradient(700px 380px at 100% 0%, rgba(14, 165, 164, .10), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.55;
+    padding-bottom: 130px;
+  }
+  .page { max-width: 1480px; margin: 0 auto; padding: 28px 24px 0; }
+  .hero {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 22px; padding: 26px 26px 24px;
+    background: linear-gradient(135deg, var(--panel) 0%, var(--panel2) 100%);
+    border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .eyebrow { font-size: 11px; letter-spacing: .18em; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+  h1 { margin: 8px 0 6px; font-size: clamp(26px, 3vw, 38px); line-height: 1.12; letter-spacing: -.02em; }
+  .rootline { display: flex; align-items: center; gap: 9px; margin-top: 10px; flex-wrap: wrap; }
+  .rootline .tag { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--muted); }
+  .rootpath {
+    font-family: var(--mono); font-size: 13px; padding: 5px 10px; border-radius: 9px;
+    background: var(--line2); border: 1px solid var(--line); word-break: break-all;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel2); color: var(--muted); font-size: 12px;
+  }
+  .chip strong { color: var(--text); font-weight: 650; }
+  .volume {
+    min-width: 300px; flex: 0 1 360px; padding: 16px 18px;
+    border: 1px solid var(--line); border-radius: 14px; background: var(--panel2);
+  }
+  .volume-head, .volume-foot { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .volume-head span { color: var(--muted); font-size: 12px; font-weight: 650; }
+  .volume-head strong { font-size: 20px; letter-spacing: -.02em; }
+  .bar { height: 9px; border-radius: 99px; background: var(--line2); overflow: hidden; margin: 12px 0 9px; border: 1px solid var(--line); }
+  .bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .5s ease; }
+  .volume-foot { color: var(--faint); font-size: 11px; }
+
+  .dashboard { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+  .stat {
+    position: relative; overflow: hidden; padding: 16px 17px; border: 1px solid var(--line);
+    border-radius: 15px; background: var(--panel); box-shadow: 0 1px 0 rgba(255,255,255,.4) inset;
+  }
+  .stat::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--line); }
+  .stat.safe::after { background: var(--safe); } .stat.caution::after { background: var(--caution); }
+  .stat.review::after { background: var(--review); } .stat.keep::after { background: var(--keep); }
+  .stat .label { color: var(--muted); font-size: 12px; font-weight: 650; display: flex; justify-content: space-between; gap: 8px; }
+  .stat .value { font-size: 26px; font-weight: 750; letter-spacing: -.03em; margin: 5px 0 2px; }
+  .stat .sub { color: var(--faint); font-size: 11px; }
+
+  .howto {
+    display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start;
+    margin: 0 0 18px; padding: 16px 18px; border: 1px dashed var(--line);
+    border-radius: 15px; background: color-mix(in srgb, var(--panel) 82%, transparent);
+  }
+  .howto .icon {
+    width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
+    background: var(--review-bg); color: var(--review); font-size: 19px; font-weight: 800;
+  }
+  .howto h2 { margin: 0 0 4px; font-size: 15px; }
+  .howto p { margin: 0; color: var(--muted); }
+  .howto ol { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
+  .howto li { margin: 3px 0; }
+  .howto b { color: var(--text); }
+  .howto .fine { margin-top: 8px; font-size: 12px; color: var(--faint); }
+
+  .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); overflow: hidden; }
+  .tabs { display: flex; gap: 4px; padding: 12px 14px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .tab {
+    appearance: none; border: 0; background: transparent; color: var(--muted); cursor: pointer;
+    font: inherit; font-weight: 650; padding: 9px 12px 10px; border-radius: 10px 10px 0 0; position: relative;
+  }
+  .tab:hover { background: var(--line2); color: var(--text); }
+  .tab[aria-selected="true"] { color: var(--accent); background: var(--panel2); }
+  .tab[aria-selected="true"]::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; background: var(--accent); border-radius: 2px; }
+  .tab .n { display: inline-block; margin-left: 5px; font-size: 11px; color: var(--faint); font-weight: 600; }
+  .toolbar {
+    display: flex; gap: 9px; align-items: center; flex-wrap: wrap;
+    padding: 13px 14px; border-bottom: 1px solid var(--line); background: var(--panel2);
+  }
+  .search { position: relative; flex: 1 1 240px; min-width: 190px; }
+  .search input {
+    width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--panel); color: var(--text); font: inherit; outline: none;
+  }
+  .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .search::before { content: "⌕"; position: absolute; left: 11px; top: 6px; color: var(--faint); font-size: 17px; }
+  select, .btn {
+    font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 8px 10px; outline: none;
+  }
+  select:focus, .btn:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .btn { cursor: pointer; font-weight: 650; white-space: nowrap; }
+  .btn:hover { background: var(--line2); }
+  .btn.subtle { color: var(--muted); }
+  .checkline { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+  input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+  .table-wrap { overflow-x: auto; max-height: 62vh; overflow-y: auto; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
+  thead th {
+    position: sticky; top: 0; z-index: 3; background: var(--panel2);
+    text-align: left; font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--faint); font-weight: 750; padding: 10px 12px; border-bottom: 1px solid var(--line);
+  }
+  thead th.num { text-align: right; }
+  tbody td { padding: 12px; border-bottom: 1px solid var(--line2); vertical-align: top; }
+  tbody tr { transition: background .12s ease; }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+  tbody tr.selected { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  tbody tr.disabled { opacity: .72; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.check { width: 42px; }
+  td.check input { margin-top: 2px; }
+  .name { min-width: 280px; max-width: 440px; }
+  .title { font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .path { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: 3px; word-break: break-all; }
+  .badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 750; letter-spacing: .01em; border: 1px solid transparent; white-space: nowrap;
+  }
+  .rec-safe { color: var(--safe); background: var(--safe-bg); border-color: color-mix(in srgb, var(--safe) 18%, transparent); }
+  .rec-caution { color: var(--caution); background: var(--caution-bg); border-color: color-mix(in srgb, var(--caution) 20%, transparent); }
+  .rec-review { color: var(--review); background: var(--review-bg); border-color: color-mix(in srgb, var(--review) 18%, transparent); }
+  .rec-keep { color: var(--keep); background: var(--keep-bg); border-color: var(--line); }
+  .role { color: var(--muted); background: var(--line2); border-color: var(--line); }
+  .admin { color: var(--danger); background: var(--danger-bg); border-color: color-mix(in srgb, var(--danger) 18%, transparent); }
+  .partial { color: var(--caution); background: var(--caution-bg); border-color: color-mix(in srgb, var(--caution) 18%, transparent); }
+  td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .size { font-weight: 750; }
+  .files { color: var(--faint); font-size: 11px; margin-top: 2px; }
+  .desc { min-width: 300px; max-width: 560px; color: var(--muted); font-size: 12.5px; }
+  .desc .action { margin-top: 4px; color: var(--text); font-size: 12px; }
+  .desc .action b { color: var(--accent); font-weight: 750; }
+  .desc .risk { margin-top: 4px; color: var(--faint); font-size: 11.5px; }
+  .mtime { color: var(--faint); font-size: 11px; white-space: nowrap; }
+  .empty { padding: 46px 20px; text-align: center; color: var(--faint); }
+  .empty strong { display: block; color: var(--muted); font-size: 15px; margin-bottom: 4px; }
+  .table-note { padding: 10px 14px; border-top: 1px solid var(--line); color: var(--faint); font-size: 11.5px; background: var(--panel2); }
+  .table-note b { color: var(--muted); }
+
+  .selbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    backdrop-filter: blur(14px); border-top: 1px solid var(--line);
+    box-shadow: 0 -12px 34px rgba(23, 32, 51, .12);
+  }
+  .selbar-inner {
+    max-width: 1480px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .selinfo { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 220px; }
+  .selinfo strong { font-size: 16px; }
+  .selinfo .size { color: var(--muted); font-weight: 650; }
+  .selwarn { color: var(--caution); font-size: 11.5px; max-width: 520px; }
+  .selwarn.bad { color: var(--danger); }
+  .selactions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .modebox { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+  .modebox select { padding: 7px 9px; }
+  .confirmline { display: inline-flex; align-items: flex-start; gap: 7px; color: var(--muted); font-size: 12px; max-width: 360px; line-height: 1.35; }
+  .confirmline input { margin-top: 2px; flex: 0 0 auto; }
+  .confirmline.warn { color: var(--danger); }
+  .copybtn {
+    appearance: none; border: 0; border-radius: 12px; padding: 11px 18px; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), #1d4ed8); color: #fff; font: inherit;
+    font-weight: 750; letter-spacing: .01em; box-shadow: 0 6px 16px rgba(37, 99, 235, .28);
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  .copybtn:hover:not(:disabled) { transform: translateY(-1px); }
+  .copybtn:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
+  .toast {
+    position: fixed; left: 50%; bottom: 96px; transform: translate(-50%, 12px);
+    background: #101828; color: #fff; padding: 10px 16px; border-radius: 11px;
+    font-size: 12.5px; font-weight: 600; opacity: 0; pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease; z-index: 40; max-width: min(560px, 90vw);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .modal[hidden] { display: none; }
+  .modal {
+    position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+    background: rgba(9, 14, 26, .55); padding: 20px;
+  }
+  .modal-card {
+    width: min(760px, 100%); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 18px; box-shadow: var(--shadow); padding: 20px;
+  }
+  .modal-card h3 { margin: 0 0 6px; font-size: 18px; }
+  .modal-card p { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
+  .modal-card textarea {
+    width: 100%; min-height: 230px; resize: vertical; padding: 12px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--panel2); color: var(--text);
+    font-family: var(--mono); font-size: 12px; line-height: 1.5;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 12px; }
+  details.notes { margin: 0 0 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); overflow: hidden; }
+  details.notes summary { cursor: pointer; padding: 12px 16px; font-weight: 650; color: var(--muted); }
+  details.notes summary:hover { background: var(--panel2); }
+  details.notes ul { margin: 0; padding: 0 22px 14px 34px; color: var(--muted); font-size: 12.5px; }
+  details.notes li { margin: 4px 0; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+  @media (max-width: 980px) {
+    .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .page { padding: 18px 14px 0; }
+    .hero { padding: 20px; }
+  }
+  @media (max-width: 640px) {
+    body { font-size: 13px; }
+    .hero { gap: 16px; }
+    .volume { min-width: 0; width: 100%; }
+    .dashboard { gap: 10px; }
+    .stat .value { font-size: 22px; }
+    .howto { grid-template-columns: 1fr; }
+    .howto .icon { display: none; }
+    .toolbar { padding: 10px; }
+    .selbar-inner { padding: 10px 14px; align-items: stretch; }
+    .selactions { width: 100%; justify-content: space-between; }
+    .copybtn { flex: 1 1 100%; }
+    .mtime { display: none; }
+    .table-wrap { max-height: none; }
+  }
+  @media print {
+    body { background: #fff; padding-bottom: 0; color: #000; }
+    .toolbar, .selbar, .howto, .toast, .modal { display: none !important; }
+    .panel, .hero, .stat { box-shadow: none; }
+    .table-wrap { max-height: none; overflow: visible; }
+    thead th { position: static; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Windows Disk Cleanup · Scan Report</div>
+      <h1>磁盘扫描报告</h1>
+      <div class="rootline">
+        <span class="tag">ROOT</span>
+        <span class="rootpath" id="rootPath">—</span>
+      </div>
+      <div class="meta" id="metaChips"></div>
+    </div>
+    <div class="volume" aria-label="磁盘占用">
+      <div class="volume-head"><span>磁盘占用</span><strong id="usedPct">—</strong></div>
+      <div class="bar"><i id="usedBar"></i></div>
+      <div class="volume-foot"><span id="usedText">—</span><span id="freeText">—</span></div>
+    </div>
+  </header>
+
+  <section class="dashboard" aria-label="扫描摘要">
+    <div class="stat safe">
+      <div class="label"><span>安全清理</span><span id="safeBytes">—</span></div>
+      <div class="value" id="safeCount">0</div>
+      <div class="sub">缓存 / 临时文件 / 可再生成产物</div>
+    </div>
+    <div class="stat caution">
+      <div class="label"><span>谨慎清理</span><span id="cautionBytes">—</span></div>
+      <div class="value" id="cautionCount">0</div>
+      <div class="sub">可能包含数据或需要重新配置</div>
+    </div>
+    <div class="stat review">
+      <div class="label"><span>待确认目录</span><span id="reviewBytes">—</span></div>
+      <div class="value" id="reviewCount">0</div>
+      <div class="sub">未命中规则，需人工判断</div>
+    </div>
+    <div class="stat keep">
+      <div class="label"><span>保留项</span><span>&nbsp;</span></div>
+      <div class="value" id="keepCount">0</div>
+      <div class="sub">系统组件 / 程序 / 凭据 / 用户数据</div>
+    </div>
+  </section>
+
+  <section class="howto">
+    <div class="icon" aria-hidden="true">1</div>
+    <div>
+      <h2>先勾选，再复制，最后交给 Agent 删除</h2>
+      <ol>
+        <li>在「清理建议」中勾选确认可以删除的条目；<b>默认不选中任何项</b>。</li>
+        <li>在底部选择删除方式，勾选确认框，点击 <b>复制选中路径</b>。</li>
+        <li>把复制出的 JSON 粘贴回 Agent 会话；Agent 会先校验选择，再执行删除并生成清理报告。</li>
+      </ol>
+      <p class="fine">本页只做选择，不会删除任何文件。回收站模式可恢复；彻底删除不可恢复。</p>
+    </div>
+  </section>
+
+  <details class="notes">
+    <summary>扫描说明与限制（点击展开）</summary>
+    <ul id="notesList"></ul>
+  </details>
+
+  <section class="panel">
+    <div class="tabs" role="tablist" aria-label="报告视图">
+      <button class="tab" role="tab" aria-selected="true" data-tab="cleanup">清理建议 <span class="n" id="tabCleanupCount">0</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="overview">目录总览 <span class="n" id="tabOverviewCount">0</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="all">全部条目 <span class="n" id="tabAllCount">0</span></button>
+    </div>
+    <div class="toolbar">
+      <div class="search">
+        <label class="sr-only" for="search">搜索</label>
+        <input id="search" type="search" placeholder="搜索路径、名称、说明…" autocomplete="off">
+      </div>
+      <select id="recFilter" aria-label="按建议筛选">
+        <option value="all">全部建议</option>
+        <option value="safe">安全清理</option>
+        <option value="caution">谨慎清理</option>
+        <option value="review">待确认</option>
+        <option value="keep">保留</option>
+      </select>
+      <select id="categoryFilter" aria-label="按类别筛选">
+        <option value="all">全部类别</option>
+      </select>
+      <select id="sortBy" aria-label="排序">
+        <option value="size-desc">大小：从大到小</option>
+        <option value="size-asc">大小：从小到大</option>
+        <option value="name">名称 / 路径</option>
+        <option value="rec">建议优先级</option>
+      </select>
+      <label class="checkline"><input id="onlySelectable" type="checkbox" checked> 只看可选中</label>
+      <button class="btn subtle" id="selectVisible" type="button">全选可见</button>
+      <button class="btn subtle" id="clearSelection" type="button">清空选择</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="check"><span class="sr-only">选择</span></th>
+            <th>目录 / 文件</th>
+            <th class="num">大小</th>
+            <th class="num">文件数</th>
+            <th>建议</th>
+            <th>说明与操作</th>
+            <th class="num">修改时间</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyState" hidden>
+        <strong>没有匹配的条目</strong>
+        调整筛选条件或搜索关键词试试。
+      </div>
+    </div>
+    <div class="table-note" id="tableNote"></div>
+  </section>
+</div>
+
+<footer class="selbar">
+  <div class="selbar-inner">
+    <div class="selinfo">
+      <strong id="selCount">已选 0 项</strong>
+      <span class="size" id="selSize">0 B</span>
+      <span class="selwarn" id="selWarn"></span>
+    </div>
+    <div class="selactions">
+      <label class="modebox">删除方式
+        <select id="mode">
+          <option value="recycle">移入回收站（可恢复）</option>
+          <option value="permanent">彻底删除（更快，不可恢复）</option>
+        </select>
+      </label>
+      <label class="confirmline" id="confirmLabel">
+        <input id="confirm" type="checkbox">
+        <span>我已确认以上选中项可以删除；删除前请再核对路径。</span>
+      </label>
+      <button class="copybtn" id="copyBtn" type="button" disabled>复制选中路径</button>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal" id="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">手动复制选择</h3>
+    <p>浏览器没有授予剪贴板权限。下面是完整的选择 JSON，请全选复制后粘贴给 Agent。</p>
+    <textarea id="modalText" readonly spellcheck="false"></textarea>
+    <div class="modal-actions">
+      <button class="btn" id="modalClose" type="button">关闭</button>
+      <button class="btn" id="modalCopy" type="button">再次复制</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
+(function () {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const REC_ORDER = { safe: 0, caution: 1, review: 2, keep: 3 };
+  const byPath = new Map(DATA.entries.map((e) => [e.path, e]));
+  const selected = new Set();
+  const state = {
+    tab: "cleanup",
+    search: "",
+    rec: "all",
+    category: "all",
+    onlySelectable: true,
+    sort: "size-desc",
+    mode: "recycle",
+  };
+
+  function fmtBytes(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) return "未统计";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let n = Number(value);
+    let i = 0;
+    while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+    return i === 0 ? Math.round(n) + " B" : n.toFixed(1) + " " + units[i];
+  }
+
+  function fmtCount(value) {
+    if (value === null || value === undefined) return "—";
+    return Number(value).toLocaleString("zh-CN");
+  }
+
+  function fmtTime(value) {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toLocaleString("zh-CN", { hour12: false });
+  }
+
+  function chip(label, value) {
+    const el = document.createElement("span");
+    el.className = "chip";
+    const b = document.createElement("strong");
+    b.textContent = value;
+    el.appendChild(document.createTextNode(label + " "));
+    el.appendChild(b);
+    return el;
+  }
+
+  function badge(text, cls) {
+    const el = document.createElement("span");
+    el.className = "badge " + cls;
+    el.textContent = text;
+    return el;
+  }
+
+  function isActionable(e) {
+    return e.selectable && (e.recommendation === "safe" || e.recommendation === "caution" || e.recommendation === "review");
+  }
+
+  function tabBase() {
+    if (state.tab === "cleanup") return DATA.entries.filter(isActionable);
+    if (state.tab === "overview") return DATA.entries.filter((e) => e.is_top_level || e.is_root);
+    return DATA.entries.slice();
+  }
+
+  function filtered() {
+    const q = state.search.trim().toLowerCase();
+    let rows = tabBase().filter((e) => {
+      if (state.rec !== "all" && e.recommendation !== state.rec) return false;
+      if (state.category !== "all" && e.category !== state.category) return false;
+      if (state.tab === "cleanup" && state.onlySelectable && !e.selectable) return false;
+      if (q) {
+        const hay = [e.path, e.name, e.title, e.description, e.action, e.category, e.rule_id || ""]
+          .join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    if (state.sort === "size-desc") rows.sort((a, b) => (b.size || 0) - (a.size || 0));
+    else if (state.sort === "size-asc") rows.sort((a, b) => (a.size || 0) - (b.size || 0));
+    else if (state.sort === "name") rows.sort((a, b) => a.path.localeCompare(b.path, "zh-CN"));
+    else if (state.sort === "rec") rows.sort((a, b) => (REC_ORDER[a.recommendation] - REC_ORDER[b.recommendation]) || ((b.size || 0) - (a.size || 0)));
+    return rows;
+  }
+
+  function addBadges(cell, e) {
+    const wrap = document.createElement("div");
+    wrap.className = "badges";
+    wrap.appendChild(badge(e.recommendation_label, "rec-" + e.recommendation));
+    if (e.role_label) wrap.appendChild(badge(e.role_label, "role"));
+    if (e.requires_admin) wrap.appendChild(badge("需管理员", "admin"));
+    if (e.partial) wrap.appendChild(badge("部分统计", "partial"));
+    if (e.reparse) wrap.appendChild(badge("链接未跟随", "role"));
+    cell.appendChild(wrap);
+  }
+
+  function toggle(path) {
+    const entry = byPath.get(path);
+    if (!entry || !entry.selectable) return;
+    if (selected.has(path)) selected.delete(path); else selected.add(path);
+    $("confirm").checked = false;
+    renderTable();
+    updateFooter();
+  }
+
+  function renderTable() {
+    const rows = filtered();
+    const tbody = $("tbody");
+    tbody.textContent = "";
+    const frag = document.createDocumentFragment();
+    for (const e of rows) {
+      const tr = document.createElement("tr");
+      tr.dataset.path = e.path;
+      if (selected.has(e.path)) tr.classList.add("selected");
+      if (!e.selectable) tr.classList.add("disabled");
+
+      const tdCheck = document.createElement("td");
+      tdCheck.className = "check";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = selected.has(e.path);
+      cb.disabled = !e.selectable;
+      cb.setAttribute("aria-label", "选择 " + e.path);
+      cb.addEventListener("change", () => toggle(e.path));
+      tdCheck.appendChild(cb);
+      tr.appendChild(tdCheck);
+
+      const tdName = document.createElement("td");
+      tdName.className = "name";
+      const title = document.createElement("div");
+      title.className = "title";
+      title.textContent = e.title || e.name || "目录";
+      const path = document.createElement("div");
+      path.className = "path";
+      path.textContent = e.path;
+      path.title = e.path;
+      tdName.appendChild(title);
+      tdName.appendChild(path);
+      addBadges(tdName, e);
+      tr.appendChild(tdName);
+
+      const tdSize = document.createElement("td");
+      tdSize.className = "num";
+      const size = document.createElement("div");
+      size.className = "size";
+      size.textContent = e.size_h || fmtBytes(e.size);
+      tdSize.appendChild(size);
+      if (e.size_known === false) {
+        const note = document.createElement("div");
+        note.className = "files";
+        note.textContent = "未深入统计";
+        tdSize.appendChild(note);
+      }
+      tr.appendChild(tdSize);
+
+      const tdFiles = document.createElement("td");
+      tdFiles.className = "num";
+      const files = document.createElement("div");
+      files.className = "files";
+      files.textContent = e.files_h && e.files_h !== "—" ? e.files_h : "—";
+      tdFiles.appendChild(files);
+      tr.appendChild(tdFiles);
+
+      const tdRec = document.createElement("td");
+      tdRec.appendChild(badge(e.recommendation_label, "rec-" + e.recommendation));
+      tr.appendChild(tdRec);
+
+      const tdDesc = document.createElement("td");
+      tdDesc.className = "desc";
+      const desc = document.createElement("div");
+      desc.textContent = e.description || "未提供说明。";
+      tdDesc.appendChild(desc);
+      if (e.action) {
+        const action = document.createElement("div");
+        action.className = "action";
+        const b = document.createElement("b");
+        b.textContent = "建议：";
+        action.appendChild(b);
+        action.appendChild(document.createTextNode(e.action));
+        tdDesc.appendChild(action);
+      }
+      if (e.risk) {
+        const risk = document.createElement("div");
+        risk.className = "risk";
+        risk.textContent = "风险：" + e.risk;
+        tdDesc.appendChild(risk);
+      }
+      tr.appendChild(tdDesc);
+
+      const tdTime = document.createElement("td");
+      tdTime.className = "num mtime";
+      tdTime.textContent = e.mtime_display || "—";
+      tr.appendChild(tdTime);
+
+      tr.addEventListener("click", (ev) => {
+        if (ev.target.closest("input,button,a,details,summary,select,textarea")) return;
+        if (e.selectable) toggle(e.path);
+      });
+      frag.appendChild(tr);
+    }
+    tbody.appendChild(frag);
+    $("emptyState").hidden = rows.length !== 0;
+    $("selectVisible").disabled = rows.every((e) => !e.selectable);
+    $("tableNote").innerHTML = "";
+    const note = document.createElement("span");
+    const total = DATA.meta.entry_count || DATA.entries.length;
+    const omitted = DATA.meta.omitted_entries || 0;
+    note.innerHTML = "当前视图 <b>" + rows.length + "</b> 条 · 报告共 <b>" + DATA.entries.length +
+      "</b> 条 · 扫描共 <b>" + total + "</b> 条" +
+      (omitted ? "（另有 <b>" + omitted + "</b> 条较小条目只在 scan.json 中）" : "");
+    $("tableNote").appendChild(note);
+  }
+
+  function selectedEntries() {
+    return Array.from(selected).map((p) => byPath.get(p)).filter(Boolean);
+  }
+
+  function isAncestor(a, b) {
+    const x = a.toLowerCase().replace(/\\+$/, "");
+    const y = b.toLowerCase().replace(/\\+$/, "");
+    return x !== y && y.startsWith(x + "\\");
+  }
+
+  function findOverlap(paths) {
+    const sorted = paths.slice().sort((a, b) => a.length - b.length);
+    for (let i = 0; i < sorted.length; i++) {
+      for (let j = i + 1; j < sorted.length; j++) {
+        if (isAncestor(sorted[i], sorted[j])) return [sorted[i], sorted[j]];
+      }
+    }
+    return null;
+  }
+
+  function updateFooter() {
+    const items = selectedEntries();
+    const total = items.reduce((sum, e) => sum + (e.size || 0), 0);
+    $("selCount").textContent = "已选 " + items.length + " 项";
+    $("selSize").textContent = fmtBytes(total);
+    const overlap = findOverlap(items.map((e) => e.path));
+    const review = items.filter((e) => e.recommendation === "review");
+    const caution = items.filter((e) => e.recommendation === "caution");
+    const warn = $("selWarn");
+    warn.textContent = "";
+    warn.className = "selwarn";
+    if (overlap) {
+      warn.textContent = "选中项存在父子关系，删除时以父目录为准：" + overlap[0];
+      warn.classList.add("bad");
+    } else if (review.length) {
+      warn.textContent = "包含 " + review.length + " 个待确认目录，请先核实用途：" + review[0].path;
+    } else if (caution.length) {
+      warn.textContent = "包含 " + caution.length + " 个谨慎项，请确认已了解风险。";
+    } else if (state.mode === "permanent" && items.length) {
+      warn.textContent = "彻底删除不可恢复；缓存/构建产物通常可再生成，系统项建议用回收站。";
+    }
+    const label = $("confirmLabel");
+    const span = label.querySelector("span");
+    if (review.length || state.mode === "permanent") {
+      span.textContent = "我已核对路径，了解彻底删除/待确认项的风险，确认删除以上条目。";
+      label.classList.add("warn");
+    } else {
+      span.textContent = "我已确认以上选中项可以删除；删除前请再核对路径。";
+      label.classList.remove("warn");
+    }
+    $("copyBtn").disabled = items.length === 0 || !$("confirm").checked;
+  }
+
+  function makePayload() {
+    return {
+      skill: "windows-disk-cleanup",
+      schema: 1,
+      scan_id: DATA.meta.scan_id,
+      scan_file: DATA.meta.scan_file || "",
+      root: DATA.meta.root,
+      mode: state.mode,
+      confirmed: true,
+      paths: Array.from(selected).sort(),
+    };
+  }
+
+  function payloadText() {
+    return "【windows-disk-cleanup 选择】\n```json\n" +
+      JSON.stringify(makePayload(), null, 2) + "\n```\n";
+  }
+
+  function toast(message) {
+    const el = $("toast");
+    el.textContent = message;
+    el.classList.add("show");
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => el.classList.remove("show"), 3200);
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  async function copySelection() {
+    if (!selected.size || !$("confirm").checked) return;
+    const text = payloadText();
+    let ok = false;
+    try {
+      if (navigator.clipboard && window.isSecureContext !== false) {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      }
+    } catch (_) { ok = false; }
+    if (!ok) ok = fallbackCopy(text);
+    if (ok) {
+      toast("已复制 " + selected.size + " 项选择，粘贴回 Agent 会话即可。");
+      const btn = $("copyBtn");
+      const old = btn.textContent;
+      btn.textContent = "已复制 ✓";
+      setTimeout(() => { btn.textContent = old; }, 1800);
+    } else {
+      $("modalText").value = text;
+      $("modal").hidden = false;
+      $("modalText").focus();
+      $("modalText").select();
+    }
+  }
+
+  function populate() {
+    const v = DATA.meta.volume || {};
+    $("rootPath").textContent = DATA.meta.root_display || DATA.meta.root || "—";
+    const chips = $("metaChips");
+    chips.textContent = "";
+    chips.appendChild(chip("扫描时间", fmtTime(DATA.meta.started_at)));
+    chips.appendChild(chip("耗时", (DATA.meta.duration_s || 0).toFixed(1) + " s"));
+    chips.appendChild(chip("权限", (DATA.meta.environment && DATA.meta.environment.admin) ? "管理员" : "普通用户"));
+    chips.appendChild(chip("文件", fmtCount(DATA.meta.stats && DATA.meta.stats.files)));
+    chips.appendChild(chip("规则库", DATA.meta.rules_version || "—"));
+    chips.appendChild(chip("ID", DATA.meta.scan_id || "—"));
+
+    $("usedPct").textContent = (v.used_pct === null || v.used_pct === undefined) ? "—" : v.used_pct + "%";
+    $("usedBar").style.width = Math.max(0, Math.min(100, v.used_pct || 0)) + "%";
+    $("usedText").textContent = "已用 " + (v.used_h || "—");
+    $("freeText").textContent = "可用 " + (v.free_h || "—") + " / 共 " + (v.total_h || "—");
+
+    const s = DATA.summary || {};
+    $("safeCount").textContent = fmtCount(s.safe_count);
+    $("cautionCount").textContent = fmtCount(s.caution_count);
+    $("reviewCount").textContent = fmtCount(s.review_count);
+    $("keepCount").textContent = fmtCount(s.keep_count);
+    $("safeBytes").textContent = fmtBytes(s.safe_bytes);
+    $("cautionBytes").textContent = fmtBytes(s.caution_bytes);
+    $("reviewBytes").textContent = fmtBytes(s.review_bytes);
+
+    $("tabCleanupCount").textContent = DATA.entries.filter(isActionable).length;
+    $("tabOverviewCount").textContent = DATA.entries.filter((e) => e.is_top_level || e.is_root).length;
+    $("tabAllCount").textContent = DATA.entries.length;
+
+    const cat = $("categoryFilter");
+    const cats = Array.from(new Set(DATA.entries.map((e) => e.category).filter(Boolean))).sort((a, b) => a.localeCompare(b, "zh-CN"));
+    for (const c of cats) {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      cat.appendChild(opt);
+    }
+
+    const notes = $("notesList");
+    notes.textContent = "";
+    const baseNotes = (DATA.meta.notes || []).slice();
+    baseNotes.push("报告生成时间：" + fmtTime(DATA.generated_at) + "；规则库更新：" + (DATA.meta.rules_version || "—") + "。");
+    for (const n of baseNotes) {
+      const li = document.createElement("li");
+      li.textContent = n;
+      notes.appendChild(li);
+    }
+  }
+
+  function bind() {
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        state.tab = tab.dataset.tab;
+        document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+        $("onlySelectable").disabled = state.tab !== "cleanup";
+        renderTable();
+      });
+    });
+    let timer = null;
+    $("search").addEventListener("input", (ev) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { state.search = ev.target.value; renderTable(); }, 120);
+    });
+    $("recFilter").addEventListener("change", (ev) => { state.rec = ev.target.value; renderTable(); });
+    $("categoryFilter").addEventListener("change", (ev) => { state.category = ev.target.value; renderTable(); });
+    $("sortBy").addEventListener("change", (ev) => { state.sort = ev.target.value; renderTable(); });
+    $("onlySelectable").addEventListener("change", (ev) => { state.onlySelectable = ev.target.checked; renderTable(); });
+    $("selectVisible").addEventListener("click", () => {
+      const before = selected.size;
+      filtered().forEach((e) => { if (e.selectable) selected.add(e.path); });
+      if (selected.size !== before) $("confirm").checked = false;
+      renderTable();
+      updateFooter();
+    });
+    $("clearSelection").addEventListener("click", () => {
+      selected.clear();
+      $("confirm").checked = false;
+      renderTable();
+      updateFooter();
+    });
+    $("mode").addEventListener("change", (ev) => { state.mode = ev.target.value; $("confirm").checked = false; updateFooter(); });
+    $("confirm").addEventListener("change", updateFooter);
+    $("copyBtn").addEventListener("click", copySelection);
+    $("modalClose").addEventListener("click", () => { $("modal").hidden = true; });
+    $("modal").addEventListener("click", (ev) => {
+      if (ev.target === $("modal")) $("modal").hidden = true;
+    });
+    $("modalCopy").addEventListener("click", async () => {
+      const text = $("modalText").value;
+      try {
+        await navigator.clipboard.writeText(text);
+        toast("已复制，粘贴回 Agent 会话即可。");
+        $("modal").hidden = true;
+      } catch (_) {
+        $("modalText").focus();
+        $("modalText").select();
+        toast("请按 Ctrl+C 复制。");
+      }
+    });
+    document.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") $("modal").hidden = true;
+    });
+  }
+
+  populate();
+  bind();
+  renderTable();
+  updateFooter();
+})();
+</script>
+</body>
+</html>

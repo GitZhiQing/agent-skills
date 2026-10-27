@@ -30,7 +30,7 @@ bash scripts/skills-doctor.sh    # 链接健康矩阵，应全部 linked
 
 1. 读该 skill 的 `SKILL.md`、`README.md`、`docs/测试集.md`。
 2. 只改必要文件；行为语义变化时按规范 §4 升版本，并同步 `pyproject.toml`（若有）、`.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json`。
-3. 按该 skill 的测试集回归；`video-insight` 另跑 `python -m unittest discover -s skills/video-insight/tests`。
+3. 按该 skill 的测试集回归；`video-insight` 另跑 `python -m unittest discover -s skills/video-insight/tests`；`windows-disk-cleanup` 另跑 `python -m unittest discover -s skills/windows-disk-cleanup/tests` 与 `python skills/windows-disk-cleanup/scripts/memory.py check --json`。
 4. `bash scripts/skills-lint.sh` 全绿。
 
 ### 新增 skill
@@ -47,7 +47,8 @@ bash scripts/skills-new.sh my-skill --with-design  # 另生成设计文档
 3. 在根 `README.md` 的 `## Skills` 表补一行（不写版本号）。
 4. 在 `.claude-plugin/marketplace.json` 补一个 plugin 条目。
 5. 本机维护者另在 `SKILLS.local.md` 补总览一行 + 明细一节。
-6. `bash scripts/skills-lint.sh` → `bash scripts/skills-link.sh my-skill` → `bash scripts/skills-doctor.sh`。
+6. 代码型 skill 在 `.github/workflows/ci.yml` 增加对应测试 job（Windows-only 用 `windows-latest`）；纯提示词 skill 仍按测试集人工回归。
+7. `bash scripts/skills-lint.sh` → `bash scripts/skills-link.sh my-skill` → `bash scripts/skills-doctor.sh`。
 
 ### 修改维护脚本
 

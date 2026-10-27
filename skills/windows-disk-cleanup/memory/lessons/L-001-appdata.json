@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "id": "L-001",
+  "title": "AppData 大目录先限时，通用目录只留最外层",
+  "kind": "success",
+  "scope": "scan",
+  "trigger": [
+    "appdata",
+    "timeout",
+    "generic"
+  ],
+  "finding": "扫描 AppData\\Local 这类大目录时，嵌套通用目录（App/Cache/Sub）会放大报告；30–60s 上限可先拿到可用清单。",
+  "action": "大目录加 --max-seconds 30–60（全盘可 900）；接受 partial 并在交付时说明；通用大目录只列最外层。",
+  "evidence": {
+    "rule_ids": [],
+    "error_types": [],
+    "options": {
+      "max_seconds": "60"
+    },
+    "notes": ""
+  },
+  "used": 3,
+  "status": "graduated",
+  "privacy": "public",
+  "skill_version": "0.2.0",
+  "created_at": "2026-10-27T10:43:16+08:00",
+  "last_used_at": "2026-10-27T10:43:17+08:00",
+  "graduated_at": "2026-10-27T10:43:17+08:00",
+  "graduated_to": "SKILL.md#第-0-步 + src/disk_cleanup/scanner.py#_prune_nested_generic",
+  "graduation_note": "限时约定写入 SKILL 第 0 步；通用大目录只留最外层写入 scanner"
+}

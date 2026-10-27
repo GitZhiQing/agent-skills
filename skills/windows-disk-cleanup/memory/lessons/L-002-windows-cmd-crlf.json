@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "id": "L-002",
+  "title": "Windows .cmd 启动器必须 CRLF",
+  "kind": "failure",
+  "scope": "general",
+  "trigger": [
+    "cmd",
+    "crlf",
+    "launcher"
+  ],
+  "finding": "LF-only .cmd 在 cmd.exe 中会把行拼错（leanup is not recognized）。",
+  "action": "保持 .cmd 为 CRLF；用 cmd /c 验证启动器。",
+  "evidence": {
+    "rule_ids": [],
+    "error_types": [],
+    "options": {},
+    "notes": ""
+  },
+  "used": 0,
+  "status": "graduated",
+  "privacy": "public",
+  "skill_version": "0.2.0",
+  "created_at": "2026-10-27T10:43:17+08:00",
+  "last_used_at": null,
+  "graduated_at": "2026-10-27T10:43:17+08:00",
+  "graduated_to": "bin/windows-disk-cleanup.cmd + .gitattributes",
+  "graduation_note": "已转 CRLF 并验证"
+}
