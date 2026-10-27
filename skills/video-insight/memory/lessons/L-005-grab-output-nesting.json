@@ -1,0 +1,13 @@
+{
+  "id": "L-005",
+  "created": "2026-10-22",
+  "scope": "general",
+  "type": "workflow",
+  "trigger": "grab_frames.py --output-dir X 之后按 X/xxx.jpg 找图找不到，实际落在 X/evidence/keyframes/ 或 X/evidence/crops/",
+  "finding": "单步抓帧脚本会把产物再套一层 evidence/keyframes|evidence/crops，且与 --label 前缀组合后路径更深；报告里若直接写 X/…jpg 会指向空路径",
+  "action": "抓帧后先 find 定位再引用；交付前把多层 key*/、zoom*/ 目录扁平合并到 evidence/keyframes/ 与 evidence/crops/，并同步改报告里的路径",
+  "evidence": "error-卡牌游戏实现 复盘（2026-10-22）：4 次 --output-dir 产生 key/key2/key3/key4 与 zoom~zoom5 八层目录，交付前合并为两层",
+  "status": "active",
+  "superseded_by": null,
+  "used": 1
+}

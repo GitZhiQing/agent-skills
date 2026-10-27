@@ -10,3 +10,4 @@
 | L-002 | uniform 采样后拼版屏数 > n_screens / dwell_s 异常长段 | 短于采样间隔的屏可能整屏被跳过 | active |
 | L-003 | grab_frames 报 Non full-range YUV / mjpeg 编码错误 | 新版 ffmpeg mjpeg 拒绝有限色域 YUV | graduated |
 | L-004 | python -c 内联 CJK 引号脚本在 Git Bash 报错 | shell 转义破坏中文引号与多字节字符 | active |
+| L-005 | grab_frames --output-dir 后按 X/xxx.jpg 找不到图 | 产物套了一层 evidence/keyframes 或 evidence/crops，交付前需扁平合并 | active |
