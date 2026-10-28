@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -118,9 +119,14 @@ class ScannerTests(unittest.TestCase):
                 root=str(root),
                 output_dir=str(Path(tmp) / "out"),
                 min_size=0,
-                max_seconds=1e-9,
+                max_seconds=1,
             )
-            result = Scanner(options).scan()
+            scanner = Scanner(options)
+            # 不依赖时钟粒度：极小预算（如 1e-9）在 CI 上可能小于 monotonic 的
+            # 一个 tick，导致 deadline 与首次检查同刻而不判超时。直接把截止时间
+            # 放到过去，稳定覆盖「已超时即标记 partial」这条路径。
+            scanner.deadline = time.monotonic() - 1
+            result = scanner.scan()
             self.assertTrue(result.stats.partial)
 
 
