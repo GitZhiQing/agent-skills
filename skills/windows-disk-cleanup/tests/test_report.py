@@ -15,7 +15,12 @@ from disk_cleanup.model import (
     ScanResult,
     ScanStats,
 )
-from disk_cleanup.report import write_cleanup_outputs, write_scan_outputs
+from disk_cleanup.report import (
+    _entry_for_js,
+    summarize_entries,
+    write_cleanup_outputs,
+    write_scan_outputs,
+)
 
 
 def sample_scan(root: str) -> ScanResult:
@@ -60,6 +65,23 @@ def sample_scan(root: str) -> ScanResult:
 
 
 class ReportTests(unittest.TestCase):
+    def test_summary_covers_five_tiers_and_suggest_is_actionable(self):
+        entry = Entry(
+            path=r"C:\Windows.old",
+            name="Windows.old",
+            role="cleanup",
+            size=100,
+            selectable=True,
+            recommendation="suggest",
+        )
+        summary = summarize_entries([entry])
+        self.assertEqual(summary["suggest_count"], 1)
+        self.assertEqual(summary["suggest_bytes"], 100)
+        self.assertEqual(summary["counts"]["suggest"], 1)
+        js = _entry_for_js(entry)
+        self.assertTrue(js["is_actionable"])
+        self.assertEqual(js["recommendation_label"], "建议清理")
+
     def test_scan_report_is_standalone_and_escaped(self):
         with tempfile.TemporaryDirectory(prefix="wdc-report-") as tmp:
             out = Path(tmp) / "out"
@@ -70,7 +92,9 @@ class ReportTests(unittest.TestCase):
             self.assertIn("\\u003cscript", html)
             self.assertNotIn("__TITLE__", html)
             self.assertNotIn("/*__WINDOWS_DISK_CLEANUP_DATA__*/", html)
-            self.assertNotIn("<script src=", html)
+            # 唯一允许的外部资源是 Tailwind CDN（用户已接受离线时无样式）。
+            self.assertIn("https://cdn.tailwindcss.com", html)
+            self.assertEqual(html.count("<script src="), 1)
             self.assertTrue(Path(outputs["scan_json"]).exists())
 
     def test_cleanup_report_renders_statuses(self):

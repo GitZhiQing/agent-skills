@@ -8,6 +8,9 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
 from disk_cleanup.model import (
+    ADVICE_LABELS,
+    GROUP_LABELS,
+    NATURE_LABELS,
     RECOMMENDATION_LABELS,
     RECOMMENDATION_SHORT,
     ROLE_LABELS,
@@ -77,7 +80,7 @@ def select_report_entries(entries: List[Entry], max_entries: int) -> Tuple[List[
         seen.add(key)
         if entry.is_root or entry.is_top_level or entry.role == "data":
             base.append(entry)
-        elif entry.recommendation in ("safe", "caution"):
+        elif entry.recommendation in ("suggest", "safe", "caution"):
             actionable.append(entry)
         else:
             optional.append(entry)
@@ -137,9 +140,11 @@ def summarize_entries(entries: Iterable[Entry]) -> Dict[str, Any]:
         "bytes": byte_counts,
         "selectable": selectable,
         "known_actionable": known_actionable,
+        "suggest_bytes": byte_counts.get("suggest", 0),
         "safe_bytes": byte_counts.get("safe", 0),
         "caution_bytes": byte_counts.get("caution", 0),
         "review_bytes": byte_counts.get("review", 0),
+        "suggest_count": counts.get("suggest", 0),
         "safe_count": counts.get("safe", 0),
         "caution_count": counts.get("caution", 0),
         "review_count": counts.get("review", 0),
@@ -171,8 +176,11 @@ def _entry_for_js(entry: Entry) -> Dict[str, Any]:
             ),
             "role_label": ROLE_LABELS.get(entry.role, entry.role),
             "scope_label": SCOPE_LABELS.get(entry.scope, entry.scope),
+            "group_label": GROUP_LABELS.get(entry.group, ""),
+            "nature_label": NATURE_LABELS.get(entry.nature, ""),
+            "advice_label": ADVICE_LABELS.get(entry.advice, ""),
             "is_actionable": entry.selectable
-            and entry.recommendation in ("safe", "caution", "review"),
+            and entry.recommendation in ("suggest", "safe", "caution", "review"),
         }
     )
     return data

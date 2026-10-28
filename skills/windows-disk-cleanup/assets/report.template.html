@@ -1,449 +1,336 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
 <title>__TITLE__</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // Tailwind Play CDN 加载失败（离线）时给出提示；数据展示与复制 JSON 不依赖样式。
+  window.addEventListener("DOMContentLoaded", function () {
+    setTimeout(function () {
+      if (!window.tailwind) {
+        var el = document.getElementById("cdnWarn");
+        if (el) el.hidden = false;
+      }
+    }, 1200);
+  });
+</script>
+<script>
+  tailwind.config = {
+    darkMode: "media",
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "PingFang SC", "Microsoft YaHei", "sans-serif"],
+          mono: ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"],
+        },
+      },
+    },
+  };
+</script>
 <style>
-  :root {
-    --bg: #f4f6fa;
-    --bg2: #e9eef7;
-    --panel: #ffffff;
-    --panel2: #fbfcff;
-    --text: #172033;
-    --muted: #667085;
-    --faint: #98a2b3;
-    --line: #dfe5ef;
-    --line2: #eef2f8;
-    --accent: #2563eb;
-    --accent2: #0ea5a4;
-    --safe: #087443;
-    --safe-bg: #e8f7ef;
-    --caution: #9a5b00;
-    --caution-bg: #fff4dc;
-    --review: #1d4ed8;
-    --review-bg: #e8efff;
-    --keep: #475467;
-    --keep-bg: #eff2f7;
-    --danger: #b42318;
-    --danger-bg: #feeceb;
-    --shadow: 0 10px 30px rgba(23, 32, 51, .07), 0 2px 8px rgba(23, 32, 51, .04);
-    --radius: 18px;
-    --mono: ui-monospace, "Cascadia Code", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
-    --sans: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  /* 步骤条：编号徽章 + 步骤间引导箭头。箭头用普通 CSS，不经 Tailwind 编译。 */
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    border-radius: 9999px;
+    background: #18181b;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0d1424;
-      --bg2: #111b2f;
-      --panel: #141e33;
-      --panel2: #111a2c;
-      --text: #e7edf8;
-      --muted: #9aa8bf;
-      --faint: #70809a;
-      --line: #24324b;
-      --line2: #1b2740;
-      --accent: #6ea0ff;
-      --accent2: #2dd4bf;
-      --safe: #6ee7b7;
-      --safe-bg: rgba(16, 185, 129, .13);
-      --caution: #fbbf24;
-      --caution-bg: rgba(245, 158, 11, .13);
-      --review: #93b4ff;
-      --review-bg: rgba(59, 130, 246, .15);
-      --keep: #b6c2d6;
-      --keep-bg: rgba(148, 163, 184, .12);
-      --danger: #fda4af;
-      --danger-bg: rgba(244, 63, 94, .14);
-      --shadow: 0 16px 40px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .2);
+    .step-num { background: #e4e4e7; color: #18181b; }
+  }
+  @media (min-width: 640px) {
+    .steps > li { position: relative; }
+    .steps > li:not(:last-child)::after {
+      content: "›";
+      position: absolute;
+      right: -0.6rem;
+      top: 0;
+      color: rgba(161, 161, 170, 0.75);
+      font-size: 15px;
+      line-height: 20px;
     }
   }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    margin: 0;
-    background:
-      radial-gradient(900px 420px at 8% -8%, rgba(37, 99, 235, .12), transparent 60%),
-      radial-gradient(700px 380px at 100% 0%, rgba(14, 165, 164, .10), transparent 55%),
-      var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    line-height: 1.55;
-    padding-bottom: 130px;
+  /* 滚动条样式必须写普通 <style>：Tailwind Play CDN 编译 text/tailwindcss 时会剔除
+     ::-webkit-scrollbar 规则，导致这里失效而退回系统默认滚动条。 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(161 161 170 / 0.35) transparent;
   }
-  .page { max-width: 1480px; margin: 0 auto; padding: 28px 24px 0; }
-  .hero {
-    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
-    gap: 22px; padding: 26px 26px 24px;
-    background: linear-gradient(135deg, var(--panel) 0%, var(--panel2) 100%);
-    border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-corner { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: rgb(161 161 170 / 0.35);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
   }
-  .eyebrow { font-size: 11px; letter-spacing: .18em; font-weight: 700; color: var(--accent); text-transform: uppercase; }
-  h1 { margin: 8px 0 6px; font-size: clamp(26px, 3vw, 38px); line-height: 1.12; letter-spacing: -.02em; }
-  .rootline { display: flex; align-items: center; gap: 9px; margin-top: 10px; flex-wrap: wrap; }
-  .rootline .tag { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--muted); }
-  .rootpath {
-    font-family: var(--mono); font-size: 13px; padding: 5px 10px; border-radius: 9px;
-    background: var(--line2); border: 1px solid var(--line); word-break: break-all;
+  *::-webkit-scrollbar-thumb:hover { background-color: rgb(113 113 122 / 0.55); }
+  @media (prefers-color-scheme: dark) {
+    * { scrollbar-color: rgb(228 228 231 / 0.22) transparent; }
+    *::-webkit-scrollbar-thumb { background: rgb(228 228 231 / 0.22); }
+    *::-webkit-scrollbar-thumb:hover { background: rgb(228 228 231 / 0.42); }
   }
-  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
-    border: 1px solid var(--line); background: var(--panel2); color: var(--muted); font-size: 12px;
-  }
-  .chip strong { color: var(--text); font-weight: 650; }
-  .volume {
-    min-width: 300px; flex: 0 1 360px; padding: 16px 18px;
-    border: 1px solid var(--line); border-radius: 14px; background: var(--panel2);
-  }
-  .volume-head, .volume-foot { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-  .volume-head span { color: var(--muted); font-size: 12px; font-weight: 650; }
-  .volume-head strong { font-size: 20px; letter-spacing: -.02em; }
-  .bar { height: 9px; border-radius: 99px; background: var(--line2); overflow: hidden; margin: 12px 0 9px; border: 1px solid var(--line); }
-  .bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .5s ease; }
-  .volume-foot { color: var(--faint); font-size: 11px; }
-
-  .dashboard { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
-  .stat {
-    position: relative; overflow: hidden; padding: 16px 17px; border: 1px solid var(--line);
-    border-radius: 15px; background: var(--panel); box-shadow: 0 1px 0 rgba(255,255,255,.4) inset;
-  }
-  .stat::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--line); }
-  .stat.safe::after { background: var(--safe); } .stat.caution::after { background: var(--caution); }
-  .stat.review::after { background: var(--review); } .stat.keep::after { background: var(--keep); }
-  .stat .label { color: var(--muted); font-size: 12px; font-weight: 650; display: flex; justify-content: space-between; gap: 8px; }
-  .stat .value { font-size: 26px; font-weight: 750; letter-spacing: -.03em; margin: 5px 0 2px; }
-  .stat .sub { color: var(--faint); font-size: 11px; }
-
-  .howto {
-    display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start;
-    margin: 0 0 18px; padding: 16px 18px; border: 1px dashed var(--line);
-    border-radius: 15px; background: color-mix(in srgb, var(--panel) 82%, transparent);
-  }
-  .howto .icon {
-    width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
-    background: var(--review-bg); color: var(--review); font-size: 19px; font-weight: 800;
-  }
-  .howto h2 { margin: 0 0 4px; font-size: 15px; }
-  .howto p { margin: 0; color: var(--muted); }
-  .howto ol { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
-  .howto li { margin: 3px 0; }
-  .howto b { color: var(--text); }
-  .howto .fine { margin-top: 8px; font-size: 12px; color: var(--faint); }
-
-  .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); overflow: hidden; }
-  .tabs { display: flex; gap: 4px; padding: 12px 14px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  .tab {
-    appearance: none; border: 0; background: transparent; color: var(--muted); cursor: pointer;
-    font: inherit; font-weight: 650; padding: 9px 12px 10px; border-radius: 10px 10px 0 0; position: relative;
-  }
-  .tab:hover { background: var(--line2); color: var(--text); }
-  .tab[aria-selected="true"] { color: var(--accent); background: var(--panel2); }
-  .tab[aria-selected="true"]::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; background: var(--accent); border-radius: 2px; }
-  .tab .n { display: inline-block; margin-left: 5px; font-size: 11px; color: var(--faint); font-weight: 600; }
-  .toolbar {
-    display: flex; gap: 9px; align-items: center; flex-wrap: wrap;
-    padding: 13px 14px; border-bottom: 1px solid var(--line); background: var(--panel2);
-  }
-  .search { position: relative; flex: 1 1 240px; min-width: 190px; }
-  .search input {
-    width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--line); border-radius: 10px;
-    background: var(--panel); color: var(--text); font: inherit; outline: none;
-  }
-  .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
-  .search::before { content: "⌕"; position: absolute; left: 11px; top: 6px; color: var(--faint); font-size: 17px; }
-  select, .btn {
-    font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line);
-    border-radius: 10px; padding: 8px 10px; outline: none;
-  }
-  select:focus, .btn:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
-  .btn { cursor: pointer; font-weight: 650; white-space: nowrap; }
-  .btn:hover { background: var(--line2); }
-  .btn.subtle { color: var(--muted); }
-  .checkline { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; white-space: nowrap; }
-  input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
-  .table-wrap { overflow-x: auto; max-height: 62vh; overflow-y: auto; }
-  table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
-  thead th {
-    position: sticky; top: 0; z-index: 3; background: var(--panel2);
-    text-align: left; font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
-    color: var(--faint); font-weight: 750; padding: 10px 12px; border-bottom: 1px solid var(--line);
-  }
-  thead th.num { text-align: right; }
-  tbody td { padding: 12px; border-bottom: 1px solid var(--line2); vertical-align: top; }
-  tbody tr { transition: background .12s ease; }
-  tbody tr:hover { background: color-mix(in srgb, var(--accent) 4%, transparent); }
-  tbody tr.selected { background: color-mix(in srgb, var(--accent) 8%, transparent); }
-  tbody tr.disabled { opacity: .72; }
-  tbody tr:last-child td { border-bottom: 0; }
-  td.check { width: 42px; }
-  td.check input { margin-top: 2px; }
-  .name { min-width: 280px; max-width: 440px; }
-  .title { font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-  .path { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: 3px; word-break: break-all; }
-  .badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
-  .badge {
-    display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px;
-    font-size: 10.5px; font-weight: 750; letter-spacing: .01em; border: 1px solid transparent; white-space: nowrap;
-  }
-  .rec-safe { color: var(--safe); background: var(--safe-bg); border-color: color-mix(in srgb, var(--safe) 18%, transparent); }
-  .rec-caution { color: var(--caution); background: var(--caution-bg); border-color: color-mix(in srgb, var(--caution) 20%, transparent); }
-  .rec-review { color: var(--review); background: var(--review-bg); border-color: color-mix(in srgb, var(--review) 18%, transparent); }
-  .rec-keep { color: var(--keep); background: var(--keep-bg); border-color: var(--line); }
-  .role { color: var(--muted); background: var(--line2); border-color: var(--line); }
-  .admin { color: var(--danger); background: var(--danger-bg); border-color: color-mix(in srgb, var(--danger) 18%, transparent); }
-  .partial { color: var(--caution); background: var(--caution-bg); border-color: color-mix(in srgb, var(--caution) 18%, transparent); }
-  td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .size { font-weight: 750; }
-  .files { color: var(--faint); font-size: 11px; margin-top: 2px; }
-  .desc { min-width: 300px; max-width: 560px; color: var(--muted); font-size: 12.5px; }
-  .desc .action { margin-top: 4px; color: var(--text); font-size: 12px; }
-  .desc .action b { color: var(--accent); font-weight: 750; }
-  .desc .risk { margin-top: 4px; color: var(--faint); font-size: 11.5px; }
-  .mtime { color: var(--faint); font-size: 11px; white-space: nowrap; }
-  .empty { padding: 46px 20px; text-align: center; color: var(--faint); }
-  .empty strong { display: block; color: var(--muted); font-size: 15px; margin-bottom: 4px; }
-  .table-note { padding: 10px 14px; border-top: 1px solid var(--line); color: var(--faint); font-size: 11.5px; background: var(--panel2); }
-  .table-note b { color: var(--muted); }
-
-  .selbar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-    background: color-mix(in srgb, var(--panel) 92%, transparent);
-    backdrop-filter: blur(14px); border-top: 1px solid var(--line);
-    box-shadow: 0 -12px 34px rgba(23, 32, 51, .12);
-  }
-  .selbar-inner {
-    max-width: 1480px; margin: 0 auto; padding: 12px 24px;
-    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  }
-  .selinfo { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 220px; }
-  .selinfo strong { font-size: 16px; }
-  .selinfo .size { color: var(--muted); font-weight: 650; }
-  .selwarn { color: var(--caution); font-size: 11.5px; max-width: 520px; }
-  .selwarn.bad { color: var(--danger); }
-  .selactions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .modebox { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
-  .modebox select { padding: 7px 9px; }
-  .confirmline { display: inline-flex; align-items: flex-start; gap: 7px; color: var(--muted); font-size: 12px; max-width: 360px; line-height: 1.35; }
-  .confirmline input { margin-top: 2px; flex: 0 0 auto; }
-  .confirmline.warn { color: var(--danger); }
-  .copybtn {
-    appearance: none; border: 0; border-radius: 12px; padding: 11px 18px; cursor: pointer;
-    background: linear-gradient(135deg, var(--accent), #1d4ed8); color: #fff; font: inherit;
-    font-weight: 750; letter-spacing: .01em; box-shadow: 0 6px 16px rgba(37, 99, 235, .28);
-    transition: transform .12s ease, opacity .12s ease;
-  }
-  .copybtn:hover:not(:disabled) { transform: translateY(-1px); }
-  .copybtn:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
-  .toast {
-    position: fixed; left: 50%; bottom: 96px; transform: translate(-50%, 12px);
-    background: #101828; color: #fff; padding: 10px 16px; border-radius: 11px;
-    font-size: 12.5px; font-weight: 600; opacity: 0; pointer-events: none;
-    transition: opacity .2s ease, transform .2s ease; z-index: 40; max-width: min(560px, 90vw);
-  }
-  .toast.show { opacity: 1; transform: translate(-50%, 0); }
-  .modal[hidden] { display: none; }
-  .modal {
-    position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
-    background: rgba(9, 14, 26, .55); padding: 20px;
-  }
-  .modal-card {
-    width: min(760px, 100%); background: var(--panel); border: 1px solid var(--line);
-    border-radius: 18px; box-shadow: var(--shadow); padding: 20px;
-  }
-  .modal-card h3 { margin: 0 0 6px; font-size: 18px; }
-  .modal-card p { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
-  .modal-card textarea {
-    width: 100%; min-height: 230px; resize: vertical; padding: 12px; border-radius: 12px;
-    border: 1px solid var(--line); background: var(--panel2); color: var(--text);
-    font-family: var(--mono); font-size: 12px; line-height: 1.5;
-  }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 12px; }
-  details.notes { margin: 0 0 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); overflow: hidden; }
-  details.notes summary { cursor: pointer; padding: 12px 16px; font-weight: 650; color: var(--muted); }
-  details.notes summary:hover { background: var(--panel2); }
-  details.notes ul { margin: 0; padding: 0 22px 14px 34px; color: var(--muted); font-size: 12.5px; }
-  details.notes li { margin: 4px 0; }
-  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-
-  @media (max-width: 980px) {
-    .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .page { padding: 18px 14px 0; }
-    .hero { padding: 20px; }
-  }
-  @media (max-width: 640px) {
-    body { font-size: 13px; }
-    .hero { gap: 16px; }
-    .volume { min-width: 0; width: 100%; }
-    .dashboard { gap: 10px; }
-    .stat .value { font-size: 22px; }
-    .howto { grid-template-columns: 1fr; }
-    .howto .icon { display: none; }
-    .toolbar { padding: 10px; }
-    .selbar-inner { padding: 10px 14px; align-items: stretch; }
-    .selactions { width: 100%; justify-content: space-between; }
-    .copybtn { flex: 1 1 100%; }
-    .mtime { display: none; }
-    .table-wrap { max-height: none; }
-  }
-  @media print {
-    body { background: #fff; padding-bottom: 0; color: #000; }
-    .toolbar, .selbar, .howto, .toast, .modal { display: none !important; }
-    .panel, .hero, .stat { box-shadow: none; }
-    .table-wrap { max-height: none; overflow: visible; }
-    thead th { position: static; }
+</style>
+<style type="text/tailwindcss">
+  @layer components {
+    .card { @apply rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900; }
+    .btn { @apply inline-flex h-8 items-center justify-center gap-1 rounded-md border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800; }
+    .btn-primary { @apply border-transparent bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300; }
+    .input { @apply h-8 rounded-md border border-zinc-200 bg-white px-2 text-xs text-zinc-900 outline-none focus:ring-2 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100; }
+    .badge { @apply inline-flex items-center rounded px-1.5 py-0 text-[10px] font-medium leading-4 whitespace-nowrap; }
+    .badge-rec-suggest { @apply bg-emerald-100 text-emerald-800 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20; }
+    .badge-rec-safe { @apply bg-sky-100 text-sky-800 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-400/20; }
+    .badge-rec-caution { @apply bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-600/25 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20; }
+    .badge-rec-keep { @apply bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-500/20 dark:bg-zinc-500/15 dark:text-zinc-400 dark:ring-zinc-400/20; }
+    .badge-rec-review { @apply bg-violet-100 text-violet-800 ring-1 ring-inset ring-violet-600/20 dark:bg-violet-500/15 dark:text-violet-300 dark:ring-violet-400/20; }
+    .badge-plain { @apply bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-500/15 dark:bg-zinc-800 dark:text-zinc-400; }
+    .badge-ai { @apply bg-fuchsia-100 text-fuchsia-800 ring-1 ring-inset ring-fuchsia-600/25 dark:bg-fuchsia-500/15 dark:text-fuchsia-300 dark:ring-fuchsia-400/25; }
+    .badge-advice-safe { @apply bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/25 dark:bg-emerald-500/10 dark:text-emerald-300; }
+    .badge-advice-caution { @apply bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/25 dark:bg-amber-500/10 dark:text-amber-300; }
+    .badge-advice-keep { @apply bg-zinc-50 text-zinc-500 ring-1 ring-inset ring-zinc-500/25 dark:bg-zinc-800/60 dark:text-zinc-400; }
+    .chip { @apply inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400; }
+    .pill { @apply inline-flex h-6 cursor-pointer items-center rounded-md px-2 text-[11px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800; }
+    .pill-active { @apply bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300; }
+    .pill-danger-active { @apply bg-red-600 text-white hover:bg-red-500; }
+    .tabbtn { @apply -mb-px inline-flex h-9 items-center gap-1.5 border-b-2 border-transparent px-1 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200; }
+    .tabbtn-active { @apply border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100; }
+    .chipf { @apply inline-flex h-6 items-center gap-1 rounded-md border border-zinc-200 bg-white px-1.5 text-[11px] font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800; }
+    .chipf-active { @apply border-transparent bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300; }
+    .chipf-count { @apply text-[10px] opacity-55; }
+    .chipf-empty { @apply cursor-not-allowed opacity-40 hover:bg-white dark:hover:bg-zinc-900; }
+    .facet-item { @apply flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-[11px] text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800; }
+    .facet-item-active { @apply bg-zinc-900 font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200; }
+    .facet-head { @apply px-2 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500; }
+    .facet-item-empty { @apply cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent; }
+    .facet-count { @apply ml-auto shrink-0 font-mono text-[10px] opacity-60; }
+    .facet-tag { @apply inline-flex items-center gap-1 rounded-md border border-zinc-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200; }
+    .facet-tag-x { @apply rounded px-0.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-100; }
+    .stat-value { @apply text-2xl font-semibold tracking-tight; }
+    .stat-label { @apply mt-1 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400; }
   }
 </style>
 </head>
-<body>
-<div class="page">
-  <header class="hero">
-    <div>
-      <div class="eyebrow">Windows Disk Cleanup · Scan Report</div>
-      <h1>磁盘扫描报告</h1>
-      <div class="rootline">
-        <span class="tag">ROOT</span>
-        <span class="rootpath" id="rootPath">—</span>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+<noscript><p class="bg-red-600 p-2 text-center text-sm text-white">本报告需要启用 JavaScript 才能浏览与复制选择。</p></noscript>
+<div id="cdnWarn" hidden class="bg-amber-100 px-4 py-2 text-center text-xs text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
+  样式库（Tailwind CDN）加载失败——当前可能离线。数据与筛选、复制选择 JSON 仍可使用，但页面无样式。联网后重新打开即可恢复。
+</div>
+
+<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+  <!-- hero -->
+  <header class="card p-5">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="text-lg font-semibold tracking-tight">磁盘扫描报告</h1>
+        <p id="rootPath" class="mt-1 break-all font-mono text-xs text-zinc-500 dark:text-zinc-400">—</p>
       </div>
-      <div class="meta" id="metaChips"></div>
+      <div id="metaChips" class="flex max-w-xl flex-wrap justify-end gap-1.5"></div>
     </div>
-    <div class="volume" aria-label="磁盘占用">
-      <div class="volume-head"><span>磁盘占用</span><strong id="usedPct">—</strong></div>
-      <div class="bar"><i id="usedBar"></i></div>
-      <div class="volume-foot"><span id="usedText">—</span><span id="freeText">—</span></div>
+    <div class="mt-4">
+      <div class="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+        <span id="usedText">已用 —</span>
+        <span id="usedPct" class="font-mono font-medium text-zinc-700 dark:text-zinc-300">—</span>
+      </div>
+      <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+        <div id="usedBar" class="h-full rounded-full transition-all duration-500" style="width:0%"></div>
+      </div>
+      <p id="freeText" class="mt-1.5 text-xs text-zinc-400 dark:text-zinc-500">可用 — / 共 —</p>
     </div>
   </header>
 
-  <section class="dashboard" aria-label="扫描摘要">
-    <div class="stat safe">
-      <div class="label"><span>安全清理</span><span id="safeBytes">—</span></div>
-      <div class="value" id="safeCount">0</div>
-      <div class="sub">缓存 / 临时文件 / 可再生成产物</div>
+  <!-- stats: five recommendation tiers -->
+  <section class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div class="card p-4">
+      <div id="suggestCount" class="stat-value text-emerald-600 dark:text-emerald-400">0</div>
+      <div class="stat-label"><span class="badge badge-rec-suggest">建议清理</span></div>
+      <div id="suggestBytes" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">—</div>
     </div>
-    <div class="stat caution">
-      <div class="label"><span>谨慎清理</span><span id="cautionBytes">—</span></div>
-      <div class="value" id="cautionCount">0</div>
-      <div class="sub">可能包含数据或需要重新配置</div>
+    <div class="card p-4">
+      <div id="safeCount" class="stat-value text-sky-600 dark:text-sky-400">0</div>
+      <div class="stat-label"><span class="badge badge-rec-safe">安全清理</span></div>
+      <div id="safeBytes" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">—</div>
     </div>
-    <div class="stat review">
-      <div class="label"><span>待确认目录</span><span id="reviewBytes">—</span></div>
-      <div class="value" id="reviewCount">0</div>
-      <div class="sub">未命中规则，需人工判断</div>
+    <div class="card p-4">
+      <div id="cautionCount" class="stat-value text-amber-600 dark:text-amber-400">0</div>
+      <div class="stat-label"><span class="badge badge-rec-caution">谨慎清理</span></div>
+      <div id="cautionBytes" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">—</div>
     </div>
-    <div class="stat keep">
-      <div class="label"><span>保留项</span><span>&nbsp;</span></div>
-      <div class="value" id="keepCount">0</div>
-      <div class="sub">系统组件 / 程序 / 凭据 / 用户数据</div>
+    <div class="card p-4">
+      <div id="keepCount" class="stat-value">0</div>
+      <div class="stat-label"><span class="badge badge-rec-keep">建议保留</span></div>
+      <div class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">本工具拒绝删除</div>
     </div>
-  </section>
-
-  <section class="howto">
-    <div class="icon" aria-hidden="true">1</div>
-    <div>
-      <h2>先勾选，再复制，最后交给 Agent 删除</h2>
-      <ol>
-        <li>在「清理建议」中勾选确认可以删除的条目；<b>默认不选中任何项</b>。</li>
-        <li>在底部选择删除方式，勾选确认框，点击 <b>复制选中路径</b>。</li>
-        <li>把复制出的 JSON 粘贴回 Agent 会话；Agent 会先校验选择，再执行删除并生成清理报告。</li>
-      </ol>
-      <p class="fine">本页只做选择，不会删除任何文件。回收站模式可恢复；彻底删除不可恢复。</p>
+    <div class="card p-4">
+      <div id="reviewCount" class="stat-value text-violet-600 dark:text-violet-400">0</div>
+      <div class="stat-label"><span class="badge badge-rec-review">待定</span></div>
+      <div id="reviewBytes" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">—</div>
     </div>
   </section>
 
-  <details class="notes">
-    <summary>扫描说明与限制（点击展开）</summary>
-    <ul id="notesList"></ul>
+  <!-- how to use -->
+  <section class="card mt-4 px-4 py-3">
+    <ol class="steps grid gap-3 sm:grid-cols-3 sm:gap-4">
+      <li class="flex items-start gap-2.5">
+        <span class="step-num">1</span>
+        <div class="min-w-0">
+          <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200">勾选条目</p>
+          <p class="mt-0.5 text-[11px] leading-4 text-zinc-500 dark:text-zinc-400">逐条选「回收站 / 彻底」，默认回收站</p>
+        </div>
+      </li>
+      <li class="flex items-start gap-2.5">
+        <span class="step-num">2</span>
+        <div class="min-w-0">
+          <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200">复制选择</p>
+          <p class="mt-0.5 text-[11px] leading-4 text-zinc-500 dark:text-zinc-400">勾选底部确认框，点「复制选中路径」</p>
+        </div>
+      </li>
+      <li class="flex items-start gap-2.5">
+        <span class="step-num">3</span>
+        <div class="min-w-0">
+          <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200">交回 Agent</p>
+          <p class="mt-0.5 text-[11px] leading-4 text-zinc-500 dark:text-zinc-400">把复制内容粘贴回会话，由 Agent 预演并执行</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <details class="card mt-3 p-4 text-xs text-zinc-600 dark:text-zinc-400">
+    <summary class="cursor-pointer font-medium text-zinc-800 dark:text-zinc-200">扫描说明</summary>
+    <ul id="notesList" class="mt-2 list-disc space-y-1 pl-5"></ul>
   </details>
 
-  <section class="panel">
-    <div class="tabs" role="tablist" aria-label="报告视图">
-      <button class="tab" role="tab" aria-selected="true" data-tab="cleanup">清理建议 <span class="n" id="tabCleanupCount">0</span></button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="overview">目录总览 <span class="n" id="tabOverviewCount">0</span></button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="all">全部条目 <span class="n" id="tabAllCount">0</span></button>
+  <!-- main panel -->
+  <section class="card mt-4">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-zinc-200 px-4 dark:border-zinc-800">
+      <nav class="flex gap-4" role="tablist" aria-label="视图">
+        <button class="tabbtn tabbtn-active" data-tab="cleanup" role="tab" aria-selected="true">清理建议 <span id="tabCleanupCount" class="chip">0</span></button>
+        <button class="tabbtn" data-tab="overview" role="tab" aria-selected="false">目录总览 <span id="tabOverviewCount" class="chip">0</span></button>
+        <button class="tabbtn" data-tab="all" role="tab" aria-selected="false">全部 <span id="tabAllCount" class="chip">0</span></button>
+      </nav>
     </div>
-    <div class="toolbar">
-      <div class="search">
-        <label class="sr-only" for="search">搜索</label>
-        <input id="search" type="search" placeholder="搜索路径、名称、说明…" autocomplete="off">
-      </div>
-      <select id="recFilter" aria-label="按建议筛选">
-        <option value="all">全部建议</option>
+
+    <div class="flex flex-wrap items-center gap-2 border-b border-zinc-200 px-4 py-2.5 dark:border-zinc-800">
+      <input id="search" type="search" placeholder="搜索路径 / 名称 / 说明…" class="input w-52 shrink-0" aria-label="搜索">
+      <select id="recFilter" class="input shrink-0" aria-label="按建议档筛选">
+        <option value="all">全部建议档</option>
+        <option value="suggest">建议清理</option>
         <option value="safe">安全清理</option>
         <option value="caution">谨慎清理</option>
-        <option value="review">待确认</option>
-        <option value="keep">保留</option>
+        <option value="keep">建议保留</option>
+        <option value="review">待定</option>
       </select>
-      <select id="categoryFilter" aria-label="按类别筛选">
-        <option value="all">全部类别</option>
+      <select id="aiFilter" class="input shrink-0" aria-label="按 AI 分析状态筛选">
+        <option value="all">AI 全部分析状态</option>
+        <option value="analyzed">AI 已分析</option>
+        <option value="missing">AI 未分析</option>
+        <option value="retiered">AI 已定档</option>
       </select>
-      <select id="sortBy" aria-label="排序">
-        <option value="size-desc">大小：从大到小</option>
-        <option value="size-asc">大小：从小到大</option>
-        <option value="name">名称 / 路径</option>
-        <option value="rec">建议优先级</option>
+      <select id="sortBy" class="input shrink-0" aria-label="排序">
+        <option value="rec">按建议度</option>
+        <option value="size-desc">按大小（大 → 小）</option>
+        <option value="size-asc">按大小（小 → 大）</option>
+        <option value="name">按名称</option>
       </select>
-      <label class="checkline"><input id="onlySelectable" type="checkbox" checked> 只看可选中</label>
-      <button class="btn subtle" id="selectVisible" type="button">全选可见</button>
-      <button class="btn subtle" id="clearSelection" type="button">清空选择</button>
+      <label class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+        <input id="onlySelectable" type="checkbox" checked class="h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-800">仅可操作项
+      </label>
+      <span class="min-w-4 flex-1"></span>
+      <button id="selectVisible" class="btn shrink-0" type="button">全选可见</button>
+      <button id="clearSelection" class="btn shrink-0" type="button">清空选择</button>
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th class="check"><span class="sr-only">选择</span></th>
-            <th>目录 / 文件</th>
-            <th class="num">大小</th>
-            <th class="num">文件数</th>
-            <th>建议</th>
-            <th>说明与操作</th>
-            <th class="num">修改时间</th>
+
+    <!-- 分类导航：表格上方，每维一行；计数静态（按当前视图），不随其它维度变化 -->
+    <div class="space-y-1 border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
+      <div id="groupFacet" class="flex flex-wrap items-center gap-1" role="group" aria-label="按归属筛选"></div>
+      <div id="natureFacet" class="flex flex-wrap items-center gap-1" role="group" aria-label="按性质筛选"></div>
+      <div id="langFacet" class="flex flex-wrap items-center gap-1" role="group" aria-label="按生态筛选"></div>
+    </div>
+
+    <div id="activeFilters" hidden class="flex flex-wrap items-center gap-1.5 border-b border-zinc-200 bg-zinc-50/60 px-4 py-1.5 dark:border-zinc-800 dark:bg-zinc-900/40"></div>
+
+    <div class="max-h-[68vh] overflow-auto">
+      <table class="w-full table-fixed border-collapse text-left text-xs">
+        <thead class="sticky top-0 z-10 bg-zinc-50/95 backdrop-blur dark:bg-zinc-900/95">
+          <tr class="border-b border-zinc-200 text-[11px] uppercase tracking-wide text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
+            <th class="w-9 px-2 py-2"></th>
+            <th class="px-2 py-2 font-medium">条目</th>
+            <th class="w-[78px] px-2 py-2 text-right font-medium">大小</th>
+            <th class="w-[62px] px-2 py-2 text-right font-medium">文件</th>
+            <th class="w-[64px] px-1 py-2 text-center font-medium" title="逐条删除方式：默认跟随底部全局设置，点击行内图标可覆盖">方式</th>
+            <th class="w-[208px] px-2 py-2 font-medium">说明</th>
+            <th class="w-[112px] px-2 py-2 font-medium">修改时间</th>
           </tr>
         </thead>
-        <tbody id="tbody"></tbody>
+        <tbody id="tbody" class="divide-y divide-zinc-100 dark:divide-zinc-800/70"></tbody>
       </table>
-      <div class="empty" id="emptyState" hidden>
-        <strong>没有匹配的条目</strong>
-        调整筛选条件或搜索关键词试试。
+    </div>
+
+    <div id="emptyState" hidden class="px-4 py-12 text-center text-sm text-zinc-400">
+      当前筛选没有匹配的条目。
+      <button id="clearFiltersEmpty" type="button" class="ml-2 text-xs text-zinc-600 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">清除全部筛选</button>
+    </div>
+
+    <!-- pagination -->
+    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-200 px-4 py-2.5 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+      <span id="tableNote"></span>
+      <div id="pager" class="flex items-center gap-2">
+        <button id="pagePrev" class="btn" type="button">‹ 上一页</button>
+        <span id="pageInfo" class="font-mono"></span>
+        <button id="pageNext" class="btn" type="button">下一页 ›</button>
       </div>
     </div>
-    <div class="table-note" id="tableNote"></div>
   </section>
+
+  <p class="mt-6 text-center text-[11px] text-zinc-400 dark:text-zinc-600">
+    windows-disk-cleanup · 只读扫描 · 删除始终经确认后由 Agent 执行 · 样式经 CDN 加载，离线时无样式
+  </p>
 </div>
 
-<footer class="selbar">
-  <div class="selbar-inner">
-    <div class="selinfo">
-      <strong id="selCount">已选 0 项</strong>
-      <span class="size" id="selSize">0 B</span>
-      <span class="selwarn" id="selWarn"></span>
+<!-- selection bar -->
+<footer class="sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95">
+  <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
+    <div class="flex items-baseline gap-2">
+      <span id="selCount" class="text-sm font-semibold">已选 0 项</span>
+      <span id="selSize" class="font-mono text-xs text-zinc-500 dark:text-zinc-400">0 B</span>
     </div>
-    <div class="selactions">
-      <label class="modebox">删除方式
-        <select id="mode">
-          <option value="recycle">移入回收站（可恢复）</option>
-          <option value="permanent">彻底删除（更快，不可恢复）</option>
-        </select>
-      </label>
-      <label class="confirmline" id="confirmLabel">
-        <input id="confirm" type="checkbox">
-        <span>我已确认以上选中项可以删除；删除前请再核对路径。</span>
-      </label>
-      <button class="copybtn" id="copyBtn" type="button" disabled>复制选中路径</button>
-    </div>
+    <p id="selWarn" class="min-w-0 flex-1 truncate text-xs text-amber-700 dark:text-amber-400"></p>
+    <label class="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+      默认方式
+      <select id="mode" class="input" aria-label="默认删除方式">
+        <option value="recycle">移入回收站</option>
+        <option value="permanent">彻底删除</option>
+      </select>
+    </label>
+    <label id="confirmLabel" class="inline-flex cursor-pointer items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+      <input id="confirm" type="checkbox" class="h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-800">
+      <span>我已确认以上选中项可以删除；删除前请再核对路径。</span>
+    </label>
+    <button id="copyBtn" class="btn btn-primary" type="button" disabled>复制选中路径</button>
   </div>
 </footer>
 
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div class="modal" id="modal" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <h3 id="modalTitle">手动复制选择</h3>
-    <p>浏览器没有授予剪贴板权限。下面是完整的选择 JSON，请全选复制后粘贴给 Agent。</p>
-    <textarea id="modalText" readonly spellcheck="false"></textarea>
-    <div class="modal-actions">
-      <button class="btn" id="modalClose" type="button">关闭</button>
-      <button class="btn" id="modalCopy" type="button">再次复制</button>
+<div id="toast" role="status" aria-live="polite" class="pointer-events-none fixed bottom-20 left-1/2 z-30 -translate-x-1/2 rounded-md bg-zinc-900 px-4 py-2 text-xs text-white opacity-0 shadow-lg transition-opacity dark:bg-zinc-100 dark:text-zinc-900"></div>
+
+<div id="modal" hidden class="fixed inset-0 z-40 items-center justify-center bg-zinc-950/60 p-4">
+  <div class="card w-full max-w-lg p-5" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle" class="text-sm font-semibold">手动复制选择</h3>
+    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">浏览器没有授予剪贴板权限。下面是完整的选择 JSON，请全选复制后粘贴给 Agent。</p>
+    <textarea id="modalText" readonly spellcheck="false" class="mt-3 h-56 w-full rounded-md border border-zinc-200 bg-white p-2 font-mono text-[11px] text-zinc-800 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"></textarea>
+    <div class="mt-3 flex justify-end gap-2">
+      <button id="modalClose" class="btn" type="button">关闭</button>
+      <button id="modalCopy" class="btn" type="button">再次复制</button>
     </div>
   </div>
 </div>
@@ -454,17 +341,36 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const REC_ORDER = { safe: 0, caution: 1, review: 2, keep: 3 };
+  const PAGE_SIZE = 100;
+  const REC_ORDER = { suggest: 0, safe: 1, caution: 2, keep: 3, review: 4 };
+  // 三维分类词表（与 model.py 的 GROUPS / NATURES 对应）。
+  const GROUP_LABEL = { system: "系统", app: "应用", dev: "开发工具", user: "用户文件", virtual: "虚拟机" };
+  const NATURE_LABEL = {
+    cache: "缓存", log: "日志与转储", build: "构建产物", installer: "安装包与更新残留",
+    temp: "临时文件", content: "用户内容", config: "配置与凭据", other: "未识别",
+  };
+  const LANG_LABEL = {
+    nodejs: "Node.js", python: "Python", rust: "Rust", go: "Go", java: "Java",
+    dotnet: ".NET", php: "PHP", ruby: "Ruby", swift: "Swift", cpp: "C/C++",
+    dart: "Dart", docker: "Docker", vscode: "VS Code", jetbrains: "JetBrains",
+    git: "Git", ai: "AI/模型", tools: "通用开发",
+  };
   const byPath = new Map(DATA.entries.map((e) => [e.path, e]));
   const selected = new Set();
+  const modeOverrides = new Map(); // path -> "recycle" | "permanent"
+  const expandedRows = new Set();
   const state = {
     tab: "cleanup",
     search: "",
     rec: "all",
-    category: "all",
+    group: "all",
+    nature: "all",
+    lang: "all",
+    ai: "all",
     onlySelectable: true,
-    sort: "size-desc",
+    sort: "rec",
     mode: "recycle",
+    page: 1,
   };
 
   function fmtBytes(value) {
@@ -498,6 +404,39 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     return el;
   }
 
+  // 使用率分档：颜色内联写死，不依赖 Tailwind 运行时生成类。
+  const USAGE_TIERS = [
+    { below: 60, from: "#10b981", to: "#34d399", label: "空间充足", text: "#047857", dark: "#34d399" },
+    { below: 80, from: "#f59e0b", to: "#fbbf24", label: "开始吃紧", text: "#b45309", dark: "#fbbf24" },
+    { below: 90, from: "#f97316", to: "#fb923c", label: "空间紧张", text: "#c2410c", dark: "#fb923c" },
+    { below: 101, from: "#ef4444", to: "#f87171", label: "空间告急", text: "#b91c1c", dark: "#f87171" },
+  ];
+
+  function usageTier(pct) {
+    for (const tier of USAGE_TIERS) {
+      if (pct < tier.below) return tier;
+    }
+    return USAGE_TIERS[USAGE_TIERS.length - 1];
+  }
+
+  function isDarkTheme() {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+
+  function paintUsage(barEl, labelEl, pct) {
+    const p = Math.max(0, Math.min(100, Number(pct) || 0));
+    const tier = usageTier(p);
+    barEl.style.width = p + "%";
+    barEl.style.background = "linear-gradient(90deg, " + tier.from + ", " + tier.to + ")";
+    barEl.style.boxShadow = p >= 80 ? "0 0 10px " + tier.to + "66" : "";
+    barEl.title = tier.label + " · 已用 " + p.toFixed(1) + "%";
+    if (labelEl) {
+      labelEl.textContent = p.toFixed(1) + "%";
+      labelEl.style.color = isDarkTheme() ? tier.dark : tier.text;
+      labelEl.title = tier.label;
+    }
+  }
+
   function badge(text, cls) {
     const el = document.createElement("span");
     el.className = "badge " + cls;
@@ -506,7 +445,32 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   }
 
   function isActionable(e) {
-    return e.selectable && (e.recommendation === "safe" || e.recommendation === "caution" || e.recommendation === "review");
+    return e.selectable && ["suggest", "safe", "caution", "review"].includes(e.recommendation);
+  }
+
+  function matchesAI(e) {
+    if (state.ai === "all") return true;
+    if (state.ai === "analyzed") return !!e.enriched;
+    if (state.ai === "missing") return !e.enriched;
+    if (state.ai === "retiered") return e.tier_source === "ai";
+    return true;
+  }
+
+  // dim 为要跳过的维度（用于分面计数），null 表示全部维度都生效。
+  function matches(e, dim) {
+    const q = state.search.trim().toLowerCase();
+    if (state.rec !== "all" && e.recommendation !== state.rec) return false;
+    if (dim !== "group" && state.group !== "all" && e.group !== state.group) return false;
+    if (dim !== "nature" && state.nature !== "all" && e.nature !== state.nature) return false;
+    if (dim !== "lang" && state.lang !== "all" && e.language !== state.lang) return false;
+    if (dim !== "ai" && !matchesAI(e)) return false;
+    if (state.tab === "cleanup" && state.onlySelectable && !e.selectable) return false;
+    if (q) {
+      const hay = [e.path, e.name, e.title, e.description, e.action, e.category, e.rule_id || "", e.language || ""]
+        .join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
   }
 
   function tabBase() {
@@ -516,34 +480,220 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   }
 
   function filtered() {
-    const q = state.search.trim().toLowerCase();
-    let rows = tabBase().filter((e) => {
-      if (state.rec !== "all" && e.recommendation !== state.rec) return false;
-      if (state.category !== "all" && e.category !== state.category) return false;
-      if (state.tab === "cleanup" && state.onlySelectable && !e.selectable) return false;
-      if (q) {
-        const hay = [e.path, e.name, e.title, e.description, e.action, e.category, e.rule_id || ""]
-          .join(" ").toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
+    let rows = tabBase().filter((e) => matches(e, null));
     if (state.sort === "size-desc") rows.sort((a, b) => (b.size || 0) - (a.size || 0));
     else if (state.sort === "size-asc") rows.sort((a, b) => (a.size || 0) - (b.size || 0));
     else if (state.sort === "name") rows.sort((a, b) => a.path.localeCompare(b.path, "zh-CN"));
-    else if (state.sort === "rec") rows.sort((a, b) => (REC_ORDER[a.recommendation] - REC_ORDER[b.recommendation]) || ((b.size || 0) - (a.size || 0)));
+    else rows.sort((a, b) => (REC_ORDER[a.recommendation] ?? 9) - (REC_ORDER[b.recommendation] ?? 9) || ((b.size || 0) - (a.size || 0)));
     return rows;
   }
 
-  function addBadges(cell, e) {
-    const wrap = document.createElement("div");
-    wrap.className = "badges";
-    wrap.appendChild(badge(e.recommendation_label, "rec-" + e.recommendation));
-    if (e.role_label) wrap.appendChild(badge(e.role_label, "role"));
-    if (e.requires_admin) wrap.appendChild(badge("需管理员", "admin"));
-    if (e.partial) wrap.appendChild(badge("部分统计", "partial"));
-    if (e.reparse) wrap.appendChild(badge("链接未跟随", "role"));
-    cell.appendChild(wrap);
+  function fmtBytesShort(bytes) {
+    if (!bytes) return "0";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let n = Number(bytes);
+    let i = 0;
+    while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+    return (i === 0 ? Math.round(n) : n.toFixed(1)) + " " + units[i];
+  }
+
+  // 分类导航：每维一行、表格上方。清单与计数静态（按当前 tab 统计），
+  // 不随其它维度变化，避免条目跳动与互相影响。
+  function renderFacetRow(boxId, label, dim, values, field, labelOf) {
+    const box = $(boxId);
+    box.textContent = "";
+    const head = document.createElement("span");
+    head.className = "w-7 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500";
+    head.textContent = label;
+    box.appendChild(head);
+
+    const base = tabBase();
+    const makeChip = (value, text) => {
+      const active = state[dim] === value;
+      const subset = base.filter((e) => value === "all" || e[field] === value);
+      const empty = value !== "all" && subset.length === 0;
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chipf" + (active ? " chipf-active" : "") + (empty ? " chipf-empty" : "");
+      b.setAttribute("aria-pressed", String(active));
+      b.appendChild(document.createTextNode(text));
+      if (value !== "all") {
+        const count = document.createElement("span");
+        count.className = "chipf-count";
+        count.textContent = String(subset.length);
+        b.appendChild(count);
+        const bytes = fmtBytesShort(subset.reduce((s, e) => s + (e.size || 0), 0));
+        b.title = text + "：" + subset.length + " 条，合计 " + bytes;
+      } else {
+        b.title = "不限制" + label;
+      }
+      if (empty) {
+        b.disabled = true;
+        b.title = "当前视图没有该分类的条目";
+      }
+      b.addEventListener("click", () => {
+        state[dim] = active && value !== "all" ? "all" : value;
+        state.page = 1;
+        renderTable();
+      });
+      return b;
+    };
+
+    box.appendChild(makeChip("all", "不限"));
+    for (const value of values) {
+      box.appendChild(makeChip(value, labelOf(value)));
+    }
+  }
+
+  function renderChips() {
+    const groups = Array.from(new Set(DATA.entries.map((e) => e.group).filter(Boolean)))
+      .sort((a, b) => Object.keys(GROUP_LABEL).indexOf(a) - Object.keys(GROUP_LABEL).indexOf(b));
+    renderFacetRow("groupFacet", "归属", "group", groups, "group", (v) => GROUP_LABEL[v] || v);
+
+    const natures = Array.from(new Set(DATA.entries.map((e) => e.nature).filter(Boolean)))
+      .sort((a, b) => Object.keys(NATURE_LABEL).indexOf(a) - Object.keys(NATURE_LABEL).indexOf(b));
+    renderFacetRow("natureFacet", "性质", "nature", natures, "nature", (v) => NATURE_LABEL[v] || v);
+
+    // 生态常驻：数据里出现过的语言固定列出，不随归属筛选增删。
+    const langs = Array.from(
+      new Set(DATA.entries.filter((e) => e.language).map((e) => e.language))
+    ).sort((a, b) => {
+      const ca = DATA.entries.filter((e) => e.language === a).length;
+      const cb = DATA.entries.filter((e) => e.language === b).length;
+      return cb - ca;
+    });
+    const langBox = $("langFacet");
+    langBox.hidden = langs.length === 0;
+    if (langs.length) {
+      renderFacetRow("langFacet", "生态", "lang", langs, "language", (v) => LANG_LABEL[v] || v);
+    }
+  }
+
+  // 已选筛选条：把当前生效的筛选显式列出来，避免用户去侧栏里找。
+  const REC_FILTER_LABEL = { suggest: "建议清理", safe: "安全清理", caution: "谨慎清理", keep: "建议保留", review: "待定" };
+  const AI_FILTER_LABEL = { analyzed: "AI 已分析", missing: "AI 未分析", retiered: "AI 已定档" };
+
+  function renderActiveFilters() {
+    const box = $("activeFilters");
+    const items = [];
+    if (state.group !== "all") items.push(["group", GROUP_LABEL[state.group] || state.group]);
+    if (state.nature !== "all") items.push(["nature", NATURE_LABEL[state.nature] || state.nature]);
+    if (state.lang !== "all") items.push(["lang", LANG_LABEL[state.lang] || state.lang]);
+    if (state.rec !== "all") items.push(["rec", REC_FILTER_LABEL[state.rec] || state.rec]);
+    if (state.ai !== "all") items.push(["ai", AI_FILTER_LABEL[state.ai] || state.ai]);
+
+    box.textContent = "";
+    if (!items.length) {
+      box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    const head = document.createElement("span");
+    head.className = "text-[11px] text-zinc-400 dark:text-zinc-500";
+    head.textContent = "已筛选";
+    box.appendChild(head);
+
+    for (const [dim, text] of items) {
+      const tag = document.createElement("span");
+      tag.className = "facet-tag";
+      tag.appendChild(document.createTextNode(text));
+      const x = document.createElement("button");
+      x.type = "button";
+      x.className = "facet-tag-x";
+      x.textContent = "×";
+      x.setAttribute("aria-label", "移除筛选 " + text);
+      x.addEventListener("click", () => {
+        state[dim] = "all";
+        state.page = 1;
+        renderTable();
+      });
+      tag.appendChild(x);
+      box.appendChild(tag);
+    }
+
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "ml-1 text-[11px] text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400";
+    clear.textContent = "清除全部";
+    clear.addEventListener("click", () => {
+      state.group = "all";
+      state.nature = "all";
+      state.lang = "all";
+      state.rec = "all";
+      state.ai = "all";
+      state.page = 1;
+      $("recFilter").value = "all";
+      $("aiFilter").value = "all";
+      renderTable();
+    });
+    box.appendChild(clear);
+  }
+
+  function rowBadges(e) {
+    // 行内只保留影响浏览判断的徽章；role 等低密度信息移入展开详情。
+    const wrap = document.createElement("span");
+    wrap.className = "inline-flex shrink-0 items-center gap-1";
+    wrap.appendChild(badge(e.recommendation_label, "badge-rec-" + e.recommendation));
+    if (e.enriched) {
+      const conf = e.confidence === "high" ? "高" : e.confidence === "medium" ? "中" : e.confidence === "low" ? "低" : "";
+      const isTier = e.tier_source === "ai";
+      const ai = badge(isTier ? "AI 定档" + (conf ? "·" + conf : "") : "AI" + (conf ? "·" + conf : ""), "badge-ai");
+      ai.title = (isTier ? "档位由 AI 高置信判定（原为待定）" : "AI 辅助分析，不改变档位")
+        + (e.evidence && e.evidence.length ? "；依据：" + e.evidence.join("、") : "");
+      wrap.appendChild(ai);
+    }
+    if (e.advice_label && e.tier_source !== "ai") {
+      wrap.appendChild(badge(e.advice_label.replace("AI 参考 · ", "AI·"), "badge-advice-" + (e.advice || "keep")));
+    }
+    if (e.requires_admin) wrap.appendChild(badge("管理员", "badge-plain"));
+    if (e.partial) wrap.appendChild(badge("部分统计", "badge-plain"));
+    if (e.reparse) wrap.appendChild(badge("链接", "badge-plain"));
+    return wrap;
+  }
+
+  function toggleExpand(path) {
+    if (expandedRows.has(path)) expandedRows.delete(path);
+    else expandedRows.add(path);
+    renderTable();
+  }
+
+  function effectiveMode(path) {
+    return modeOverrides.get(path) || state.mode;
+  }
+
+  function setMode(path, mode) {
+    if (mode === state.mode) modeOverrides.delete(path);
+    else modeOverrides.set(path, mode);
+    $("confirm").checked = false;
+    updateFooter();
+    renderTable();
+  }
+
+  function modeCell(e) {
+    const td = document.createElement("td");
+    td.className = "px-1 py-1 text-center";
+    if (!e.selectable || e.recommendation === "keep") { td.textContent = "—"; return td; }
+    const group = document.createElement("div");
+    group.className = "inline-flex overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700";
+    group.setAttribute("role", "group");
+    group.setAttribute("aria-label", "选择 " + (e.title || e.path) + " 的删除方式");
+    const current = effectiveMode(e.path);
+    const mk = (value, label, title, activeCls) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.title = title;
+      b.className = "h-6 w-7 text-[12px] leading-none transition-colors " +
+        (current === value
+          ? activeCls
+          : "text-zinc-400 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800");
+      b.addEventListener("click", (ev) => { ev.stopPropagation(); setMode(e.path, value); });
+      return b;
+    };
+    group.appendChild(mk("recycle", "♻", "移入回收站（默认，可恢复）", "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"));
+    group.appendChild(mk("permanent", "✕", "彻底删除（不可恢复）", "bg-red-600 text-white"));
+    td.appendChild(group);
+    return td;
   }
 
   function toggle(path) {
@@ -556,92 +706,98 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   }
 
   function renderTable() {
+    renderChips();
+    renderActiveFilters();
     const rows = filtered();
+    const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    if (state.page > pageCount) state.page = pageCount;
+    if (state.page < 1) state.page = 1;
+    const start = (state.page - 1) * PAGE_SIZE;
+    const pageRows = rows.slice(start, start + PAGE_SIZE);
+
     const tbody = $("tbody");
     tbody.textContent = "";
     const frag = document.createDocumentFragment();
-    for (const e of rows) {
+    for (const e of pageRows) {
       const tr = document.createElement("tr");
       tr.dataset.path = e.path;
-      if (selected.has(e.path)) tr.classList.add("selected");
-      if (!e.selectable) tr.classList.add("disabled");
+      tr.className = "h-9 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40";
+      if (selected.has(e.path)) tr.classList.add("bg-emerald-50/60", "dark:bg-emerald-950/20");
+      if (!e.selectable) tr.classList.add("opacity-55");
 
       const tdCheck = document.createElement("td");
-      tdCheck.className = "check";
+      tdCheck.className = "px-2 py-1";
       const cb = document.createElement("input");
       cb.type = "checkbox";
       cb.checked = selected.has(e.path);
       cb.disabled = !e.selectable;
+      cb.className = "h-3.5 w-3.5 rounded border-zinc-300 accent-emerald-600";
       cb.setAttribute("aria-label", "选择 " + e.path);
       cb.addEventListener("change", () => toggle(e.path));
       tdCheck.appendChild(cb);
       tr.appendChild(tdCheck);
 
+      // 条目列：展开箭头 + 标题 + 路径 + 关键徽章，全部单行内截断。
       const tdName = document.createElement("td");
-      tdName.className = "name";
-      const title = document.createElement("div");
-      title.className = "title";
+      tdName.className = "px-2 py-1";
+      const line = document.createElement("div");
+      line.className = "flex min-w-0 items-center gap-1.5";
+      const exp = document.createElement("button");
+      exp.type = "button";
+      exp.title = "展开 / 收起详情";
+      exp.textContent = "▶";
+      exp.className = "h-5 w-5 shrink-0 rounded text-[9px] text-zinc-400 transition-transform hover:bg-zinc-200 dark:hover:bg-zinc-700" +
+        (expandedRows.has(e.path) ? " rotate-90" : "");
+      exp.addEventListener("click", (ev) => { ev.stopPropagation(); toggleExpand(e.path); });
+      line.appendChild(exp);
+      const title = document.createElement("span");
+      title.className = "shrink-0 max-w-[60%] truncate font-medium text-zinc-800 dark:text-zinc-200";
       title.textContent = e.title || e.name || "目录";
-      const path = document.createElement("div");
-      path.className = "path";
+      title.title = e.title || e.name || "";
+      line.appendChild(title);
+      const path = document.createElement("span");
+      path.className = "min-w-0 flex-1 truncate font-mono text-[10px] text-zinc-400 dark:text-zinc-500";
       path.textContent = e.path;
       path.title = e.path;
-      tdName.appendChild(title);
-      tdName.appendChild(path);
-      addBadges(tdName, e);
+      line.appendChild(path);
+      line.appendChild(rowBadges(e));
+      tdName.appendChild(line);
       tr.appendChild(tdName);
 
       const tdSize = document.createElement("td");
-      tdSize.className = "num";
+      tdSize.className = "px-2 py-1 text-right font-mono align-middle";
       const size = document.createElement("div");
-      size.className = "size";
       size.textContent = e.size_h || fmtBytes(e.size);
+      if (e.size_known === false) size.title = "未深入统计";
       tdSize.appendChild(size);
-      if (e.size_known === false) {
-        const note = document.createElement("div");
-        note.className = "files";
-        note.textContent = "未深入统计";
-        tdSize.appendChild(note);
-      }
       tr.appendChild(tdSize);
 
       const tdFiles = document.createElement("td");
-      tdFiles.className = "num";
-      const files = document.createElement("div");
-      files.className = "files";
-      files.textContent = e.files_h && e.files_h !== "—" ? e.files_h : "—";
-      tdFiles.appendChild(files);
+      tdFiles.className = "px-2 py-1 text-right align-middle font-mono text-zinc-500 dark:text-zinc-400";
+      tdFiles.textContent = e.files_h && e.files_h !== "—" ? e.files_h : "—";
+      if (e.size_known === false) tdFiles.textContent = "—";
       tr.appendChild(tdFiles);
 
-      const tdRec = document.createElement("td");
-      tdRec.appendChild(badge(e.recommendation_label, "rec-" + e.recommendation));
-      tr.appendChild(tdRec);
+      tr.appendChild(modeCell(e));
 
       const tdDesc = document.createElement("td");
-      tdDesc.className = "desc";
+      tdDesc.className = "px-2 py-1 align-middle";
       const desc = document.createElement("div");
-      desc.textContent = e.description || "未提供说明。";
+      desc.className = "truncate text-zinc-500 dark:text-zinc-400";
+      desc.textContent = e.description || "—";
+      desc.title = [
+        e.description || "",
+        e.action ? "建议：" + e.action : "",
+        e.risk ? "风险：" + e.risk : "",
+      ].filter(Boolean).join("\n");
       tdDesc.appendChild(desc);
-      if (e.action) {
-        const action = document.createElement("div");
-        action.className = "action";
-        const b = document.createElement("b");
-        b.textContent = "建议：";
-        action.appendChild(b);
-        action.appendChild(document.createTextNode(e.action));
-        tdDesc.appendChild(action);
-      }
-      if (e.risk) {
-        const risk = document.createElement("div");
-        risk.className = "risk";
-        risk.textContent = "风险：" + e.risk;
-        tdDesc.appendChild(risk);
-      }
       tr.appendChild(tdDesc);
 
       const tdTime = document.createElement("td");
-      tdTime.className = "num mtime";
-      tdTime.textContent = e.mtime_display || "—";
+      tdTime.className = "px-2 py-1 align-middle font-mono text-[10px] text-zinc-400 dark:text-zinc-500";
+      const t = e.mtime_display || "—";
+      tdTime.textContent = t.length > 16 ? t.slice(0, 16) : t;
+      tdTime.title = t;
       tr.appendChild(tdTime);
 
       tr.addEventListener("click", (ev) => {
@@ -649,18 +805,59 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
         if (e.selectable) toggle(e.path);
       });
       frag.appendChild(tr);
+
+      if (expandedRows.has(e.path)) {
+        const trX = document.createElement("tr");
+        trX.className = "bg-zinc-50 dark:bg-zinc-900/60";
+        const tdX = document.createElement("td");
+        tdX.colSpan = 7;
+        tdX.className = "space-y-1 px-11 py-2.5 text-[11px] leading-5";
+        const addLine = (label, text, cls) => {
+          const div = document.createElement("div");
+          div.className = cls || "text-zinc-600 dark:text-zinc-300";
+          if (label) {
+            const b = document.createElement("span");
+            b.className = "mr-1.5 font-medium text-zinc-400 dark:text-zinc-500";
+            b.textContent = label;
+            div.appendChild(b);
+          }
+          div.appendChild(document.createTextNode(text));
+          tdX.appendChild(div);
+        };
+        addLine("路径", e.path, "break-all font-mono text-[10px] text-zinc-400 dark:text-zinc-500");
+        if (e.description) addLine("说明", e.description);
+        if (e.action) addLine("建议", e.action);
+        if (e.risk) addLine("风险", e.risk, "text-red-600/80 dark:text-red-400/80");
+        if (e.evidence && e.evidence.length) addLine("AI 依据", e.evidence.join("、"), "text-fuchsia-700 dark:text-fuchsia-300");
+        const meta = [];
+        if (e.group_label) meta.push(e.group_label);
+        if (e.nature_label) meta.push(e.nature_label);
+        if (e.role_label) meta.push(e.role_label);
+        if (e.language) meta.push(LANG_LABEL[e.language] || e.language);
+        if (e.category) meta.push(e.category);
+        if (e.rule_id) meta.push("规则 " + e.rule_id);
+        if (meta.length) addLine("分类", meta.join(" · "));
+        trX.appendChild(tdX);
+        frag.appendChild(trX);
+      }
     }
     tbody.appendChild(frag);
     $("emptyState").hidden = rows.length !== 0;
     $("selectVisible").disabled = rows.every((e) => !e.selectable);
-    $("tableNote").innerHTML = "";
+
     const note = document.createElement("span");
     const total = DATA.meta.entry_count || DATA.entries.length;
     const omitted = DATA.meta.omitted_entries || 0;
     note.innerHTML = "当前视图 <b>" + rows.length + "</b> 条 · 报告共 <b>" + DATA.entries.length +
       "</b> 条 · 扫描共 <b>" + total + "</b> 条" +
       (omitted ? "（另有 <b>" + omitted + "</b> 条较小条目只在 scan.json 中）" : "");
+    $("tableNote").textContent = "";
     $("tableNote").appendChild(note);
+
+    $("pageInfo").textContent = pageCount > 1 ? (state.page + " / " + pageCount) : "";
+    $("pagePrev").disabled = state.page <= 1;
+    $("pageNext").disabled = state.page >= pageCount;
+    $("pager").style.display = pageCount > 1 ? "" : "none";
   }
 
   function selectedEntries() {
@@ -691,41 +888,46 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     const overlap = findOverlap(items.map((e) => e.path));
     const review = items.filter((e) => e.recommendation === "review");
     const caution = items.filter((e) => e.recommendation === "caution");
+    const permanentItems = items.filter((e) => effectiveMode(e.path) === "permanent");
+    const recycleItems = items.filter((e) => effectiveMode(e.path) === "recycle");
     const warn = $("selWarn");
     warn.textContent = "";
-    warn.className = "selwarn";
     if (overlap) {
       warn.textContent = "选中项存在父子关系，删除时以父目录为准：" + overlap[0];
-      warn.classList.add("bad");
     } else if (review.length) {
-      warn.textContent = "包含 " + review.length + " 个待确认目录，请先核实用途：" + review[0].path;
+      warn.textContent = "包含 " + review.length + " 个待定目录，请先核实用途：" + review[0].path;
     } else if (caution.length) {
       warn.textContent = "包含 " + caution.length + " 个谨慎项，请确认已了解风险。";
-    } else if (state.mode === "permanent" && items.length) {
-      warn.textContent = "彻底删除不可恢复；缓存/构建产物通常可再生成，系统项建议用回收站。";
+    } else if (permanentItems.length) {
+      warn.textContent = permanentItems.length + " 项将彻底删除（不可恢复）；其余 " + recycleItems.length + " 项移入回收站。";
     }
     const label = $("confirmLabel");
     const span = label.querySelector("span");
-    if (review.length || state.mode === "permanent") {
-      span.textContent = "我已核对路径，了解彻底删除/待确认项的风险，确认删除以上条目。";
-      label.classList.add("warn");
+    if (review.length || permanentItems.length) {
+      span.textContent = "我已核对路径，了解彻底删除/待定项的风险，确认删除以上条目。";
     } else {
       span.textContent = "我已确认以上选中项可以删除；删除前请再核对路径。";
-      label.classList.remove("warn");
     }
     $("copyBtn").disabled = items.length === 0 || !$("confirm").checked;
   }
 
   function makePayload() {
+    const paths = Array.from(selected).sort();
+    const modes = {};
+    for (const p of paths) {
+      const m = effectiveMode(p);
+      if (m !== state.mode) modes[p] = m;
+    }
     return {
       skill: "windows-disk-cleanup",
-      schema: 1,
+      schema: 2,
       scan_id: DATA.meta.scan_id,
       scan_file: DATA.meta.scan_file || "",
       root: DATA.meta.root,
       mode: state.mode,
+      modes: modes,
       confirmed: true,
-      paths: Array.from(selected).sort(),
+      paths: paths,
     };
   }
 
@@ -737,9 +939,9 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   function toast(message) {
     const el = $("toast");
     el.textContent = message;
-    el.classList.add("show");
+    el.classList.remove("opacity-0");
     clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => el.classList.remove("show"), 3200);
+    toast._timer = setTimeout(() => el.classList.add("opacity-0"), 3200);
   }
 
   function fallbackCopy(text) {
@@ -776,6 +978,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     } else {
       $("modalText").value = text;
       $("modal").hidden = false;
+      $("modal").classList.add("flex");
       $("modalText").focus();
       $("modalText").select();
     }
@@ -793,16 +996,23 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     chips.appendChild(chip("规则库", DATA.meta.rules_version || "—"));
     chips.appendChild(chip("ID", DATA.meta.scan_id || "—"));
 
-    $("usedPct").textContent = (v.used_pct === null || v.used_pct === undefined) ? "—" : v.used_pct + "%";
-    $("usedBar").style.width = Math.max(0, Math.min(100, v.used_pct || 0)) + "%";
+    const usedPct = (v.used_pct === null || v.used_pct === undefined) ? null : v.used_pct;
+    if (usedPct === null) {
+      $("usedBar").style.width = "0%";
+      $("usedPct").textContent = "—";
+    } else {
+      paintUsage($("usedBar"), $("usedPct"), usedPct);
+    }
     $("usedText").textContent = "已用 " + (v.used_h || "—");
     $("freeText").textContent = "可用 " + (v.free_h || "—") + " / 共 " + (v.total_h || "—");
 
     const s = DATA.summary || {};
+    $("suggestCount").textContent = fmtCount(s.suggest_count);
     $("safeCount").textContent = fmtCount(s.safe_count);
     $("cautionCount").textContent = fmtCount(s.caution_count);
-    $("reviewCount").textContent = fmtCount(s.review_count);
     $("keepCount").textContent = fmtCount(s.keep_count);
+    $("reviewCount").textContent = fmtCount(s.review_count);
+    $("suggestBytes").textContent = fmtBytes(s.suggest_bytes);
     $("safeBytes").textContent = fmtBytes(s.safe_bytes);
     $("cautionBytes").textContent = fmtBytes(s.caution_bytes);
     $("reviewBytes").textContent = fmtBytes(s.review_bytes);
@@ -811,19 +1021,11 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     $("tabOverviewCount").textContent = DATA.entries.filter((e) => e.is_top_level || e.is_root).length;
     $("tabAllCount").textContent = DATA.entries.length;
 
-    const cat = $("categoryFilter");
-    const cats = Array.from(new Set(DATA.entries.map((e) => e.category).filter(Boolean))).sort((a, b) => a.localeCompare(b, "zh-CN"));
-    for (const c of cats) {
-      const opt = document.createElement("option");
-      opt.value = c;
-      opt.textContent = c;
-      cat.appendChild(opt);
-    }
-
     const notes = $("notesList");
     notes.textContent = "";
     const baseNotes = (DATA.meta.notes || []).slice();
     baseNotes.push("报告生成时间：" + fmtTime(DATA.generated_at) + "；规则库更新：" + (DATA.meta.rules_version || "—") + "。");
+    baseNotes.push("本页样式通过 Tailwind CDN 加载；离线打开时无样式，但数据与复制功能不受影响。");
     for (const n of baseNotes) {
       const li = document.createElement("li");
       li.textContent = n;
@@ -832,10 +1034,14 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   }
 
   function bind() {
-    document.querySelectorAll(".tab").forEach((tab) => {
+    document.querySelectorAll(".tabbtn").forEach((tab) => {
       tab.addEventListener("click", () => {
         state.tab = tab.dataset.tab;
-        document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+        state.page = 1;
+        document.querySelectorAll(".tabbtn").forEach((t) => {
+          t.classList.toggle("tabbtn-active", t === tab);
+          t.setAttribute("aria-selected", String(t === tab));
+        });
         $("onlySelectable").disabled = state.tab !== "cleanup";
         renderTable();
       });
@@ -843,12 +1049,12 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     let timer = null;
     $("search").addEventListener("input", (ev) => {
       clearTimeout(timer);
-      timer = setTimeout(() => { state.search = ev.target.value; renderTable(); }, 120);
+      timer = setTimeout(() => { state.search = ev.target.value; state.page = 1; renderTable(); }, 120);
     });
-    $("recFilter").addEventListener("change", (ev) => { state.rec = ev.target.value; renderTable(); });
-    $("categoryFilter").addEventListener("change", (ev) => { state.category = ev.target.value; renderTable(); });
-    $("sortBy").addEventListener("change", (ev) => { state.sort = ev.target.value; renderTable(); });
-    $("onlySelectable").addEventListener("change", (ev) => { state.onlySelectable = ev.target.checked; renderTable(); });
+    $("recFilter").addEventListener("change", (ev) => { state.rec = ev.target.value; state.page = 1; renderTable(); });
+    $("aiFilter").addEventListener("change", (ev) => { state.ai = ev.target.value; state.page = 1; renderTable(); });
+    $("sortBy").addEventListener("change", (ev) => { state.sort = ev.target.value; state.page = 1; renderTable(); });
+    $("onlySelectable").addEventListener("change", (ev) => { state.onlySelectable = ev.target.checked; state.page = 1; renderTable(); });
     $("selectVisible").addEventListener("click", () => {
       const before = selected.size;
       filtered().forEach((e) => { if (e.selectable) selected.add(e.path); });
@@ -858,16 +1064,41 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     });
     $("clearSelection").addEventListener("click", () => {
       selected.clear();
+      modeOverrides.clear();
       $("confirm").checked = false;
       renderTable();
       updateFooter();
     });
-    $("mode").addEventListener("change", (ev) => { state.mode = ev.target.value; $("confirm").checked = false; updateFooter(); });
+    $("mode").addEventListener("change", (ev) => {
+      state.mode = ev.target.value;
+      // 全局默认变化后，旧的覆盖不再有意义，清空保留显式覆盖以外的跟随关系。
+      for (const [p, m] of Array.from(modeOverrides.entries())) {
+        if (m === state.mode) modeOverrides.delete(p);
+      }
+      $("confirm").checked = false;
+      renderTable();
+      updateFooter();
+    });
     $("confirm").addEventListener("change", updateFooter);
+    $("clearFiltersEmpty").addEventListener("click", () => {
+      state.group = "all";
+      state.nature = "all";
+      state.lang = "all";
+      state.rec = "all";
+      state.ai = "all";
+      state.search = "";
+      state.page = 1;
+      $("search").value = "";
+      $("recFilter").value = "all";
+      $("aiFilter").value = "all";
+      renderTable();
+    });
+    $("pagePrev").addEventListener("click", () => { state.page -= 1; renderTable(); $("tbody").scrollIntoView({ block: "start" }); });
+    $("pageNext").addEventListener("click", () => { state.page += 1; renderTable(); $("tbody").scrollIntoView({ block: "start" }); });
     $("copyBtn").addEventListener("click", copySelection);
-    $("modalClose").addEventListener("click", () => { $("modal").hidden = true; });
+    $("modalClose").addEventListener("click", () => { $("modal").hidden = true; $("modal").classList.remove("flex"); });
     $("modal").addEventListener("click", (ev) => {
-      if (ev.target === $("modal")) $("modal").hidden = true;
+      if (ev.target === $("modal")) { $("modal").hidden = true; $("modal").classList.remove("flex"); }
     });
     $("modalCopy").addEventListener("click", async () => {
       const text = $("modalText").value;
@@ -875,6 +1106,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
         await navigator.clipboard.writeText(text);
         toast("已复制，粘贴回 Agent 会话即可。");
         $("modal").hidden = true;
+        $("modal").classList.remove("flex");
       } catch (_) {
         $("modalText").focus();
         $("modalText").select();
@@ -882,7 +1114,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       }
     });
     document.addEventListener("keydown", (ev) => {
-      if (ev.key === "Escape") $("modal").hidden = true;
+      if (ev.key === "Escape") { $("modal").hidden = true; $("modal").classList.remove("flex"); }
     });
   }
 
@@ -890,6 +1122,11 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   bind();
   renderTable();
   updateFooter();
+  // 系统主题切换时重绘使用率配色。
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    const v = DATA.meta.volume || {};
+    if (v.used_pct !== null && v.used_pct !== undefined) paintUsage($("usedBar"), $("usedPct"), v.used_pct);
+  });
 })();
 </script>
 </body>
