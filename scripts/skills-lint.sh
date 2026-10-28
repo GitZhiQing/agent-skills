@@ -204,15 +204,19 @@ for skill in $skills_list; do
   fi
 
   # 包内 __version__ 是 CLI --version 与经验记录的版本来源，必须同步。
-  init_file="$SKILLS_DIR/$skill/src/${skill//-/_}/__init__.py"
-  if [ -f "$init_file" ]; then
+  # 包名不一定等于 skill 名（如 windows-disk-cleanup 的包是 disk_cleanup），
+  # 因此扫描 src/*/__init__.py 而不是按名字推导路径。
+  for init_file in "$SKILLS_DIR/$skill"/src/*/__init__.py; do
+    [ -f "$init_file" ] || continue
     init_ver="$(awk -F'"' '/^__version__[[:space:]]*=/ { print $2; exit }' "$init_file")"
-    if [ -n "$ver" ] && [ -n "$init_ver" ] && [ "$ver" != "$init_ver" ]; then
-      err "$skill: 版本不一致：SKILL.md $ver != __init__.py __version__ $init_ver"
+    [ -n "$init_ver" ] || continue
+    init_pkg="$(basename "$(dirname "$init_file")")"
+    if [ -n "$ver" ] && [ "$ver" != "$init_ver" ]; then
+      err "$skill: 版本不一致：SKILL.md $ver != src/$init_pkg/__init__.py __version__ $init_ver"
     else
-      ok "$skill: __init__.py 版本一致（$init_ver）"
+      ok "$skill: src/$init_pkg/__init__.py 版本一致（$init_ver）"
     fi
-  fi
+  done
 
   plugin_file="$SKILLS_DIR/$skill/.claude-plugin/plugin.json"
   if [ ! -f "$plugin_file" ]; then
