@@ -14,7 +14,7 @@ description: >-
   当用户只需一次搜索可答的单点查询、只需阅读已给出的代码片段或调试单个问题、或明确要求不联网且不涉及源码分析时，不要使用本 skill。
 license: MIT
 metadata:
-  version: 0.10.1
+  version: 0.10.2
   category: research
 ---
 
