@@ -16,40 +16,15 @@
 
 ## 安装
 
-**让 Agent 代装（推荐）**：把下面这段原样发给你的 Agent。
+把这句交给你的 Agent（它会自己安装并验证）：
 
 ```text
-安装 https://github.com/GitZhiQing/agent-skills 仓库中的 ddgs-web-access skill：
-1) 先执行 `npx skills add "GitZhiQing/agent-skills/ddgs-web-access"`，按输出完成安装；
-2) 该方式不可用时，克隆仓库后执行 `bash scripts/skills-link.sh ddgs-web-access`，再跑 `bash scripts/skills-doctor.sh` 确认链接健康；
-3) 汇报安装位置与验证结果；失败时说明原因，不要跳过验证。
+安装 GitHub 仓库 GitZhiQing/agent-skills 里的 ddgs-web-access skill：优先 `npx skills add "GitZhiQing/agent-skills/ddgs-web-access"`；不可用则 clone 仓库后执行 `bash scripts/skills-link.sh ddgs-web-access`，再用 `scripts/skills-doctor.sh` 验证并汇报结果。
 ```
 
-**Claude Code 插件市场**：`/plugin marketplace add GitZhiQing/agent-skills`，然后 `/plugin install ddgs-web-access@agent-skills`。
+插件市场与手动分发方式见[仓库 README](../../README.md#安装)。
 
-**仓库内手动分发**（Windows junction / Unix symlink，单一来源，`git pull` 后全端生效）：
-
-```bash
-git clone https://github.com/GitZhiQing/agent-skills.git
-cd agent-skills
-bash scripts/skills-link.sh ddgs-web-access    # 全部 skill 用 --all；卸载用 scripts/skills-unlink.sh ddgs-web-access
-bash scripts/skills-doctor.sh
-```
-
-**可选：多端共享链接**（skill 自带脚本，只链接本 skill，覆盖 ZCode / Claude Code / Cursor / Codex 等 14 个常见位置与 `~/.agents/skills`）：
-
-```bash
-cd skills/ddgs-web-access
-bash scripts/install.sh                    # 卸载：bash scripts/uninstall.sh
-bash scripts/install.sh <skills-dir> ...   # 仅链接指定目录
-```
-
-**可选：仅命令行使用**（不需要 agent 集成）：
-
-```bash
-export PATH="$(pwd)/bin:$PATH"
-ddgs-web-search "python 3.13" -m 3
-```
+仅命令行使用（不需要 agent 集成）：`export PATH="$PWD/bin:$PATH"` 后直接跑 `ddgs-web-search`。skill 自带的 `scripts/install.sh` 可把本 skill 单独链接到本机 14 个常见 agent 目录，用法见脚本头注释。
 
 ## 使用
 

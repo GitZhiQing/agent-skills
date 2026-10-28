@@ -19,17 +19,19 @@
 
 ## 安装
 
-三种方式任选其一：
-
-- **skills CLI**：`npx skills add GitZhiQing/agent-skills`（单个 skill 用 `npx skills add GitZhiQing/agent-skills/<name>`）
-- **Claude Code marketplace**：`/plugin marketplace add GitZhiQing/agent-skills`，再 `/plugin install <name>@agent-skills`
-- **手动**：克隆后执行 `bash scripts/skills-link.sh --all`，再 `bash scripts/skills-doctor.sh` 巡检
-
-**让 Agent 代装**：把下面这段发给 agent：
+把这句交给你的 Agent（安装全部 skill）：
 
 ```text
-Run `npx skills add "https://github.com/GitZhiQing/agent-skills"` and follow the generated instructions now. Read its complete output, redirecting it to a temporary file first if necessary. Resolve relative paths from the supporting-files directory it provides.
+安装 GitHub 仓库 GitZhiQing/agent-skills 里的全部 skill：优先 `npx skills add "GitZhiQing/agent-skills"`；不可用则 clone 后执行 `bash scripts/skills-link.sh --all`，再用 `scripts/skills-doctor.sh` 验证并汇报结果。
 ```
+
+只装一个时，把「全部 skill」换成 skill 名，`--all` 换成同一个名字（如 `windows-disk-cleanup`）。
+
+其他方式：
+
+- **skills CLI**：`npx skills add GitZhiQing/agent-skills`（单个：`.../agent-skills/<name>`）
+- **Claude Code 插件市场**：`/plugin marketplace add GitZhiQing/agent-skills`，再 `/plugin install <name>@agent-skills`
+- **手动**：clone 后 `bash scripts/skills-link.sh --all`，再 `bash scripts/skills-doctor.sh`
 
 ## 快速使用
 

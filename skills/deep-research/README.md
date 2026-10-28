@@ -46,28 +46,15 @@
 
 ## 安装
 
-**让 Agent 代装（推荐）**：把下面这段原样发给你的 Agent。
+把这句交给你的 Agent（它会自己安装并验证）：
 
 ```text
-安装 https://github.com/GitZhiQing/agent-skills 仓库中的 deep-research skill：
-1) 先执行 `npx skills add "GitZhiQing/agent-skills/deep-research"`，按输出完成安装；
-2) 该方式不可用时，克隆仓库后执行 `bash scripts/skills-link.sh deep-research`，再跑 `bash scripts/skills-doctor.sh` 确认链接健康；
-3) 汇报安装位置与验证结果；失败时说明原因，不要跳过验证。
+安装 GitHub 仓库 GitZhiQing/agent-skills 里的 deep-research skill：优先 `npx skills add "GitZhiQing/agent-skills/deep-research"`；不可用则 clone 仓库后执行 `bash scripts/skills-link.sh deep-research`，再用 `scripts/skills-doctor.sh` 验证并汇报结果。
 ```
 
-**Claude Code 插件市场**：`/plugin marketplace add GitZhiQing/agent-skills`，然后 `/plugin install deep-research@agent-skills`。
+插件市场与手动分发方式见[仓库 README](../../README.md#安装)。
 
-**仓库内手动分发**（Windows junction / Unix symlink，单一来源，`git pull` 后全端生效）：
-
-```bash
-git clone https://github.com/GitZhiQing/agent-skills.git
-cd agent-skills
-bash scripts/skills-link.sh deep-research    # 全部 skill 用 --all；卸载用 scripts/skills-unlink.sh deep-research
-bash scripts/skills-doctor.sh
-```
-
-纯提示词 skill，无运行时依赖；链接完成后，Agent 依据 `SKILL.md` 的 description 自动触发。
-
+纯提示词 skill，无运行时依赖。
 
 ## 文档
 
