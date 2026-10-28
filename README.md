@@ -4,16 +4,16 @@
 
 ## Skills
 
-| Skill | 类型 | 说明 |
-| --- | --- | --- |
-| [ddgs-web-access](skills/ddgs-web-access/) | Python CLI | 联网搜索与网页抓取 |
-| [deep-research](skills/deep-research/) | 纯提示词 | 先校准再调研：目标、计划与输出目录经用户确认后执行，无法确认则停止；交付 REPORT + REFERENCES + META，支持源码调研 |
-| [theme-commit](skills/theme-commit/) | 纯提示词 | 先计划预览并用提问工具确认，再按主题分组提交 |
-| [zero-coding](skills/zero-coding/) | 纯提示词 | 从零启动个人项目的轻量工作流 |
-| [session-handoff](skills/session-handoff/) | 纯提示词 | 生成跨会话交接提示词 |
-| [video-insight](skills/video-insight/) | Python 脚本 | 拉片级视频内容与画面分析 |
-| [md2pdf](skills/md2pdf/) | Python CLI | Markdown 转精美 PDF |
-| [windows-disk-cleanup](skills/windows-disk-cleanup/) | Python CLI | Windows 磁盘/文件夹扫描、可勾选 HTML 报告、安全删除与经验闭环 |
+| Skill | 说明 |
+| --- | --- |
+| [ddgs-web-access](skills/ddgs-web-access/) | 联网搜索与网页抓取 |
+| [deep-research](skills/deep-research/) | 先校准再调研：目标、计划与输出目录经用户确认后执行，无法确认则停止；交付 REPORT + REFERENCES + META，支持源码调研 |
+| [theme-commit](skills/theme-commit/) | 先计划预览并用提问工具确认，再按主题分组提交 |
+| [zero-coding](skills/zero-coding/) | 从零启动个人项目的轻量工作流 |
+| [session-handoff](skills/session-handoff/) | 生成跨会话交接提示词 |
+| [video-insight](skills/video-insight/) | 拉片级视频内容与画面分析 |
+| [md2pdf](skills/md2pdf/) | Markdown 转精美 PDF |
+| [windows-disk-cleanup](skills/windows-disk-cleanup/) | Windows 磁盘/文件夹扫描、可勾选 HTML 报告、安全删除与经验闭环 |
 
 各 skill 的用法、依赖与排障见其目录内的 `README.md` / `SKILL.md`；版本号以 `SKILL.md` frontmatter 为准。
 

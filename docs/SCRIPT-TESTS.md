@@ -33,7 +33,7 @@
 - = ERROR：版本不一致：SKILL.md 9.9.9 != pyproject.toml 0.2.2
 - = ERROR：plugin.json / marketplace.json 版本与 frontmatter 不一致
 - = 如存在本地台账，另报本地台账总览版本与 frontmatter 不一致
-- = README Skills 表只有 Skill / 类型 / 说明 三列，不参与版本校验
+- = README Skills 表只有 Skill / 说明 两列，不参与版本校验
 - = exit 1；还原后恢复
 
 ### L-4 name 失配检出

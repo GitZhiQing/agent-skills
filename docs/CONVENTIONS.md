@@ -104,7 +104,7 @@ description: >-
 
 ### 5.1 README 公开目录表（入库，lint 强制）
 
-- README 的 `## Skills` 表是仓库对外唯一的 skill 目录：列定义 `Skill`（链接到目录，文本为目录名）| `类型` | `说明`。**不在 README 展示版本号**；版本权威来源是 SKILL.md frontmatter。
+- README 的 `## Skills` 表是仓库对外唯一的 skill 目录：列定义 `Skill`（链接到目录，文本为目录名）| `说明`（一句话，写清用途与关键约束，不写形态/版本）。**不在 README 展示版本号**；版本权威来源是 SKILL.md frontmatter。
 - **何时必须更新**（lint 强制）：新增 / 删除 skill；说明文案变化随批更新。版本变更只改 frontmatter / pyproject / plugin / marketplace / 本地台账，不改 README 表。
 - lint 校验：表 ↔ 磁盘双向一致（L-readme）；README 不校验版本列。
 

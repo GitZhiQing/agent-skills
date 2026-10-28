@@ -57,7 +57,7 @@ bash skills/windows-disk-cleanup/bin/windows-disk-cleanup doctor --root . --json
 - 一个 skill 一个目录，`SKILL.md` 为入口；frontmatter 需含 `name`（== 目录名）、三段式 `description`、`metadata.version`（semver，版本唯一权威）与 `metadata.category`（建议）。
 - 每个 skill 必须有 `README.md` 与 `.claude-plugin/plugin.json`，并在 `.claude-plugin/marketplace.json` 有对应条目；应带 `docs/TESTS.md`（缺失 lint warn）。
 - 详细条件分支、模板、长清单放 `references/`（距 `SKILL.md` 一层）；`SKILL.md` 目标 ≤500 行 / ≤16KB，只留核心流程与"何时读哪个文件"。
-- README 的 `## Skills` 表是唯一公开目录，列固定 `Skill | 类型 | 说明`，不展示版本号。
+- README 的 `## Skills` 表是唯一公开目录，列固定 `Skill | 说明`，不展示类型与版本号。
 - 维护者个人的台账、分发状态与下一步计划记录在 `SKILLS.local.md`（gitignore `*.local.md`，不入库）。
 - 分发与卸载统一用 `bash scripts/skills-link.sh` / `skills-unlink.sh`；链接变更后跑 doctor 并回填台账。内置目标清单的权威实现是 `scripts/lib.sh` 的 `builtin_agent_targets()`。
 - 运行产物（`.venv/`、`.cache/`、`__pycache__/`、`*.egg-info/`）已 gitignore，lint 检查不得入库；`.zcode/` 同样排除。
