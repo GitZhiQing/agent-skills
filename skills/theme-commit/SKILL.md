@@ -10,7 +10,7 @@ description: >-
   明确要求改写历史、推送或只查看 diff 时不要使用本 skill。
 license: MIT
 metadata:
-  version: 0.3.0
+  version: 0.3.1
   category: git
 ---
 

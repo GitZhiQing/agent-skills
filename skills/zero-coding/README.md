@@ -34,7 +34,28 @@ README.md 是常规惯例，骨架期写最小版自然长成，不作为工作�
 
 ## 安装
 
-随仓库任一方式安装（skills CLI / Claude Code 插件市场 / 手动链接），见[仓库 README](../../README.md#安装)。纯提示词 skill，无运行时依赖，链接后 agent 依据 SKILL.md 的 description 自动触发。
+**让 Agent 代装（推荐）**：把下面这段原样发给你的 Agent。
+
+```text
+安装 https://github.com/GitZhiQing/agent-skills 仓库中的 zero-coding skill：
+1) 先执行 `npx skills add "GitZhiQing/agent-skills/zero-coding"`，按输出完成安装；
+2) 该方式不可用时，克隆仓库后执行 `bash scripts/skills-link.sh zero-coding`，再跑 `bash scripts/skills-doctor.sh` 确认链接健康；
+3) 汇报安装位置与验证结果；失败时说明原因，不要跳过验证。
+```
+
+**Claude Code 插件市场**：`/plugin marketplace add GitZhiQing/agent-skills`，然后 `/plugin install zero-coding@agent-skills`。
+
+**仓库内手动分发**（Windows junction / Unix symlink，单一来源，`git pull` 后全端生效）：
+
+```bash
+git clone https://github.com/GitZhiQing/agent-skills.git
+cd agent-skills
+bash scripts/skills-link.sh zero-coding    # 全部 skill 用 --all；卸载用 scripts/skills-unlink.sh zero-coding
+bash scripts/skills-doctor.sh
+```
+
+纯提示词 skill，无运行时依赖；链接完成后，Agent 依据 `SKILL.md` 的 description 自动触发。
+
 
 ## 文档
 

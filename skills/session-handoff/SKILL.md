@@ -7,7 +7,7 @@ description: >-
   当用户只要本会话的总结 / 复盘（不用于跨会话继续）、或任务已完结只需常规收尾时，不要使用本 skill。
 license: MIT
 metadata:
-  version: 0.1.0
+  version: 0.1.1
   category: workflow
 ---
 

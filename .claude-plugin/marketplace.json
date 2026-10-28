@@ -13,7 +13,7 @@
         "./"
       ],
       "description": "联网搜索与网页抓取工具（基于 ddgs 多引擎元搜索：ddgs-web-search / ddgs-web-fetch）",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "author": {
         "name": "QING"
       },
@@ -30,7 +30,7 @@
         "./"
       ],
       "description": "工作区混杂多主题变更时，先给提交计划预览，再按逻辑主题分批提交；消息遵循 type(scope): 摘要 + 列表式 body，显式暂存、提交前检查、提交后验证",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "author": {
         "name": "QING"
       },
@@ -46,7 +46,7 @@
         "./"
       ],
       "description": "先校准问题、再消耗调研资源的深度调研：调研目标、计划与输出目录经用户确认后执行，在所选目录的 YYMMDD-主题/ 下产出 REPORT.md + REFERENCES.md + META.md 三文件（低/中/高档位）；源码调研先 clone 到 sources/ 固定 commit 再本地分析",
-      "version": "0.10.0",
+      "version": "0.10.1",
       "author": {
         "name": "QING"
       },
@@ -62,7 +62,7 @@
         "./"
       ],
       "description": "从零启动个人项目的轻量工作流：先判规模分路——小活一轮对齐直接做，立项走 SPEC 范围契约 + 垂直切片，维护最小文档集（SPEC / DECISIONS / AGENTS），方案确认尽量委托平台 Plan Mode 与子 Agent",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "author": {
         "name": "QING"
       },
@@ -79,7 +79,7 @@
         "./"
       ],
       "description": "视频内容与画面深度分析（拉片级）：L1 文案档 / L2 画面档，结论带帧证据与精度声明；pipeline.py 一键机械采集（单条或批量：--batch 清单、失败隔离、批报告），模型专注确认门与分析；无口播视频画面文案提取（帧差逐屏 + 读图/OCR 回退）",
-      "version": "0.8.0",
+      "version": "0.8.1",
       "author": {
         "name": "QING"
       },
@@ -97,7 +97,7 @@
         "./"
       ],
       "description": "会话收尾时把接手所需上下文打包成一段可粘贴的交接提示词，让下一段全新会话的 Coding Agent 无历史上下文即可恢复状态、继续开发（7 节骨架 + AGENTS.md 未覆盖项条件补充）",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "QING"
       },
@@ -114,7 +114,7 @@
         "./"
       ],
       "description": "把 Markdown 转成排版精良的 PDF：双版式（报告版/正文版）× 多主题（kimi/deepseek/gemini/anthropic），Playwright+Paged.js 渲染，preview 选主题 + 内置质量门断言",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "QING"
       },
@@ -132,7 +132,7 @@
         "./"
       ],
       "description": "Windows 磁盘/文件夹只读扫描 → 可勾选 HTML 报告 → 用户选择 JSON → 二次校验安全删除 → 清理报告；内置 226 条目录规则，缓存叶子不展开；public/local 经验闭环",
-      "version": "0.5.6",
+      "version": "0.5.8",
       "author": {
         "name": "QING"
       },

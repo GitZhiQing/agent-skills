@@ -10,7 +10,7 @@ description: >-
   不要使用本 skill。
 license: MIT
 metadata:
-  version: 0.4.1
+  version: 0.4.2
   category: workflow
 ---
 

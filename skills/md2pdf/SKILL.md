@@ -8,7 +8,7 @@ license: MIT
 compatibility: 需要 uv >= 0.5、Python >= 3.11 与系统 Edge（Playwright channel=msedge 打印，零浏览器下载）；首次使用需联网 fetch 一次下载字体切片 + Paged.js + KaTeX（~15MB）；网页来源经 trafilatura 抽正文
 allowed-tools: Bash(uv run *) Bash(bash *bin/md2pdf *)
 metadata:
-  version: 0.1.1
+  version: 0.1.2
   category: document
 ---
 

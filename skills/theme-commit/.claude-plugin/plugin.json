@@ -1,6 +1,6 @@
 {
   "name": "theme-commit",
   "description": "工作区混杂多主题变更时，先给提交计划预览，再按逻辑主题分批提交；消息遵循 type(scope): 摘要 + 列表式 body，显式暂存、提交前检查、提交后验证",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": { "name": "QING" }
 }

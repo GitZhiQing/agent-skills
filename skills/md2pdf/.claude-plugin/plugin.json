@@ -1,6 +1,6 @@
 {
   "name": "md2pdf",
   "description": "Markdown 转排版精良 PDF（双版式 × 四主题，Playwright + Paged.js，内置质量门）",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": { "name": "QING" }
 }

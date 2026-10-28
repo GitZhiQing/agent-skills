@@ -1,6 +1,6 @@
 {
   "name": "video-insight",
   "description": "拉片级视频内容与画面分析（L1 文案档 / L2 画面档，pipeline 一键机械采集，结论带帧证据）",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "author": { "name": "QING" }
 }

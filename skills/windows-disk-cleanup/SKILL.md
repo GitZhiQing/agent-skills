@@ -9,7 +9,7 @@ description: >-
 license: MIT
 compatibility: Windows 10/11；Python 3.9+（推荐 uv，也可直接用 python）；回收站模式需要 Windows PowerShell 5.1+；系统级目录通常需要管理员权限
 metadata:
-  version: 0.5.6
+  version: 0.5.8
   category: system
 ---
 
@@ -217,7 +217,7 @@ mem record --kind failure --scope delete --trigger "access denied" \
 | selection JSON 字段、校验/保护清单、dry-run、权限/占用/长路径/回收站失败 | `references/扫描与删除协议.md` |
 | AI 深化分析（enrichment.json 字段、预算、安全边界） | `references/深化分析协议.md` |
 | 经验 schema、检索/写回/used/毕业、public/local 隐私 | `references/经验闭环.md`、`memory/INDEX.md` |
-| CLI 参数、安装、依赖、报告页说明、排障 | `README.md` |
+| 环境限制、失败排查 | `references/扫描与删除协议.md` §5–§6 |
 | 行为协议回归 | `docs/测试集.md` |
 
 ## 6. 边界
@@ -238,6 +238,6 @@ mem record --kind failure --scope delete --trigger "access denied" \
 - `references/深化分析协议.md` — enrichment JSON、受限探索预算、安全边界。
 - `references/经验闭环.md` — 经验 schema、检索/写回/毕业、隐私边界。
 - `memory/INDEX.md` — 当前公开经验索引（自动生成）。
-- `README.md` — 安装、用法、报告页与排障。
+- `README.md` — 面向人的介绍与效果预览。
 - `docs/需求与设计文档.md` — 架构、安全模型、规则 schema、扫描策略与决策。
 - `docs/测试集.md` — 固定工作流的行为断言。

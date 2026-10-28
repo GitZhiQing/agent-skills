@@ -1,6 +1,6 @@
 [project]
 name = "windows-disk-cleanup"
-version = "0.5.6"
+version = "0.5.8"
 description = "Scan Windows drives/folders, produce an offline HTML selection report, and delete only user-confirmed items"
 requires-python = ">=3.9"
 dependencies = []

@@ -9,7 +9,7 @@ description: >-
 license: MIT
 compatibility: 需要 Python 3.9+ 与 ffmpeg/ffprobe；B站链接下载需 yt-dlp（或 uvx）；转写内置火山引擎 Seed ASR 托管 API（纯标准库直连），设 VOLC_BIGMODEL_API_KEY 为环境变量或复制 .env.example 为 .env（无口播分支 / 已有转写稿 / L2 不需要）；OCR 回退（无读图能力时）设 PADDLEOCR_ACCESS_TOKEN 接官方托管 API，或本地安装 paddleocr
 metadata:
-  version: 0.8.0
+  version: 0.8.1
   category: media
 ---
 
