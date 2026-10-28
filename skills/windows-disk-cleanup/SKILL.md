@@ -9,7 +9,7 @@ description: >-
 license: MIT
 compatibility: Windows 10/11；Python 3.9+（推荐 uv，也可直接用 python）；回收站模式需要 Windows PowerShell 5.1+；系统级目录通常需要管理员权限
 metadata:
-  version: 0.5.5
+  version: 0.5.6
   category: system
 ---
 
