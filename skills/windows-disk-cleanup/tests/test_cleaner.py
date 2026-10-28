@@ -4,6 +4,7 @@ import json
 import shutil
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 import helpers
@@ -13,6 +14,7 @@ helpers.setup_env()
 from disk_cleanup.cleaner import execute_cleanup
 from disk_cleanup.selection import (
     Selection,
+    SelectionError,
     load_scan,
     load_selection,
     validate_selection,
@@ -51,6 +53,87 @@ class CleanerTests(unittest.TestCase):
                 self.assertFalse(Path(path).exists(), path)
             self.assertTrue(Path(outputs["cleanup_html"]).exists())
             self.assertTrue(Path(outputs["cleanup_json"]).exists())
+
+    def test_schema2_per_path_modes_validate_and_execute(self):
+        with tempfile.TemporaryDirectory(prefix="wdc-del-") as tmp:
+            root, out, scan = self._fixture_scan(Path(tmp))
+            temp = helpers.entry_by_suffix(scan, "AppData\\Local\\Temp")["path"]
+            modules = helpers.entry_by_suffix(scan, "node_modules")["path"]
+            selection_file = helpers.write_selection(
+                out, scan, [temp, modules],
+                mode="permanent", schema=2,
+                modes={temp: "recycle", r"C:\not\selected": "permanent"},
+            )
+            selection = load_selection(str(selection_file))
+            self.assertEqual(selection.schema, 2)
+            validation = validate_selection(load_scan(str(out / "scan.json")), selection)
+            self.assertEqual(validation.invalid, [])
+            by_path = {item["path"]: item for item in validation.planned}
+            self.assertEqual(by_path[temp]["mode"], "recycle")
+            self.assertEqual(by_path[modules]["mode"], "permanent")
+            self.assertEqual(validation.mode_counts, {"recycle": 1, "permanent": 1})
+
+            with unittest.mock.patch(
+                "disk_cleanup.cleaner.recycle_paths",
+                return_value=[{"path": temp, "ok": True}],
+            ) as mock_recycle:
+                result, outputs = execute_cleanup(
+                    scan, validation, str(out), confirmed=True, rules_version="test"
+                )
+            mock_recycle.assert_called_once()
+            self.assertEqual(mock_recycle.call_args[0][0], [temp])
+            statuses = {item.path: item.status for item in result.items}
+            self.assertEqual(statuses[temp], "moved_to_recycle_bin")
+            self.assertEqual(statuses[modules], "deleted")
+            modes_in_json = {item["path"]: item["mode"] for item in json.loads(
+                Path(outputs["cleanup_json"]).read_text(encoding="utf-8")
+            )["items"]}
+            self.assertEqual(modes_in_json[temp], "recycle")
+            self.assertEqual(modes_in_json[modules], "permanent")
+
+    def test_schema1_stays_global_mode(self):
+        with tempfile.TemporaryDirectory(prefix="wdc-del-") as tmp:
+            root, out, scan = self._fixture_scan(Path(tmp))
+            temp = helpers.entry_by_suffix(scan, "AppData\\Local\\Temp")["path"]
+            selection_file = helpers.write_selection(out, scan, [temp], mode="recycle")
+            selection = load_selection(str(selection_file))
+            self.assertEqual(selection.schema, 1)
+            self.assertEqual(selection.modes, {})
+            validation = validate_selection(load_scan(str(out / "scan.json")), selection)
+            self.assertEqual(validation.planned[0]["mode"], "recycle")
+
+    def test_mode_override_beats_per_path_modes(self):
+        with tempfile.TemporaryDirectory(prefix="wdc-del-") as tmp:
+            root, out, scan = self._fixture_scan(Path(tmp))
+            temp = helpers.entry_by_suffix(scan, "AppData\\Local\\Temp")["path"]
+            selection_file = helpers.write_selection(
+                out, scan, [temp], mode="recycle", schema=2, modes={temp: "recycle"},
+            )
+            selection = load_selection(str(selection_file))
+            validation = validate_selection(
+                load_scan(str(out / "scan.json")), selection, mode_override="permanent"
+            )
+            self.assertEqual(validation.planned[0]["mode"], "permanent")
+
+    def test_illegal_mode_value_is_rejected(self):
+        with tempfile.TemporaryDirectory(prefix="wdc-del-") as tmp:
+            root, out, scan = self._fixture_scan(Path(tmp))
+            temp = helpers.entry_by_suffix(scan, "AppData\\Local\\Temp")["path"]
+            selection_file = helpers.write_selection(
+                out, scan, [temp], schema=2, modes={temp: "burn"},
+            )
+            with self.assertRaises(SelectionError) as ctx:
+                load_selection(str(selection_file))
+            self.assertIn("删除方式非法", str(ctx.exception))
+
+    def test_unsupported_schema_is_rejected(self):
+        with tempfile.TemporaryDirectory(prefix="wdc-del-") as tmp:
+            root, out, scan = self._fixture_scan(Path(tmp))
+            temp = helpers.entry_by_suffix(scan, "AppData\\Local\\Temp")["path"]
+            selection_file = helpers.write_selection(out, scan, [temp], schema=3)
+            with self.assertRaises(SelectionError) as ctx:
+                load_selection(str(selection_file))
+            self.assertIn("schema", str(ctx.exception))
 
     def test_protected_path_is_rejected_even_if_scan_forged(self):
         scan = {

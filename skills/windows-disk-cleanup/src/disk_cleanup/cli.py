@@ -17,6 +17,12 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from disk_cleanup import __version__
 from disk_cleanup.cleaner import CleanupError, execute_cleanup
+from disk_cleanup.enrich import (
+    EnrichError,
+    load_enrichment,
+    validate_enrichment,
+    write_enriched_outputs,
+)
 from disk_cleanup.report import summarize_entries, write_scan_outputs
 from disk_cleanup.rules import asset_file, load_rules, validate_rules
 from disk_cleanup.scanner import ScanError, ScanOptions, Scanner, UsageError
@@ -193,11 +199,13 @@ def cmd_scan(args: argparse.Namespace) -> int:
         "scan_json": outputs["scan_json"],
         "stats": result.stats.to_dict(),
         "summary": {
+            "suggest": summary["suggest_count"],
             "safe": summary["safe_count"],
             "caution": summary["caution_count"],
             "review": summary["review_count"],
             "keep": summary["keep_count"],
             "selectable": summary["selectable"],
+            "suggest_bytes": summary["suggest_bytes"],
             "safe_bytes": summary["safe_bytes"],
             "caution_bytes": summary["caution_bytes"],
             "review_bytes": summary["review_bytes"],
@@ -220,8 +228,9 @@ def cmd_scan(args: argparse.Namespace) -> int:
             f"{human_size(result.stats.bytes)} · 耗时 {result.duration_s:.1f}s"
         )
         print(
-            f"  安全 {summary['safe_count']} · 谨慎 {summary['caution_count']} · "
-            f"待确认 {summary['review_count']} · 保留 {summary['keep_count']}"
+            f"  建议清理 {summary['suggest_count']} · 安全 {summary['safe_count']} · "
+            f"谨慎 {summary['caution_count']} · 保留 {summary['keep_count']} · "
+            f"待定 {summary['review_count']}"
         )
         print(f"  报告：{outputs['report_html']}")
         print(f"  数据：{outputs['scan_json']}")
@@ -248,6 +257,7 @@ def cmd_delete(args: argparse.Namespace) -> int:
         "scan_id": validation.scan_id,
         "root": validation.root,
         "mode": validation.mode,
+        "modes": validation.mode_counts,
         "confirmed": confirmed,
         "selected": len(validation.paths),
         "planned": validation.planned,
@@ -270,8 +280,16 @@ def cmd_delete(args: argparse.Namespace) -> int:
         if args.json:
             _print_json(plan)
         else:
+            counts = validation.mode_counts
+            mode_text = " · ".join(
+                f"{'回收站' if m == 'recycle' else '彻底删除'} {n} 项"
+                for m, n in counts.items()
+            ) or validation.mode
             print(f"预演（未删除）：{validation.root}")
-            print(f"  方式：{validation.mode} · 计划 {len(validation.planned)} 项 · 约 {human_size(validation.estimated_bytes)}")
+            print(
+                f"  方式：{mode_text} · 计划 {len(validation.planned)} 项 · "
+                f"约 {human_size(validation.estimated_bytes)}"
+            )
             if validation.invalid:
                 print("  无效路径：", file=sys.stderr)
                 for item in validation.invalid:
@@ -372,6 +390,57 @@ def cmd_rules(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_enrich(args: argparse.Namespace) -> int:
+    if os.name != "nt":
+        raise UsageError("windows-disk-cleanup 仅支持 Windows 10/11。")
+    enrichment = load_enrichment(args.enrichment)
+    scan = load_scan(args.scan)
+    errors = validate_enrichment(enrichment, scan)
+    if errors:
+        if args.json:
+            _print_json({"ok": False, "errors": errors})
+        else:
+            print("enrichment 校验失败：", file=sys.stderr)
+            for err in errors[:10]:
+                print(f"  - {err}", file=sys.stderr)
+        return EXIT_USAGE
+    if args.check:
+        payload = {
+            "ok": True,
+            "scan_id": scan.get("scan_id"),
+            "entries": len(enrichment.get("entries", [])),
+        }
+        if args.json:
+            _print_json(payload)
+        else:
+            print(f"enrichment 校验通过：{payload['entries']} 条")
+        return EXIT_OK
+    output_dir = os.path.abspath(args.output_dir or str(Path(args.scan).resolve().parent / "enriched"))
+    outputs = write_enriched_outputs(
+        scan, enrichment, output_dir, max_entries=args.max_entries,
+        enrichment_source=str(Path(args.enrichment).resolve()),
+    )
+    payload = {
+        "ok": True,
+        "scan_id": scan.get("scan_id"),
+        "applied": outputs["applied"],
+        "retiered": outputs["retiered"],
+        "output_dir": output_dir,
+        "report": outputs["report_html"],
+        "scan_json": outputs["scan_json"],
+        "ai_next": (
+            "打开增强版报告交给用户勾选；删除流程不变——selection 仍由 delete 校验，"
+            "AI 参考建议不参与删除门控。"
+        ),
+    }
+    if args.json:
+        _print_json(payload)
+    else:
+        print(f"已应用深化分析：{outputs['applied']} 条 · 提升档位 {outputs['retiered']} 条 · 输出目录 {output_dir}")
+        print(f"  报告：{outputs['report_html']}")
+    return EXIT_OK
+
+
 # -- parser -------------------------------------------------------------------
 
 
@@ -418,6 +487,14 @@ def build_parser() -> argparse.ArgumentParser:
     rules.add_argument("--rules", default="", help="自定义 rules.json")
     rules.add_argument("--check", action="store_true", help="校验规则字段与 id 唯一性")
     rules.add_argument("--json", action="store_true", help="输出 JSON")
+
+    enrich = sub.add_parser("enrich", help="应用 AI 深化分析（enrichment.json）并重新渲染报告")
+    enrich.add_argument("--scan", required=True, help="scan.json 路径")
+    enrich.add_argument("--enrichment", required=True, help="Agent 写的 enrichment.json")
+    enrich.add_argument("--output-dir", default="", help="输出目录（默认 scan.json 同目录下 enriched/，可覆盖重跑）")
+    enrich.add_argument("--max-entries", type=int, default=1500, help="HTML 报告最多嵌入条目，默认 1500")
+    enrich.add_argument("--check", action="store_true", help="只校验不应用")
+    enrich.add_argument("--json", action="store_true", help="输出单行 JSON")
     return parser
 
 
@@ -435,12 +512,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return cmd_delete(args)
         if args.command == "rules":
             return cmd_rules(args)
+        if args.command == "enrich":
+            return cmd_enrich(args)
         parser.print_help(sys.stderr)
         return EXIT_USAGE
     except UsageError as exc:
         _print_error(exc, as_json, "usage")
         return EXIT_USAGE
-    except SelectionError as exc:
+    except (SelectionError, EnrichError) as exc:
         _print_error(exc, as_json, "selection")
         return EXIT_USAGE
     except ScanError as exc:

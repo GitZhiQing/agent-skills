@@ -22,7 +22,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from disk_cleanup import SCHEMA_VERSION
-from disk_cleanup.model import Entry, ScanResult, ScanStats
+from disk_cleanup.model import Entry, ScanResult, ScanStats, classify_group, classify_nature
 from disk_cleanup.rules import RuleIndex, load_rules, validate_rules
 from disk_cleanup.winutil import (
     display_path,
@@ -609,6 +609,9 @@ class Scanner:
             title=str(rule.get("title", "")),
             category=str(rule.get("category", "其他")),
             scope=str(rule.get("scope", "data")),
+            language=str(rule.get("language", "")),
+            group=classify_group(str(rule.get("category", "其他")), str(rule.get("scope", "data"))),
+            nature=classify_nature(str(rule.get("category", "其他"))),
             description=str(rule.get("description", "")),
             action=str(rule.get("action", "")),
             risk=str(rule.get("risk", "")),
@@ -648,6 +651,8 @@ class Scanner:
             title=str(cls.get("title", "")),
             category=str(cls.get("category", "其他")),
             scope=str(cls.get("scope", "data")),
+            group=classify_group(str(cls.get("category", "其他")), str(cls.get("scope", "data"))),
+            nature=classify_nature(str(cls.get("category", "其他"))),
             description=str(cls.get("description", "")),
             action=str(cls.get("action", "")),
             risk=str(cls.get("risk", "")),
@@ -777,7 +782,7 @@ class Scanner:
             existing.partial = entry.partial
         if priority == old_priority:
             existing.selectable = existing.selectable and entry.selectable
-            severity = {"safe": 0, "caution": 1, "review": 2, "keep": 3}
+            severity = {"suggest": 0, "safe": 1, "caution": 2, "review": 3, "keep": 4}
             if severity.get(entry.recommendation, 9) > severity.get(existing.recommendation, 9):
                 existing.recommendation = entry.recommendation
 
@@ -1089,6 +1094,8 @@ class Scanner:
             entry.files = count
         entry.title = "回收站（当前用户）"
         entry.category = "回收站"
+        entry.group = classify_group("回收站", entry.scope)
+        entry.nature = classify_nature("回收站")
         entry.description = "当前用户删除的文件先进入这里；清空后才真正释放磁盘空间。"
         entry.action = "右键回收站 → 清空回收站，或 PowerShell Clear-RecycleBin；不要手动删除目录。"
         entry.risk = "清空后无法从回收站恢复文件。"

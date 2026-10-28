@@ -15,7 +15,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
-from disk_cleanup.model import RECOMMENDATIONS, RULE_MODES, TARGETS
+from disk_cleanup.model import LANGUAGES, RECOMMENDATIONS, RULE_MODES, TARGETS
 from disk_cleanup.winutil import (
     display_path,
     is_subpath,
@@ -435,6 +435,9 @@ def validate_rules(data: Dict[str, Any]) -> List[str]:
             errors.append(f"{prefix}: method 非法")
         if rule.get("target", "dir") not in TARGETS:
             errors.append(f"{prefix}: target 非法")
+        language = str(rule.get("language", "") or "")
+        if language and language not in LANGUAGES:
+            errors.append(f"{prefix}: language 非法（{language}）")
         match = rule.get("match")
         if not isinstance(match, dict):
             errors.append(f"{prefix}: match 缺失")

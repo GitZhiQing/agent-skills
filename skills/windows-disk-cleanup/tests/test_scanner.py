@@ -28,6 +28,7 @@ class ScannerTests(unittest.TestCase):
 
             modules = by[str(root / "proj/node_modules")]
             self.assertEqual(modules.recommendation, "safe")
+            self.assertEqual(modules.language, "nodejs")
             self.assertEqual(modules.size, 500)
             self.assertFalse(any("node_modules\\pkg" in p or "node_modules/pkg" in p for p in by))
 
@@ -51,6 +52,18 @@ class ScannerTests(unittest.TestCase):
             self.assertEqual(result.stats.bytes, 2_098_742)
             self.assertFalse(result.stats.partial)
             self.assertEqual(result.omitted_entries, 0)
+
+    def test_suggest_rule_classifies_upgrade_leftover(self):
+        with tempfile.TemporaryDirectory(prefix="wdc-scan-") as tmp:
+            root = Path(tmp) / "fixture"
+            bt = root / "$Windows.~BT"
+            bt.mkdir(parents=True)
+            (bt / "setup.bin").write_bytes(b"x" * 500)
+            result = helpers.scan_fixture(root)
+            entry = next(e for e in result.entries if e.path == str(bt))
+            self.assertEqual(entry.recommendation, "suggest")
+            self.assertEqual(entry.rule_id, "sys-windows-bt")
+            self.assertTrue(entry.selectable)
 
     def test_min_size_filters_generic_large_entries_but_keeps_rules(self):
         with tempfile.TemporaryDirectory(prefix="wdc-scan-") as tmp:

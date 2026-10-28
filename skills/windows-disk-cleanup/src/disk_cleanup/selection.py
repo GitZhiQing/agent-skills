@@ -23,6 +23,7 @@ class SelectionError(Exception):
 
 
 MODES = {"recycle", "permanent"}
+SELECTION_SCHEMAS = (1, 2)
 _MODE_ALIASES = {
     "回收站": "recycle",
     "移入回收站": "recycle",
@@ -38,6 +39,7 @@ class Selection:
     scan_id: str
     paths: List[str]
     mode: str = "recycle"
+    modes: Dict[str, str] = field(default_factory=dict)
     confirmed: bool = False
     scan_file: str = ""
     root: str = ""
@@ -64,6 +66,14 @@ class ValidationResult:
     @property
     def requires_allow_review(self) -> bool:
         return bool(self.review)
+
+    @property
+    def mode_counts(self) -> Dict[str, int]:
+        counts: Dict[str, int] = {}
+        for item in self.planned:
+            mode = str(item.get("mode", "recycle"))
+            counts[mode] = counts.get(mode, 0) + 1
+        return counts
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -129,8 +139,10 @@ def load_selection(path: str) -> Selection:
         schema = int(data.get("schema", 1) or 1)
     except (TypeError, ValueError):
         raise SelectionError("选择 JSON 的 schema 不是整数。")
-    if schema != 1:
-        raise SelectionError(f"不支持的选择 schema：{schema}（当前支持 1）。")
+    if schema not in SELECTION_SCHEMAS:
+        raise SelectionError(
+            f"不支持的选择 schema：{schema}（当前支持 {'/'.join(str(s) for s in SELECTION_SCHEMAS)}）。"
+        )
     scan_id = str(data.get("scan_id", "")).strip()
     if not scan_id:
         raise SelectionError("选择 JSON 缺少 scan_id；请重新从报告页复制。")
@@ -154,12 +166,28 @@ def load_selection(path: str) -> Selection:
     mode = _MODE_ALIASES.get(mode_raw, _MODE_ALIASES.get(str(data.get("mode", "")).strip(), "recycle"))
     if mode not in MODES:
         raise SelectionError(f"删除方式非法：{data.get('mode')!r}（只支持 recycle / permanent）。")
+    modes: Dict[str, str] = {}
+    if schema >= 2 and data.get("modes") is not None:
+        raw_modes = data.get("modes")
+        if not isinstance(raw_modes, dict):
+            raise SelectionError("modes 必须是「路径 -> 删除方式」的对象。")
+        for raw_path, raw_mode in raw_modes.items():
+            if not isinstance(raw_path, str) or not raw_path.strip():
+                raise SelectionError("modes 中存在非法路径键。")
+            normalized_mode = _MODE_ALIASES.get(str(raw_mode).strip().lower(), str(raw_mode).strip())
+            if normalized_mode not in MODES:
+                raise SelectionError(
+                    f"删除方式非法：{raw_mode!r}（只支持 recycle / permanent）。"
+                )
+            # paths 之外的键无害，直接忽略。
+            modes[normalize(raw_path.strip().strip('"'))] = normalized_mode
     confirmed_raw = data.get("confirmed", False)
     confirmed = confirmed_raw is True or str(confirmed_raw).strip().lower() in ("1", "true", "yes")
     return Selection(
         scan_id=scan_id,
         paths=paths,
         mode=mode,
+        modes=modes,
         confirmed=confirmed,
         scan_file=str(data.get("scan_file", "") or ""),
         root=str(data.get("root", "") or ""),
@@ -289,6 +317,12 @@ def validate_selection(
             ]
             accepted_paths = [p for p in accepted_paths if normalize(p) not in {normalize(c) for c in children}]
         accepted_paths.append(path)
+        # Per-path mode: an explicit --mode override beats everything,
+        # then the selection's per-path overrides, then the global default.
+        if mode_override:
+            item_mode = mode_override
+        else:
+            item_mode = selection.modes.get(normalize(path), mode)
         result.planned.append(
             {
                 "path": path,
@@ -297,6 +331,7 @@ def validate_selection(
                 "recommendation": entry.get("recommendation", ""),
                 "size": entry.get("size"),
                 "selectable": True,
+                "mode": item_mode,
             }
         )
         if entry.get("recommendation") == "review":

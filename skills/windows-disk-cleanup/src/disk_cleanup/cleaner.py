@@ -210,6 +210,7 @@ def _prepare_items(
             category=str(plan.get("category", "")),
             recommendation=str(plan.get("recommendation", "")),
             size=plan.get("size") if isinstance(plan.get("size"), int) else None,
+            mode=str(plan.get("mode", "recycle")),
         )
         key = normalize(path)
         if key in missing_reasons:
@@ -320,18 +321,18 @@ def execute_cleanup(
     t0 = time.monotonic()
     volume_before = get_volume_info(str(scan.get("root", "")))
     items, _missing = _prepare_items(validation)
-    if validation.mode == "recycle":
-        _execute_recycle(items)
-    else:
-        _execute_permanent(items)
+    recycle_items = [i for i in items if i.status == "pending" and i.mode == "recycle"]
+    permanent_items = [i for i in items if i.status == "pending" and i.mode == "permanent"]
+    _execute_recycle(recycle_items)
+    _execute_permanent(permanent_items)
     volume_after = get_volume_info(str(scan.get("root", "")))
     finished_at = iso_now()
     duration = round(time.monotonic() - t0, 2)
     notes: List[str] = []
-    if validation.mode == "recycle":
-        notes.append("文件已移入回收站；清空回收站后才会真正释放磁盘空间。")
-    else:
-        notes.append("已按彻底删除模式执行；删除后不可恢复。")
+    if recycle_items:
+        notes.append("移入回收站的条目需清空回收站后才会真正释放磁盘空间。")
+    if permanent_items:
+        notes.append("彻底删除的条目已直接移除，不可恢复。")
     failed = sum(1 for i in items if i.status in ("failed", "partial"))
     if failed:
         notes.append(

@@ -76,10 +76,12 @@ def write_selection(
     mode: str = "permanent",
     confirmed: bool = True,
     name: str = "selection.json",
+    modes: Optional[Dict[str, str]] = None,
+    schema: int = 1,
 ) -> Path:
     data = {
         "skill": "windows-disk-cleanup",
-        "schema": 1,
+        "schema": schema,
         "scan_id": scan["scan_id"],
         "scan_file": str((output_dir / "scan.json").resolve()),
         "root": scan["root"],
@@ -87,6 +89,8 @@ def write_selection(
         "confirmed": confirmed,
         "paths": list(paths),
     }
+    if modes is not None:
+        data["modes"] = modes
     path = output_dir / name
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     return path

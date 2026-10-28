@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -22,6 +23,69 @@ class RuleTests(unittest.TestCase):
         self.assertGreaterEqual(len(self.data["rules"]), 200)
         ids = [rule["id"] for rule in self.data["rules"]]
         self.assertEqual(len(ids), len(set(ids)))
+
+    def test_upgrade_leftovers_are_suggest(self):
+        suggest_ids = {
+            rule["id"]
+            for rule in self.data["rules"]
+            if rule.get("recommendation") == "suggest"
+        }
+        self.assertEqual(
+            suggest_ids,
+            {
+                "sys-windows-old",
+                "sys-windows-bt",
+                "sys-windows-ws",
+                "sys-windows-q",
+                "sys-inplace-tr",
+                "sys-esd",
+                "sys-sysreset",
+                "win-update-download",
+                "user-inetcache",
+                "user-webcache",
+                "user-temporary-internet-files",
+                "dev-npm-cache-roaming",
+            },
+        )
+        self.assertEqual(
+            self.index.match(r"C:\Windows.old")["recommendation"], "suggest"
+        )
+
+    def test_recommendation_tiers_and_labels_are_consistent(self):
+        from disk_cleanup.model import (
+            RECOMMENDATIONS,
+            RECOMMENDATION_LABELS,
+            RECOMMENDATION_SHORT,
+        )
+
+        self.assertEqual(
+            RECOMMENDATIONS, ("suggest", "safe", "caution", "keep", "review")
+        )
+        for rec in RECOMMENDATIONS:
+            self.assertIn(rec, RECOMMENDATION_LABELS)
+            self.assertIn(rec, RECOMMENDATION_SHORT)
+        self.assertEqual(RECOMMENDATION_LABELS["review"], "待定")
+        self.assertEqual(RECOMMENDATION_LABELS["keep"], "建议保留")
+
+    def test_language_annotation_and_validation(self):
+        annotated = {
+            rule["id"]: rule["language"]
+            for rule in self.data["rules"]
+            if rule.get("language")
+        }
+        self.assertGreaterEqual(len(annotated), 90)
+        self.assertEqual(annotated["dev-node-modules"], "nodejs")
+        self.assertEqual(annotated["dev-pip-cache"], "python")
+        self.assertEqual(annotated["dev-cargo-registry-cache"], "rust")
+        self.assertEqual(annotated["docker-vhdx"], "docker")
+        # 系统类规则不标语言
+        self.assertNotIn("sys-windows-old", annotated)
+
+        bad = json.loads(json.dumps(self.data))
+        bad["rules"][0]["language"] = "not-a-lang"
+        self.assertTrue(
+            any("language" in err for err in validate_rules(bad))
+        )
 
     def test_exact_and_suffix_matches(self):
         self.assertEqual(self.index.match(r"C:\Windows.old")["id"], "sys-windows-old")

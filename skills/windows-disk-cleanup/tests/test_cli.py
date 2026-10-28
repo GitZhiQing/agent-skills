@@ -89,6 +89,57 @@ class CliTests(unittest.TestCase):
             for path in paths:
                 self.assertFalse(Path(path).exists())
 
+    def test_scan_delete_roundtrip_schema2_modes(self):
+        with tempfile.TemporaryDirectory(prefix="wdc-cli-") as tmp:
+            tmp_path = Path(tmp)
+            root = helpers.make_fixture(tmp_path / "fixture")
+            out = tmp_path / "out"
+            proc = run_cli(
+                [
+                    "scan",
+                    "--root",
+                    str(root),
+                    "--output-dir",
+                    str(out),
+                    "--min-size",
+                    "0",
+                    "--json",
+                ],
+                helpers.SKILL_ROOT,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            scan = json.loads((out / "scan.json").read_text(encoding="utf-8"))
+            temp = helpers.entry_by_suffix(scan, "AppData\\Local\\Temp")["path"]
+            modules = helpers.entry_by_suffix(scan, "node_modules")["path"]
+            selection = helpers.write_selection(
+                out, scan, [temp, modules],
+                mode="permanent", schema=2, modes={temp: "recycle"},
+            )
+
+            dry = run_cli(
+                ["delete", "--selection", str(selection), "--dry-run", "--json"],
+                helpers.SKILL_ROOT,
+            )
+            self.assertEqual(dry.returncode, 0, dry.stderr)
+            plan = json.loads(dry.stdout)
+            self.assertTrue(plan["ok"])
+            self.assertEqual(plan["modes"], {"recycle": 1, "permanent": 1})
+            modes_by_path = {item["path"]: item["mode"] for item in plan["planned"]}
+            self.assertEqual(modes_by_path[temp], "recycle")
+            self.assertEqual(modes_by_path[modules], "permanent")
+
+            execute = run_cli(
+                ["delete", "--selection", str(selection), "--yes", "--json"],
+                helpers.SKILL_ROOT,
+            )
+            self.assertIn(execute.returncode, (0, 1), execute.stderr)
+            result = json.loads(execute.stdout)
+            # 回收站在受限环境可能失败（见 memory L-005），只断言方式字段贯穿执行结果。
+            item_modes = {item["path"]: item["mode"] for item in result["items"]}
+            self.assertEqual(item_modes[temp], "recycle")
+            self.assertEqual(item_modes[modules], "permanent")
+            self.assertFalse(Path(modules).exists())
+
     def test_review_requires_allow_review(self):
         with tempfile.TemporaryDirectory(prefix="wdc-cli-") as tmp:
             tmp_path = Path(tmp)
