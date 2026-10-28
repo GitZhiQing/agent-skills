@@ -203,6 +203,17 @@ for skill in $skills_list; do
     fi
   fi
 
+  # 包内 __version__ 是 CLI --version 与经验记录的版本来源，必须同步。
+  init_file="$SKILLS_DIR/$skill/src/${skill//-/_}/__init__.py"
+  if [ -f "$init_file" ]; then
+    init_ver="$(awk -F'"' '/^__version__[[:space:]]*=/ { print $2; exit }' "$init_file")"
+    if [ -n "$ver" ] && [ -n "$init_ver" ] && [ "$ver" != "$init_ver" ]; then
+      err "$skill: 版本不一致：SKILL.md $ver != __init__.py __version__ $init_ver"
+    else
+      ok "$skill: __init__.py 版本一致（$init_ver）"
+    fi
+  fi
+
   plugin_file="$SKILLS_DIR/$skill/.claude-plugin/plugin.json"
   if [ ! -f "$plugin_file" ]; then
     err "$skill: 缺少 .claude-plugin/plugin.json（规范 §2）"
