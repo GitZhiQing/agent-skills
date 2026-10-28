@@ -27,11 +27,32 @@
 
 只装一个时，把「全部 skill」换成 skill 名，`--all` 换成同一个名字（如 `windows-disk-cleanup`）。
 
-其他方式：
+### skills CLI
 
-- **skills CLI**：`npx skills add GitZhiQing/agent-skills`（单个：`.../agent-skills/<name>`）
-- **Claude Code 插件市场**：`/plugin marketplace add GitZhiQing/agent-skills`，再 `/plugin install <name>@agent-skills`
-- **手动**：clone 后 `bash scripts/skills-link.sh --all`，再 `bash scripts/skills-doctor.sh`
+```bash
+npx skills add GitZhiQing/agent-skills                       # 全部
+npx skills add GitZhiQing/agent-skills/windows-disk-cleanup  # 单个
+```
+
+### Claude Code 插件市场
+
+```text
+/plugin marketplace add GitZhiQing/agent-skills
+/plugin install windows-disk-cleanup@agent-skills
+```
+
+### 手动分发
+
+clone 后把 skill 链接到本机 agent 目录（Windows junction / Unix symlink，单一来源，`git pull` 后全端生效）：
+
+```bash
+git clone https://github.com/GitZhiQing/agent-skills.git
+cd agent-skills
+bash scripts/skills-link.sh --all              # 全部；单个换成 skill 名
+bash scripts/skills-doctor.sh                  # 链接健康检查
+```
+
+卸载：`bash scripts/skills-unlink.sh --all`（单个同样换成 skill 名）。
 
 ## 快速使用
 

@@ -27,7 +27,18 @@
 安装 GitHub 仓库 GitZhiQing/agent-skills 里的 session-handoff skill：优先 `npx skills add "GitZhiQing/agent-skills/session-handoff"`；不可用则 clone 仓库后执行 `bash scripts/skills-link.sh session-handoff`，再用 `scripts/skills-doctor.sh` 验证并汇报结果。
 ```
 
-插件市场与手动分发方式见[仓库 README](../../README.md#安装)。
+直接用命令行安装：
+
+```bash
+npx skills add GitZhiQing/agent-skills/session-handoff
+```
+
+```text
+/plugin marketplace add GitZhiQing/agent-skills
+/plugin install session-handoff@agent-skills
+```
+
+手动分发与卸载见[仓库 README](../../README.md#安装)。
 
 纯提示词 skill，无运行时依赖。
 

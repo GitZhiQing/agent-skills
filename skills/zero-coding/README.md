@@ -40,7 +40,18 @@ README.md 是常规惯例，骨架期写最小版自然长成，不作为工作�
 安装 GitHub 仓库 GitZhiQing/agent-skills 里的 zero-coding skill：优先 `npx skills add "GitZhiQing/agent-skills/zero-coding"`；不可用则 clone 仓库后执行 `bash scripts/skills-link.sh zero-coding`，再用 `scripts/skills-doctor.sh` 验证并汇报结果。
 ```
 
-插件市场与手动分发方式见[仓库 README](../../README.md#安装)。
+直接用命令行安装：
+
+```bash
+npx skills add GitZhiQing/agent-skills/zero-coding
+```
+
+```text
+/plugin marketplace add GitZhiQing/agent-skills
+/plugin install zero-coding@agent-skills
+```
+
+手动分发与卸载见[仓库 README](../../README.md#安装)。
 
 纯提示词 skill，无运行时依赖。
 

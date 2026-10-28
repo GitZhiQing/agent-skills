@@ -78,7 +78,18 @@
 安装 GitHub 仓库 GitZhiQing/agent-skills 里的 windows-disk-cleanup skill：优先 `npx skills add "GitZhiQing/agent-skills/windows-disk-cleanup"`；不可用则 clone 仓库后执行 `bash scripts/skills-link.sh windows-disk-cleanup`，再用 `scripts/skills-doctor.sh` 验证并汇报结果。
 ```
 
-插件市场与手动分发方式见[仓库 README](../../README.md#安装)。
+直接用命令行安装：
+
+```bash
+npx skills add GitZhiQing/agent-skills/windows-disk-cleanup
+```
+
+```text
+/plugin marketplace add GitZhiQing/agent-skills
+/plugin install windows-disk-cleanup@agent-skills
+```
+
+手动分发与卸载见[仓库 README](../../README.md#安装)。
 
 运行条件：Windows 10/11 + Python 3.9+（纯标准库）；回收站模式需 Windows PowerShell 5.1+；系统级目录通常需要管理员权限。
 

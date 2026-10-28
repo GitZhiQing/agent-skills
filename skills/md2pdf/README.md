@@ -18,7 +18,18 @@ Markdown → 排版精良的 PDF：双版式（报告版 = 封面 + 目录 + 页
 安装 GitHub 仓库 GitZhiQing/agent-skills 里的 md2pdf skill：优先 `npx skills add "GitZhiQing/agent-skills/md2pdf"`；不可用则 clone 仓库后执行 `bash scripts/skills-link.sh md2pdf`，再用 `scripts/skills-doctor.sh` 验证并汇报结果。
 ```
 
-插件市场与手动分发方式见[仓库 README](../../README.md#安装)。
+直接用命令行安装：
+
+```bash
+npx skills add GitZhiQing/agent-skills/md2pdf
+```
+
+```text
+/plugin marketplace add GitZhiQing/agent-skills
+/plugin install md2pdf@agent-skills
+```
+
+手动分发与卸载见[仓库 README](../../README.md#安装)。
 
 运行时需要 `uv`（首次运行自动拉取渲染依赖）；单独拷贝该目录时无需安装，`uv run --project <目录> md2pdf <子命令>` 即用。
 

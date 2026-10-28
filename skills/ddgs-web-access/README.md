@@ -22,7 +22,18 @@
 安装 GitHub 仓库 GitZhiQing/agent-skills 里的 ddgs-web-access skill：优先 `npx skills add "GitZhiQing/agent-skills/ddgs-web-access"`；不可用则 clone 仓库后执行 `bash scripts/skills-link.sh ddgs-web-access`，再用 `scripts/skills-doctor.sh` 验证并汇报结果。
 ```
 
-插件市场与手动分发方式见[仓库 README](../../README.md#安装)。
+直接用命令行安装：
+
+```bash
+npx skills add GitZhiQing/agent-skills/ddgs-web-access
+```
+
+```text
+/plugin marketplace add GitZhiQing/agent-skills
+/plugin install ddgs-web-access@agent-skills
+```
+
+手动分发与卸载见[仓库 README](../../README.md#安装)。
 
 仅命令行使用（不需要 agent 集成）：`export PATH="$PWD/bin:$PATH"` 后直接跑 `ddgs-web-search`。skill 自带的 `scripts/install.sh` 可把本 skill 单独链接到本机 14 个常见 agent 目录，用法见脚本头注释。
 
