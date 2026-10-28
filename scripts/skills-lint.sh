@@ -177,6 +177,13 @@ for skill in $skills_list; do
 
   if [ -f "$SKILLS_DIR/$skill/README.md" ]; then
     ok "$skill: README.md 存在"
+    if ! grep -q '^## 安装' "$SKILLS_DIR/$skill/README.md"; then
+      err "$skill: README 缺少「## 安装」章节（规范 §5）"
+    elif ! grep -q 'npx skills add' "$SKILLS_DIR/$skill/README.md"; then
+      err "$skill: README 安装章节缺少可交给 Agent 执行的命令（规范 §5）"
+    else
+      ok "$skill: README 安装章节含可执行命令"
+    fi
   else
     err "$skill: 缺少 README.md（规范 §2：面向人的目录导览，全部 skill 必备）"
   fi
