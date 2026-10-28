@@ -52,7 +52,7 @@
 
 每条给出五档建议之一：**建议清理 / 安全清理 / 谨慎清理 / 建议保留 / 待定**。标「建议保留」的它拒绝删除；「待定」是没命中规则的目录，需要你判断，或由 AI 只读探索后补充说明（AI 补充的内容单独标注，且不能放宽可删范围）。
 
-规则库是纯数据、可读可审，明细与官方来源见 [references/目录规则库.md](references/目录规则库.md)。
+规则库是纯数据、可读可审，明细与官方来源见 [references/rules-catalog.md](references/rules-catalog.md)。
 
 ## 安全承诺
 
@@ -85,11 +85,11 @@
 ## 想深入看
 
 - [SKILL.md](SKILL.md) — Agent 的固定工作流与硬规则（权威来源）
-- [references/扫描与删除协议.md](references/扫描与删除协议.md) — 选择协议、二次校验、保护清单、失败处理
-- [references/目录规则库.md](references/目录规则库.md) — 规则分类、226 条明细与官方来源
-- [references/深化分析协议.md](references/深化分析协议.md) — AI 补充说明的范围、预算与边界
+- [references/protocol.md](references/protocol.md) — 选择协议、二次校验、保护清单、失败处理
+- [references/rules-catalog.md](references/rules-catalog.md) — 规则分类、226 条明细与官方来源
+- [references/enrichment-protocol.md](references/enrichment-protocol.md) — AI 补充说明的范围、预算与边界
 - [memory/INDEX.md](memory/INDEX.md) — 跨会话积累的经验索引
-- [docs/测试集.md](docs/测试集.md) — 行为协议回归
-- [docs/需求与设计文档.md](docs/需求与设计文档.md) — 架构、安全模型与设计决策
+- [docs/TESTS.md](docs/TESTS.md) — 行为协议回归
+- [docs/SPEC.md](docs/SPEC.md) — 架构、安全模型与设计决策
 
 许可：MIT（仓库根 [LICENSE](../../LICENSE)）。

@@ -34,6 +34,6 @@
 ## 文档
 
 - [SKILL.md](SKILL.md) — 协议正文（权威来源）
-- [docs/测试集.md](docs/测试集.md) — 行为断言（人工会话执行）
+- [docs/TESTS.md](docs/TESTS.md) — 行为断言（人工会话执行）
 
 许可：MIT（仓库根 [LICENSE](../../LICENSE)）。

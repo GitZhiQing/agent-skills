@@ -8,7 +8,7 @@
 
 ### 1.1 背景
 
-工作区常混杂多轮、多主题的变更。一次性全量提交会让历史难以回溯、回滚与 bisect；只按文件类型拆分又会把同一逻辑变更切碎。2026-10-19 本仓库把提交规范固化为 `docs/开发与维护规范.md` §10：`type(scope): 摘要` + 列表式 body；theme-commit 原 0.1.1 只生成一句话摘要，已与项目规范脱节。
+工作区常混杂多轮、多主题的变更。一次性全量提交会让历史难以回溯、回滚与 bisect；只按文件类型拆分又会把同一逻辑变更切碎。2026-10-19 本仓库把提交规范固化为 `docs/CONVENTIONS.md` §10：`type(scope): 摘要` + 列表式 body；theme-commit 原 0.1.1 只生成一句话摘要，已与项目规范脱节。
 
 ### 1.2 目标
 
@@ -81,7 +81,7 @@
 
 ### D9 渐进披露拆分（v0.3.0）
 
-完整提交信息规范移入 `references/提交信息规范.md`，失败处理表移入 `references/失败处理.md`；SKILL.md 保留四步主流程与摘要式规范。理由：提交主路径每次都要，footer / `BREAKING CHANGE` 与异常处理表只在特定场景读取。语义不变，升次位版本。
+完整提交信息规范移入 `references/commit-format.md`，失败处理表移入 `references/failure-handling.md`；SKILL.md 保留四步主流程与摘要式规范。理由：提交主路径每次都要，footer / `BREAKING CHANGE` 与异常处理表只在特定场景读取。语义不变，升次位版本。
 
 ## 4. 需求规格
 
@@ -174,4 +174,4 @@ docs(repo): 清理文档版本沿革与失效记录
 - Git 官方 Contributing 指南：https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project
 - Google Engineering Practices, Small CLs：https://google.github.io/eng-practices/review/developer/small-cls.html
 - GitLab commit message guidelines：https://docs.gitlab.com/development/contributing/merge_request_workflow/
-- 本仓库提交规范：`docs/开发与维护规范.md` §10
+- 本仓库提交规范：`docs/CONVENTIONS.md` §10

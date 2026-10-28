@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# skills-new.sh — 从 template/ 生成新 skill 骨架，标准见 docs/开发与维护规范.md §2/§9。
+# skills-new.sh — 从 template/ 生成新 skill 骨架，标准见 docs/CONVENTIONS.md §2/§9。
 #
 # usage: skills-new.sh <name> [--with-design]
 #   <name> 为 kebab-case，与 frontmatter name 一致
-#   --with-design 额外生成 docs/需求与设计文档.md
+#   --with-design 额外生成 docs/SPEC.md
 # 退出码：0 创建成功 / 2 用法错误（非法名称 / 目录已存在 / 缺少模板）。
 set -euo pipefail
 
@@ -49,10 +49,10 @@ copy_tpl() {
 
 copy_tpl "$template_dir/SKILL.md" "$dir/SKILL.md"
 copy_tpl "$template_dir/README.md" "$dir/README.md"
-copy_tpl "$template_dir/docs/测试集.md" "$dir/docs/测试集.md"
+copy_tpl "$template_dir/docs/TESTS.md" "$dir/docs/TESTS.md"
 copy_tpl "$template_dir/.claude-plugin/plugin.json" "$dir/.claude-plugin/plugin.json"
 if [ "$with_design" -eq 1 ]; then
-  copy_tpl "$template_dir/docs/需求与设计文档.md" "$dir/docs/需求与设计文档.md"
+  copy_tpl "$template_dir/docs/SPEC.md" "$dir/docs/SPEC.md"
 fi
 
 echo "created: $dir"

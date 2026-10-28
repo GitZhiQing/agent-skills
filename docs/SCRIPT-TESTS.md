@@ -2,7 +2,7 @@
 
 版本：v1.6
 
-对象：仓库根 `scripts/` 下 5 个脚本（`lib.sh` 为被 source 的公共库，随各脚本覆盖）。标准与行为定义见 [开发与维护规范.md](开发与维护规范.md) §2–§5、§8。涉及临时改动的用例（L-2/L-3/L-5/L-7/L-8/L-9/L-10~L-16、D-2/D-3/D-4、K-6/K-7、N-1~N-5）执行后必须还原，还原后以 L-1 全绿收尾。
+对象：仓库根 `scripts/` 下 5 个脚本（`lib.sh` 为被 source 的公共库，随各脚本覆盖）。标准与行为定义见 [CONVENTIONS.md](CONVENTIONS.md) §2–§5、§8。涉及临时改动的用例（L-2/L-3/L-5/L-7/L-8/L-9/L-10~L-16、D-2/D-3/D-4、K-6/K-7、N-1~N-5）执行后必须还原，还原后以 L-1 全绿收尾。
 
 ## 1. lint 场景（L）
 
@@ -150,11 +150,11 @@
 
 ### L-16 测试集缺失 warn
 
-场景：临时移走某 skill 的 `docs/测试集.md`。
+场景：临时移走某 skill 的 `docs/TESTS.md`。
 
 ▶ `bash scripts/skills-lint.sh`
 
-- = warn：缺少 docs/测试集.md（规范 §2）
+- = warn：缺少 docs/TESTS.md（规范 §2）
 - = exit 0（warn 不阻塞）；还原后恢复
 
 ## 2. doctor 场景（D）
@@ -266,7 +266,7 @@
 
 ▶ `bash scripts/skills-new.sh test-skill` 后 `bash scripts/skills-lint.sh`
 
-- = 生成 `SKILL.md`、`README.md`、`docs/测试集.md`、`.claude-plugin/plugin.json`
+- = 生成 `SKILL.md`、`README.md`、`docs/TESTS.md`、`.claude-plugin/plugin.json`
 - = test-skill 自身的 frontmatter / version / description / README / plugin / references 检查通过
 - = ERROR：README Skills 目录表缺少该 skill 的行（L-readme）
 - = ERROR：test-skill 未出现在 marketplace.json（L-plugin）
@@ -305,7 +305,7 @@
 
 ▶ `bash scripts/skills-new.sh test-skill --with-design`
 
-- = 额外生成 `docs/需求与设计文档.md`
+- = 额外生成 `docs/SPEC.md`
 - = 其余输出与 N-1 一致
 - = `rm -rf skills/test-skill` 还原
 

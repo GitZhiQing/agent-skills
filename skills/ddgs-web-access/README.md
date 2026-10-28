@@ -7,7 +7,7 @@
 | `ddgs_web_search` | `ddgs-web-search` | `DDGS().text()` |
 | `ddgs_web_fetch` | `ddgs-web-fetch` | `DDGS().extract()` |
 
-设计原则：极简（单文件 CLI）、少依赖（ddgs + markdownify）、`uv run` 调用、支持 HTTP/HTTPS/SOCKS5 代理、纯文本输出节约 token。完整设计见 [docs/需求与设计文档.md](docs/需求与设计文档.md)。
+设计原则：极简（单文件 CLI）、少依赖（ddgs + markdownify）、`uv run` 调用、支持 HTTP/HTTPS/SOCKS5 代理、纯文本输出节约 token。完整设计见 [docs/SPEC.md](docs/SPEC.md)。
 
 ## 环境要求
 

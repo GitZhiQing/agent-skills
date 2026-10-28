@@ -304,7 +304,7 @@ ddgs-web-access/
 ├── pyproject.toml          # uv 项目：依赖 ddgs，定义两个 console scripts
 ├── ddgs_web_access.py           # 单文件薄 CLI（~150 行，见 §5.3）
 └── docs/
-    └── 需求与设计文档.md     # 本文档
+    └── SPEC.md     # 本文档
 ```
 
 不创建 `src/` 包、不建 `uv.lock` 提交策略另行约定（uv 自动生成）。
@@ -478,7 +478,7 @@ metadata:
 ### 8.2 一键安装（scripts/install.sh）
 
 - 自动在本机已安装 agent 的 skills 目录下创建指向本仓库的链接：Windows 用 junction（`mklink /J`，免管理员权限），Unix 用符号链接；
-- 目标目录按存在性探测，默认覆盖采用 Agent Skills 格式的主流 agent 全局位（ZCode、Claude Code、Cursor、Codex、Copilot、Gemini CLI、opencode、Windsurf、Cline、Roo、Qwen、Kilo、Junie、Trae 及跨端通用目录 `~/.agents/skills`）；也可传位置参数显式指定目录（含某个项目的 `.agents/skills`）；完整清单与依据见仓库根 `docs/开发与维护规范.md` §6，与根脚本 `scripts/lib.sh` 的内置清单保持一致；
+- 目标目录按存在性探测，默认覆盖采用 Agent Skills 格式的主流 agent 全局位（ZCode、Claude Code、Cursor、Codex、Copilot、Gemini CLI、opencode、Windsurf、Cline、Roo、Qwen、Kilo、Junie、Trae 及跨端通用目录 `~/.agents/skills`）；也可传位置参数显式指定目录（含某个项目的 `.agents/skills`）；完整清单与依据见仓库根 `docs/CONVENTIONS.md` §6，与根脚本 `scripts/lib.sh` 的内置清单保持一致；
 - **单一来源**：所有 agent 指向同一仓库，更新（git pull）后全端生效；抓取缓存（仓库 `.cache/`）跨 agent、跨项目共享；
 - 幂等（已存在链接跳过，创建后校验存在性）；`scripts/uninstall.sh` 仅删除**指向本仓库**的链接（readlink 校验目标），不触碰其他内容；
 - `MSYS2_ARG_CONV_EXCL="*"` 会禁用 `//c` 折叠，cmd 调用必须用单斜杠 `cmd /c`，否则 cmd 进入交互模式、mklink 静默不执行。
@@ -529,7 +529,7 @@ metadata:
 2. 「抓取 https://docs.python.org/3/library/asyncio.html 的正文，用 5 句话总结 asyncio 的核心概念」
 3. 「搜索 'uv run --project' 的用法，抓取最相关的官方页面确认参数语义」
 
-扩展的真实场景测试集（搜索 S / 抓取 F / 代理 P / 端到端 E 四组，含断言与回归策略）见 [docs/测试集.md](测试集.md)。
+扩展的真实场景测试集（搜索 S / 抓取 F / 代理 P / 端到端 E 四组，含断言与回归策略）见 [docs/TESTS.md](TESTS.md)。
 
 ---
 

@@ -31,7 +31,7 @@ while IFS=$'\t' read -r name d; do
   fi
 done <<<"$targets"
 
-[ "${#dirs[@]}" -gt 0 ] || { echo "ERROR: 未发现任何 agent skills 目录（内置清单见 docs/开发与维护规范.md §6，自定义见 agents.local.conf）" >&2; exit 1; }
+[ "${#dirs[@]}" -gt 0 ] || { echo "ERROR: 未发现任何 agent skills 目录（内置清单见 docs/CONVENTIONS.md §6，自定义见 agents.local.conf）" >&2; exit 1; }
 
 if [ "${#absent[@]}" -gt 0 ]; then
   printf 'targets: %s（未检测到: %s）\n' \

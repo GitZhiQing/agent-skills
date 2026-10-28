@@ -16,8 +16,8 @@
 
 - 交付闸门：META.md 的确认来源为"未确认"时，不创建 / 交付 REPORT.md 与 REFERENCES.md。
 - 完整协议（阶段模板、档位表、确认门措辞）见 [SKILL.md](SKILL.md)。
-- 源码调研六步、来源分层与安全细则见 [references/执行纪律.md](references/执行纪律.md)。
-- 报告与登记簿模板见 [references/交付模板.md](references/交付模板.md)。
+- 源码调研六步、来源分层与安全细则见 [references/execution-discipline.md](references/execution-discipline.md)。
+- 报告与登记簿模板见 [references/delivery-template.md](references/delivery-template.md)。
 
 ## 源码调研
 
@@ -59,9 +59,9 @@
 ## 文档
 
 - [SKILL.md](SKILL.md) — 协议正文（权威来源，含档位参数表、确认门模板）
-- [references/执行纪律.md](references/执行纪律.md) — 源码调研六步、增量登记、来源分层、安全细则
-- [references/交付模板.md](references/交付模板.md) — REPORT.md 结构、REFERENCES.md 模板、META.md 字段
-- [docs/需求与设计文档.md](docs/需求与设计文档.md) — 设计与决策依据
-- [docs/测试集.md](docs/测试集.md) — 验证场景
+- [references/execution-discipline.md](references/execution-discipline.md) — 源码调研六步、增量登记、来源分层、安全细则
+- [references/delivery-template.md](references/delivery-template.md) — REPORT.md 结构、REFERENCES.md 模板、META.md 字段
+- [docs/SPEC.md](docs/SPEC.md) — 设计与决策依据
+- [docs/TESTS.md](docs/TESTS.md) — 验证场景
 
 许可：MIT（仓库根 [LICENSE](../../LICENSE)）。

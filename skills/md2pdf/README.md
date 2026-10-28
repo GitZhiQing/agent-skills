@@ -2,7 +2,7 @@
 
 Markdown → 排版精良的 PDF：双版式（报告版 = 封面 + 目录 + 页眉页脚；正文版 = 纯内容）× 四主题（kimi / deepseek / gemini / anthropic，色值来自 AI 头部厂商品牌调研），Playwright + Paged.js 渲染，打印前后双重质量断言。Agent 优先、Human-in-the-loop——转换前 `preview` 出四主题对比图供用户选。
 
-设计规范与决策记录见 [docs/SPEC.md](docs/SPEC.md)、[docs/DECISIONS.md](docs/DECISIONS.md)；行为协议回归用例见 [docs/测试集.md](docs/测试集.md)。
+设计规范与决策记录见 [docs/SPEC.md](docs/SPEC.md)、[docs/DECISIONS.md](docs/DECISIONS.md)；行为协议回归用例见 [docs/TESTS.md](docs/TESTS.md)。
 
 ## 环境要求
 

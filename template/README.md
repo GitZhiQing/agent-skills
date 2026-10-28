@@ -32,7 +32,7 @@
 
 - [SKILL.md](SKILL.md) — 协议正文（权威来源）
 - `references/` — 条件分支与清单（按需加载；无则删除）
-- [docs/测试集.md](docs/测试集.md) — 行为断言
-- [docs/需求与设计文档.md](docs/需求与设计文档.md) — 设计与决策依据（可选）
+- [docs/TESTS.md](docs/TESTS.md) — 行为断言
+- [docs/SPEC.md](docs/SPEC.md) — 设计与决策依据（可选）
 
-许可：MIT（仓库根 [LICENSE](../../LICENSE)）。
+许可：MIT（仓库根 [LICENSE](../LICENSE)）。

@@ -38,7 +38,7 @@ metadata:
 - dry-run 前：`mem search --scope delete --query "delete permission recycle locked long path" --json`
 - 命中读 `finding/action`；实际改变动作才 `mem used <ID> --json`。
 - 收尾四问：环境坑/规则误判漏判/流程摩擦/成功路径；只写可复用结论。
-- public/local；`used>=3`→candidate；人工改规则+测试后 `mem graduate`；schema 见 `references/经验闭环.md`。
+- public/local；`used>=3`→candidate；人工改规则+测试后 `mem graduate`；schema 见 `references/memory-loop.md`。
 
 ## 1. 固定工作流（6 步）
 
@@ -75,7 +75,7 @@ $BIN scan --root "<目标>" --output-dir "$OUT" --json
 
 ### 第 2.5 步：AI 深化分析（可选）
 
-触发：`summary.review` 或「其他」类条目多，或用户要更细的分类说明。字段与预算细则见 `references/深化分析协议.md`。
+触发：`summary.review` 或「其他」类条目多，或用户要更细的分类说明。字段与预算细则见 `references/enrichment-protocol.md`。
 
 - 对象：无 `rule_id` 的条目，按大小取 top 30~50；探索只 `ls` 一到两层、只看文件名（不递归全树、不读内容、不执行），总时长约 2 分钟，超预算就停。
 - 结论写 `$OUT/enrichment.json`（字段见协议文档），先校验再应用：
@@ -197,7 +197,7 @@ mem record --kind failure --scope delete --trigger "access denied" \
 - schema 1（无 `modes`）的旧格式仍可执行，全部条目用全局 `mode`。
 - `confirmed` 来自报告页确认框；`--confirm` 只用于用户在聊天中明确确认后替代它。
 - 选择含 `review` 项时，执行必须加 `--allow-review`。
-- 详细校验规则、保护清单、失败状态见 `references/扫描与删除协议.md`。
+- 详细校验规则、保护清单、失败状态见 `references/protocol.md`。
 
 ## 4. 报告与判断纪律
 
@@ -213,12 +213,12 @@ mem record --kind failure --scope delete --trigger "access denied" \
 
 | 场景 | 读取 |
 | --- | --- |
-| 某个目录是什么、为什么建议删/保留、规则分类与来源 | `references/目录规则库.md` |
-| selection JSON 字段、校验/保护清单、dry-run、权限/占用/长路径/回收站失败 | `references/扫描与删除协议.md` |
-| AI 深化分析（enrichment.json 字段、预算、安全边界） | `references/深化分析协议.md` |
-| 经验 schema、检索/写回/used/毕业、public/local 隐私 | `references/经验闭环.md`、`memory/INDEX.md` |
-| 环境限制、失败排查 | `references/扫描与删除协议.md` §5–§6 |
-| 行为协议回归 | `docs/测试集.md` |
+| 某个目录是什么、为什么建议删/保留、规则分类与来源 | `references/rules-catalog.md` |
+| selection JSON 字段、校验/保护清单、dry-run、权限/占用/长路径/回收站失败 | `references/protocol.md` |
+| AI 深化分析（enrichment.json 字段、预算、安全边界） | `references/enrichment-protocol.md` |
+| 经验 schema、检索/写回/used/毕业、public/local 隐私 | `references/memory-loop.md`、`memory/INDEX.md` |
+| 环境限制、失败排查 | `references/protocol.md` §5–§6 |
+| 行为协议回归 | `docs/TESTS.md` |
 
 ## 6. 边界
 
@@ -233,11 +233,11 @@ mem record --kind failure --scope delete --trigger "access denied" \
 
 ## 7. 参考
 
-- `references/目录规则库.md` — 226 条目录规则（系统/用户/开发/项目/凭据）与官方来源。
-- `references/扫描与删除协议.md` — 选择 JSON、二次校验、保护清单、失败处理。
-- `references/深化分析协议.md` — enrichment JSON、受限探索预算、安全边界。
-- `references/经验闭环.md` — 经验 schema、检索/写回/毕业、隐私边界。
+- `references/rules-catalog.md` — 226 条目录规则（系统/用户/开发/项目/凭据）与官方来源。
+- `references/protocol.md` — 选择 JSON、二次校验、保护清单、失败处理。
+- `references/enrichment-protocol.md` — enrichment JSON、受限探索预算、安全边界。
+- `references/memory-loop.md` — 经验 schema、检索/写回/毕业、隐私边界。
 - `memory/INDEX.md` — 当前公开经验索引（自动生成）。
 - `README.md` — 面向人的介绍与效果预览。
-- `docs/需求与设计文档.md` — 架构、安全模型、规则 schema、扫描策略与决策。
-- `docs/测试集.md` — 固定工作流的行为断言。
+- `docs/SPEC.md` — 架构、安全模型、规则 schema、扫描策略与决策。
+- `docs/TESTS.md` — 固定工作流的行为断言。

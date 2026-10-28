@@ -12,12 +12,12 @@
 
 四步：预检（分支 / 进行中操作 / staged / 敏感文件）→ 分组与计划（先预览，再用宿主结构化提问工具确认）→ 逐主题提交（显式暂存、复核、快速检查、hook 不绕过）→ 收尾（完整测试、status / log 核对、汇报未推送）。完整协议见 [SKILL.md](SKILL.md)。
 
-- 提交信息完整规范（scope、footer、`BREAKING CHANGE`、示例）：[references/提交信息规范.md](references/提交信息规范.md)
-- 异常与失败处理表：[references/失败处理.md](references/失败处理.md)
+- 提交信息完整规范（scope、footer、`BREAKING CHANGE`、示例）：[references/commit-format.md](references/commit-format.md)
+- 异常与失败处理表：[references/failure-handling.md](references/failure-handling.md)
 
 ## 提交信息
 
-默认遵循 Conventional Commits：`type(scope): 摘要` + 空行 + `- ` 列表式 body；摘要中文声明式动词开头、≤50 字、不写版本号；版本变更写 body。项目有 commitlint / 模板 / hook 时以其为准；本仓库规范见 [docs/开发与维护规范.md](../../docs/开发与维护规范.md) §10。
+默认遵循 Conventional Commits：`type(scope): 摘要` + 空行 + `- ` 列表式 body；摘要中文声明式动词开头、≤50 字、不写版本号；版本变更写 body。项目有 commitlint / 模板 / hook 时以其为准；本仓库规范见 [docs/CONVENTIONS.md](../../docs/CONVENTIONS.md) §10。
 
 ## 边界
 
@@ -39,9 +39,9 @@
 ## 文档
 
 - [SKILL.md](SKILL.md) — 协议正文（权威来源）
-- [references/提交信息规范.md](references/提交信息规范.md) — 完整提交信息规范
-- [references/失败处理.md](references/失败处理.md) — 失败场景处理表
-- [docs/需求与设计文档.md](docs/需求与设计文档.md) — 设计依据、关键取舍与风险
-- [docs/测试集.md](docs/测试集.md) — 行为断言
+- [references/commit-format.md](references/commit-format.md) — 完整提交信息规范
+- [references/failure-handling.md](references/failure-handling.md) — 失败场景处理表
+- [docs/SPEC.md](docs/SPEC.md) — 设计依据、关键取舍与风险
+- [docs/TESTS.md](docs/TESTS.md) — 行为断言
 
 许可：MIT（仓库根 [LICENSE](../../LICENSE)）。

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # skills-lint.sh — 仓库结构与元数据一致性校验。
 #
-# 检查项（标准见 docs/开发与维护规范.md）：
+# 检查项（标准见 docs/CONVENTIONS.md）：
 #   L-frontmatter  每个 skill 有 SKILL.md + 合法 frontmatter
 #   L-spec         name 符合官方约束（字符集 / 长度 / 连字符）且与目录名一致
 #   L-description  description 非空、<=1024 字符、不含 <>；过短（<30）warn
@@ -15,7 +15,7 @@
 #                  总览每行有对应明细小节，明细无孤儿小节；无本地台账则跳过
 #   L-size         SKILL.md 超过 500 行或 16KB 时 warn（规范 §2.1）
 #   L-refs         SKILL.md 引用的 references/ 路径必须存在
-#   L-docs         缺少 docs/测试集.md 时 warn
+#   L-docs         缺少 docs/TESTS.md 时 warn
 #   L-layout       skill 必须位于 skills/ 子目录（skills/<name>/SKILL.md）
 #   L-artifacts    运行产物（.venv/ .cache/ __pycache__/ *.egg-info/）未入库
 #
@@ -284,10 +284,10 @@ for skill in $skills_list; do
     fi
   fi
 
-  if [ -f "$SKILLS_DIR/$skill/docs/测试集.md" ]; then
-    ok "$skill: docs/测试集.md 存在"
+  if [ -f "$SKILLS_DIR/$skill/docs/TESTS.md" ]; then
+    ok "$skill: docs/TESTS.md 存在"
   else
-    warn "$skill: 缺少 docs/测试集.md（规范 §2）"
+    warn "$skill: 缺少 docs/TESTS.md（规范 §2）"
   fi
 
   if printf '%s\n' "$readme_name_list" | grep -qx "$skill"; then

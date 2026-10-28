@@ -9,7 +9,7 @@
 # 仓库根：从本库自身位置（scripts/..）解析，不依赖调用方工作目录。
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # 维护者本地台账（不入库）；公开 skill 目录表在 README.md。格式标准见
-# docs/开发与维护规范.md §5；本地台账存在时 lint 才校验。
+# docs/CONVENTIONS.md §5；本地台账存在时 lint 才校验。
 LEDGER="$REPO_ROOT/SKILLS.local.md"
 README_FILE="$REPO_ROOT/README.md"
 # Skills 目录：全部 skill 位于 skills/ 下，一个 skill 一个子目录（规范 §2）。
@@ -40,7 +40,7 @@ AGENT_CONF="$REPO_ROOT/agents.local.conf"
 # 内置清单：name<TAB>全局 skills 目录，每 agent 一行。
 # 入表标准：官方支持 Agent Skills（agentskills.io 格式）且全局目录固定；
 # 只读 ~/.agents/skills 的 agent（Codex 新版/Zed/Goose/Amp/Crush 等）由
-# agents 行覆盖，不单列原生位。清单依据与说明见 docs/开发与维护规范.md §6；
+# agents 行覆盖，不单列原生位。清单依据与说明见 docs/CONVENTIONS.md §6；
 # 与 skills/ddgs-web-access/scripts/install.sh 的默认清单保持一致。
 builtin_agent_targets() {
   printf '%s\t%s\n' \

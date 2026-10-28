@@ -19,7 +19,7 @@ metadata:
 多轮开发后的工作区常混杂互不相关的变更。目标不是"尽量多拆"，而是让每个提交：
 
 - 只承载一个逻辑主题；
-- 提交信息符合仓库规范（本仓库见 `docs/开发与维护规范.md` §10）；
+- 提交信息符合仓库规范（本仓库见 `docs/CONVENTIONS.md` §10）；
 - 提交前经过可用的快速检查，提交后可核对；
 - 不推送、不改写已发布历史。
 
@@ -29,7 +29,7 @@ metadata:
 2. 检查进行中的操作：合并 / 变基 / cherry-pick / 冲突 / detached HEAD。命中任一项即停止并报告，不在半完成状态上提交。
 3. 盘点全部变更：`git diff`（未暂存）、`git diff --cached`（已暂存）、`git status --short`（untracked / 删除 / 重命名）。untracked 文本文件直接读内容，不按文件名猜主题；二进制 / 大文件不按文本读，按路径和大小归类并询问。
 4. **已有 staged 改动不静默混入**：`git diff --cached --name-status` 非空时，逐项列出并询问——纳入某个主题、由用户自行处理，或经同意后 `git restore --staged -- <paths>`。不要擅自丢弃用户的暂存状态；用户选择自行处理时暂停本批次，不带着 staged 改动提交其他主题。
-5. 读取项目规范与检查命令：`AGENTS.md`、`CONTRIBUTING`、`README`、`docs/开发与维护规范.md`、`package.json` / `pyproject.toml` / CI 配置。项目有 commitlint / 模板 / hook 时以其为准；没有时使用下方默认格式。检查命令只使用项目文档写明的，不自行发明。
+5. 读取项目规范与检查命令：`AGENTS.md`、`CONTRIBUTING`、`README`、`docs/CONVENTIONS.md`、`package.json` / `pyproject.toml` / CI 配置。项目有 commitlint / 模板 / hook 时以其为准；没有时使用下方默认格式。检查命令只使用项目文档写明的，不自行发明。
 6. 安全预检（最佳努力）：不要 stage ignored 文件；对 `.env`、`*.pem`、`*.key`、`id_rsa`、credentials、token 等敏感文件名先询问；对 >5MB 文件先询问，>50MB 默认不提交；生成物 / 缓存 / 构建目录（`dist/`、`build/`、`node_modules/`、`coverage/` 等）默认不入库，除非项目明确要求。
 
 ## 阶段 1 · 分组与计划
@@ -100,7 +100,7 @@ metadata:
 
 默认 `type(scope): 摘要` + 空行 + `- ` 列表式 body；`type` 取 `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `build`；摘要中文声明式动词开头、≤50 字、不加句号、不写版本号；版本变更写 body。项目有 commitlint / 模板 / hook 时以项目为准。
 
-完整规范（scope 约定、footer、`BREAKING CHANGE`、示例）见 `references/提交信息规范.md`。
+完整规范（scope 约定、footer、`BREAKING CHANGE`、示例）见 `references/commit-format.md`。
 
 ## 边界与失败处理
 
@@ -111,11 +111,11 @@ metadata:
 - 检查 / hook / 提交失败：停止并报告；不自动回滚或改写历史。
 - 纯提示词只能"建议"安全扫描与检查；可靠拦截仍需项目的 hook / CI / secret scanning。
 
-按场景的处理表见 `references/失败处理.md`。
+按场景的处理表见 `references/failure-handling.md`。
 
 ## 按需读取
 
 | 场景 | 读取 |
 | --- | --- |
-| 写提交信息，或处理 footer / `BREAKING CHANGE` / 项目规范覆盖 | `references/提交信息规范.md` |
-| 预检或提交中出现异常（staged、空提交、hook、敏感文件、合并中） | `references/失败处理.md` |
+| 写提交信息，或处理 footer / `BREAKING CHANGE` / 项目规范覆盖 | `references/commit-format.md` |
+| 预检或提交中出现异常（staged、空提交、hook、敏感文件、合并中） | `references/failure-handling.md` |

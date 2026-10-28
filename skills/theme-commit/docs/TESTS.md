@@ -141,8 +141,8 @@
 
 场景：多主题提交中，一条消息需要 footer / `BREAKING CHANGE`；另一次提交触发 hook 失败。
 
-- = 写提交信息前读取 `references/提交信息规范.md`，按其中的 scope / footer / `BREAKING CHANGE` 规则执行
-- = 遇到 hook 失败时读取 `references/失败处理.md` 并按表处理，不绕过 hook
+- = 写提交信息前读取 `references/commit-format.md`，按其中的 scope / footer / `BREAKING CHANGE` 规则执行
+- = 遇到 hook 失败时读取 `references/failure-handling.md` 并按表处理，不绕过 hook
 - = SKILL.md 仍含四步主流程与摘要式提交信息规范；读取指引按场景给出，不出现"详见 references/"这类无场景指路
 
 ## 2. 回归矩阵

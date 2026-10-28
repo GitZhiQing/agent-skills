@@ -58,8 +58,8 @@
 | --- | --- | --- |
 | [AGENTS.md](AGENTS.md) | AI 会话 | 运行、验证、完成定义 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献者 | 最短上手路径与自检清单 |
-| [docs/开发与维护规范.md](docs/开发与维护规范.md) | 维护者 | 目录结构、frontmatter、版本、分发、脚本规则、提交规范 |
-| [docs/维护脚本测试集.md](docs/维护脚本测试集.md) | 维护者 | `scripts/` 回归用例 |
+| [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | 维护者 | 目录结构、frontmatter、版本、分发、脚本规则、提交规范 |
+| [docs/SCRIPT-TESTS.md](docs/SCRIPT-TESTS.md) | 维护者 | `scripts/` 回归用例 |
 | [spec/agent-skills-spec.md](spec/agent-skills-spec.md) | 维护者 | 官方规范指针与本仓库加严项 |
 | [template/](template/) | 维护者 | 新 skill 骨架 |
 | 各 skill 目录内的 `README.md` / `docs/` | 使用者 | 用法、设计与测试集 |

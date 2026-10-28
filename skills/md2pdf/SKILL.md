@@ -88,5 +88,5 @@ bash "<skill_dir>/bin/md2pdf" fetch    # 下载字体切片 + Paged.js + KaTeX�
 
 - [docs/SPEC.md](docs/SPEC.md) — 设计规范
 - [docs/DECISIONS.md](docs/DECISIONS.md) — 决策记录
-- [docs/测试集.md](docs/测试集.md) — 行为协议回归用例
+- [docs/TESTS.md](docs/TESTS.md) — 行为协议回归用例
 - [README.md](README.md) — 安装、用法、排障与第三方资源许可

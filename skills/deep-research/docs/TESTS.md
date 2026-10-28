@@ -346,8 +346,8 @@
 
 ▶ 帮我调研 <某开源项目> 的实现原理，并给出源码证据
 
-- = 进入执行阶段时读取 `references/执行纪律.md`，按其中源码六步执行
-- = 写 REPORT.md / REFERENCES.md / META.md 前读取 `references/交付模板.md`
+- = 进入执行阶段时读取 `references/execution-discipline.md`，按其中源码六步执行
+- = 写 REPORT.md / REFERENCES.md / META.md 前读取 `references/delivery-template.md`
 - = SKILL.md 仍含阶段 0~3 确认门与阶段 4~6 核心流程；读取指引按场景给出，不出现"详见 references/"这类无场景指路
 
 ### V-28 执行环境确认与记录

@@ -2,7 +2,7 @@
 
 一行一条；检索时 `grep -i <关键词>` 本文件与 `lessons/*.json`（trigger/finding/action 字段）。
 条目实际改变了动作时把该条 `used` +1；同一经验多次验证稳定后毕业（进代码或 SKILL.md 一行），
-条目转 `graduated`。entry schema 与写回/毕业规则见 `docs/需求与设计文档.md`「记忆层」节。
+条目转 `graduated`。entry schema 与写回/毕业规则见 `docs/SPEC.md`「记忆层」节。
 
 | id | trigger（可检索信号） | finding（一句话结论） | status |
 | --- | --- | --- | --- |

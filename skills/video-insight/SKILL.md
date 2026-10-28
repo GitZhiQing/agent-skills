@@ -50,7 +50,7 @@ metadata:
 
 > 成本为 2026-09-14 实测（样本各 1–3 次，含全部图像读取，波动较大；视频越长越高）。档位未明确时必须按 §0 提问确认。
 
-**无口播形态**（纯 BGM 无人声、文案烧录在画面上，或整条无音轨）：文案的唯一来源是画面，两档都必须先走画面文案提取（见 `references/无口播与批量.md` §1）。此时 L1 = 画面文案提取 + 内容分析，成本高于普通 L1（**预估** 60–150 万 token，待实测校准后回填）；L2 照常叠加画面/节奏/取色证据，音画对齐变为「BGM 结构 × 文案屏切换节奏」（audio_probe 照跑，BGM 是唯一音频线索）。
+**无口播形态**（纯 BGM 无人声、文案烧录在画面上，或整条无音轨）：文案的唯一来源是画面，两档都必须先走画面文案提取（见 `references/no-speech-batch.md` §1）。此时 L1 = 画面文案提取 + 内容分析，成本高于普通 L1（**预估** 60–150 万 token，待实测校准后回填）；L2 照常叠加画面/节奏/取色证据，音画对齐变为「BGM 结构 × 文案屏切换节奏」（audio_probe 照跑，BGM 是唯一音频线索）。
 
 **升级到 L2 的触发**：用户提到 画面/拉片/排版/节奏/音画/承接/标注/字幕样式；或 L1 发现"文案本身没问题但效果不好"这类只有画面才能解释的现象。**触发只是建议**——带成本问用户，得到同意再跑（§0）。
 
@@ -64,14 +64,14 @@ metadata:
 | --- | --- |
 | L1 | `python $S/pipeline.py <输入> --tier L1 --output-dir $OUT [--domain finance] [--screen-mode ocr]` |
 | L2 | `python $S/pipeline.py <输入> --tier L2 --output-dir $OUT [--domain finance] [--screen-mode ocr]` |
-| 批量 | `python $S/pipeline.py <输入1> <输入2> ... --tier <档位> [--jobs N] [--output-dir <批根>]`；或 `--batch 清单.txt`（每行一个输入，# 注释）。详见 `references/无口播与批量.md` §2 |
+| 批量 | `python $S/pipeline.py <输入1> <输入2> ... --tier <档位> [--jobs N] [--output-dir <批根>]`；或 `--batch 清单.txt`（每行一个输入，# 注释）。详见 `references/no-speech-batch.md` §2 |
 
 - **输入**：视频/音频文件、B站链接、或已有转写稿（.srt/.txt，自动拷入 `$OUT/transcript.*` 并跳过转写）。
-- **`--screen-mode`**：无口播分支的精读方式——`frames`（默认，抓每屏一帧由你读图成稿，多模态主路线）/ `ocr`（无读图能力时，OCR 后自动组装 `transcript.screen.srt/.json`，整条分支零模型介入）。无口播分支细节见 `references/无口播与批量.md` §1。
+- **`--screen-mode`**：无口播分支的精读方式——`frames`（默认，抓每屏一帧由你读图成稿，多模态主路线）/ `ocr`（无读图能力时，OCR 后自动组装 `transcript.screen.srt/.json`，整条分支零模型介入）。无口播分支细节见 `references/no-speech-batch.md` §1。
 - **幂等**：失败修复后重跑同一条命令，已完成步骤（manifest 记 ok / transcribe 记 no_speech）自动跳过；`manifest.json` 仍是权威状态账本。
 - **收尾报告**（stdout 一份 JSON）：`branch`（voiced / no_speech / transcript_only）、`steps`、`ready`（就绪文件清单）、`stats`（时长/字数/语速，或屏数/每屏停留——已算好直接引用）、`ai_next`（按本文件节号指路）、`notes`（b0 告知门与 b1 目检纠偏提醒）。任一步失败时报告 `failed_step` 与原因，修好重跑即可。
 
-**条件分支**：无口播（`branch: no_speech`、纯 BGM、点名提取画面文案）→ `references/无口播与批量.md` §1；多条视频或对比 → 同文件 §2。
+**条件分支**：无口播（`branch: no_speech`、纯 BGM、点名提取画面文案）→ `references/no-speech-batch.md` §1；多条视频或对比 → 同文件 §2。
 
 **分工边界**：pipeline 只做机械采集；确认门（§0）、读图成稿、内容分析（§3/§4）与视觉决策由模型做。**确认门前禁止调用 pipeline**（doctor 是唯一例外）。
 
@@ -85,12 +85,12 @@ metadata:
 
 ## 3. L1 怎么做（读 transcript.*；无口播视频读 transcript.screen.*）
 
-1. **术语校对**：对照热词表与领域常识逐句核对，产出 01-转写校对.md（改了哪些词、为什么）；无口播形态改为 01-画面文案稿.md（逐屏文案 + 可读度标注 + 合并记录，模板见 references/输出模板.md）。
+1. **术语校对**：对照热词表与领域常识逐句核对，产出 01-转写校对.md（改了哪些词、为什么）；无口播形态改为 01-画面文案稿.md（逐屏文案 + 可读度标注 + 合并记录，模板见 references/output-template.md）。
 2. **语义分段**：按话题/悬念/转折切段，标注每段时间码（无口播形态按文案屏分段）。
 3. **口播数据**：时长/字数/语速直接引用 pipeline 报告 `stats`（不心算）；停顿分布（有音频时用 data/audio.json）；无口播形态改为屏数、每屏字数、每屏停留时长（t_end−t_start，实测——`stats.dwell_s` 已给出）。
 4. **逻辑骨架**：钩子→展开→结论→CTA 各在第几秒、占比多少；话术模板是什么（对仗、设问、二选一……）。
 5. **主张与准确性核查**：逐个主张标注 属实/存疑/违规（金融类必查合规：承诺收益、确定性结论、诱导开户）。
-6. 按 `references/输出模板.md` 的 L1 骨架写 02-内容分析.md。
+6. 按 `references/output-template.md` 的 L1 骨架写 02-内容分析.md。
 
 ## 4. L2 怎么做（读 evidence/ + data/*.json）
 
@@ -102,13 +102,13 @@ L2 基础证据（overview 拼版、字幕带、帧差、音频）已由 `pipeli
 4. **下断言前必回查**：任何时间断言，落笔前用 grab_frames 定帧或 JSON 数据支撑一次；字幕逐字核对用 subtitle-strip + 局部放大。
 5. **音频三层交叉**（单一手段不足以判断有无 BGM）：停顿 RMS vs 噪声底 vs 频谱图，三层一致才写（无音轨视频此层跳过，steps.audio_probe 为 skipped_no_audio_track）。
 6. **取色只信区域众数**：palette.py，禁止 1×1 采样——单像素取到白底就会给出误导色。
-7. 按 `references/画面分析手册.md` 的清单过一遍画面元素，写 03/04/05。
+7. 按 `references/visual-analysis.md` 的清单过一遍画面元素，写 03/04/05。
 8. 收尾：抽查 evidence/ 文件与 manifest 一致；临时目录已由脚本清理；把证据文件索引附在报告末尾。
 
-## 5. 判断纪律（详见 references/证据纪律.md，此处只列要点）
+## 5. 判断纪律（详见 references/evidence-discipline.md，此处只列要点）
 
 - 表述分三档并强制标注：**实测**（有 JSON/定帧支撑）、**约**（1s 抽帧 ±0.5s 精度）、**推断**（显式标注，不得混入实测）。
-- 画面文案（`references/无口播与批量.md` §1 产物）的表述映射：屏起止时间=帧差/定帧（实测档）；文案内容=模型读图（清晰/放大后可读/不可读三档标注）或 OCR 组装稿的置信度三档（清晰/低置信/不可读，阈值见 `references/无口播与批量.md` §1）；uniform 兜底模式的时间一律「约」；读不清的字如实标「不可读」，禁止猜写。
+- 画面文案（`references/no-speech-batch.md` §1 产物）的表述映射：屏起止时间=帧差/定帧（实测档）；文案内容=模型读图（清晰/放大后可读/不可读三档标注）或 OCR 组装稿的置信度三档（清晰/低置信/不可读，阈值见 `references/no-speech-batch.md` §1）；uniform 兜底模式的时间一律「约」；读不清的字如实标「不可读」，禁止猜写。
 - 交付形态没对齐、分析深度没确认，都不动手（无人值守按 §0 声明式执行）；交互会话中**禁止以「用户无法实时回答」为由跳过档位提问**（§0 交互模式判定）。客观结论被用户质疑时，给一次带数据的说明，然后把表述改写成对两种可能都成立，继续推进——赢了检测输了进度。
 - **交付后回路**（一句话，不占轮）：报告末尾附「可升级 L2（附成本）；存疑主张可点名核查；质疑按证据纪律 R4 处理」。
 - **收尾写回（经验闭环）**：交付前自检三问——环境坑？数据形态新知？流程摩擦？有则按 schema 写 `memory/lessons/NNN-slug.json` 并在 `INDEX.md` 加一行；条目实际改变动作时 `used` +1。单视频结论、未验证猜测、用户隐私不写回。`used ≥ 3` 或反复验证稳定 → 毕业进代码 / 证据纪律 / SKILL.md，条目标 `graduated` 并指向去处。
@@ -125,9 +125,9 @@ L2 基础证据（overview 拼版、字幕带、帧差、音频）已由 `pipeli
 
 | 场景 | 读取 |
 | --- | --- |
-| pipeline 报告 `no_speech`、纯 BGM / 无口播、提取画面文案 | `references/无口播与批量.md` §1 |
-| 一次多条视频、批量清单、跨视频对比 | `references/无口播与批量.md` §2 |
-| 写 01/02/03/04/05 报告 | `references/输出模板.md` |
-| 下断言前核对表述档位与硬规则 | `references/证据纪律.md` |
-| L2 画面元素检查、layout.json 口径、BGM 三层判断 | `references/画面分析手册.md` |
+| pipeline 报告 `no_speech`、纯 BGM / 无口播、提取画面文案 | `references/no-speech-batch.md` §1 |
+| 一次多条视频、批量清单、跨视频对比 | `references/no-speech-batch.md` §2 |
+| 写 01/02/03/04/05 报告 | `references/output-template.md` |
+| 下断言前核对表述档位与硬规则 | `references/evidence-discipline.md` |
+| L2 画面元素检查、layout.json 口径、BGM 三层判断 | `references/visual-analysis.md` |
 | 失败诊断前检索历史教训 | `memory/INDEX.md` |

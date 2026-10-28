@@ -43,7 +43,7 @@
 - **开发目录**：`node_modules`、`.venv`、`__pycache__`、`.next`、`dist/build/target`、包管理器缓存（npm/pnpm/yarn/pip/uv/cargo/go/nuget/gradle/maven/conda）、模型缓存。
 - **其他盘**：顶层数据目录、`System Volume Information`、`$Recycle.Bin`、chkdsk 恢复目录、厂商驱动目录。
 
-规则只描述“建议”，不执行删除。删除必须经过报告页勾选 + `delete` 子命令的二次校验（见 [扫描与删除协议](扫描与删除协议.md)）。
+规则只描述“建议”，不执行删除。删除必须经过报告页勾选 + `delete` 子命令的二次校验（见 [扫描与删除协议](protocol.md)）。
 
 ## 2. 建议等级与语言标注
 
@@ -402,7 +402,7 @@
 2. `match.type` 支持 `exact` / `suffix` / `basename` / `glob` / `prefix` / `regex`；`basename` 可带 `requires_inside` 或 `requires_sibling_any`。
 3. 运行 `windows-disk-cleanup rules --check --json`（退出码 0 才通过），再跑 `python -m unittest discover -s tests`。
 4. 新增/修改规则时同步本文件的表格；JSON 更新日期写当天。
-5. 规则变更属于行为变化：按仓库规范升次位版本，并在 `docs/测试集.md` 增加回归场景。
+5. 规则变更属于行为变化：按仓库规范升次位版本，并在 `docs/TESTS.md` 增加回归场景。
 
 ## 6. 来源与核对日期
 

@@ -50,7 +50,7 @@ link_skill() {
 # Default agent skills directories: mainstream agents that adopted the Agent
 # Skills format, probed by existence (keep in sync with scripts/lib.sh
 # builtin_agent_targets; rationale and full table in the repo's
-# docs/开发与维护规范.md §6).
+# docs/CONVENTIONS.md §6).
 default_skill_dirs() {
   printf '%s\n' \
     "$HOME/.zcode/skills" \

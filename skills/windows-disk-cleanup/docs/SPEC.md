@@ -54,9 +54,9 @@ skills/windows-disk-cleanup/
     ps/probe.ps1                      # 回收站大小 / 卷信息
     ps/recycle.ps1                    # 移入回收站
   references/
-    目录规则库.md                      # 规则可读目录 + 来源
-    扫描与删除协议.md                  # 选择/保护/失败协议
-    经验闭环.md                        # 经验 schema/检索/写回/毕业/隐私
+    rules-catalog.md                      # 规则可读目录 + 来源
+    protocol.md                  # 选择/保护/失败协议
+    memory-loop.md                        # 经验 schema/检索/写回/毕业/隐私
   scripts/
     memory.py                         # 经验库 CLI（search/record/used/graduate/check）
   memory/
@@ -246,7 +246,7 @@ skills/windows-disk-cleanup/
 
 ### 4.2 selection.json
 
-见 `references/扫描与删除协议.md` §1；核心字段 `scan_id` / `scan_file` / `root` / `mode`（全局默认方式）/ `modes`（可选逐条覆盖）/ `confirmed` / `paths`。
+见 `references/protocol.md` §1；核心字段 `scan_id` / `scan_file` / `root` / `mode`（全局默认方式）/ `modes`（可选逐条覆盖）/ `confirmed` / `paths`。
 
 ### 4.3 cleanup.json
 
@@ -260,7 +260,7 @@ skills/windows-disk-cleanup/
 
 ### 4.5 经验 JSON
 
-见 `references/经验闭环.md`；核心字段：`kind`（success/failure/preference）、`scope`（scan/delete/report/rule/general）、`trigger`、`finding`、`action`、`evidence`（rule_ids/error_types/options）、`used`、`status`（active/candidate/graduated/retired）、`privacy`（public/local）。
+见 `references/memory-loop.md`；核心字段：`kind`（success/failure/preference）、`scope`（scan/delete/report/rule/general）、`trigger`、`finding`、`action`、`evidence`（rule_ids/error_types/options）、`used`、`status`（active/candidate/graduated/retired）、`privacy`（public/local）。
 
 ## 5. 安全与隐私
 
@@ -279,7 +279,7 @@ skills/windows-disk-cleanup/
 - 真实扫描：本仓库（0.5s）、AppData\Local（30s 上限，62k dirs）。
 - 浏览器验收：Edge headless + Playwright，验证暗/亮主题、tab、搜索、勾选、确认、复制、page→CLI 预演闭环。
 - 经验验收：public/local 写回、检索命中、used/candidate、graduate、public 脱敏、密钥拦截、`check` 错误检测。
-- 人工回归：`docs/测试集.md` W/S/D/R/E/M/T。
+- 人工回归：`docs/TESTS.md` W/S/D/R/E/M/T。
 
 ## 7. 开放问题
 
@@ -297,6 +297,6 @@ skills/windows-disk-cleanup/
 ## 8. 变更记录
 
 - 2026-10-28：0.5.0 AI 定档与三维分类。AI 高置信判定可把「待定」提升为 safe/caution/keep 并放宽 `--allow-review`（只收紧不放宽，档位来源 `tier_source` 留痕）；新增归属/性质/生态三个正交受控维度（`model.py` 唯一定义，规则与 AI 共用），报告页改为带条数与体积计数的 chips 导航，生态行按需出现；AI 状态筛选项（已分析/未分析/已定档）；单测 59 → 63 条。
-- 2026-10-28：0.4.0 AI 深化分析。新增 `enrich` 子命令与 `enrichment.json` 协议（schema 1）：Agent 对未命中规则目录做受限只读探索（top 30~50、ls 一到两层、约 2 分钟预算），结论由 CLI 校验（path/language/advice/confidence 枚举）后合并展示字段并重渲染增强报告（`enriched/`）；Entry 新增 enriched/advice/confidence/evidence 字段；报告页「AI 分析」与「AI 参考 ·」徽章；硬边界：不改 selectable/recommendation、不参与删除门控；单测 53 → 59 条，新增 references/深化分析协议.md。
+- 2026-10-28：0.4.0 AI 深化分析。新增 `enrich` 子命令与 `enrichment.json` 协议（schema 1）：Agent 对未命中规则目录做受限只读探索（top 30~50、ls 一到两层、约 2 分钟预算），结论由 CLI 校验（path/language/advice/confidence 枚举）后合并展示字段并重渲染增强报告（`enriched/`）；Entry 新增 enriched/advice/confidence/evidence 字段；报告页「AI 分析」与「AI 参考 ·」徽章；硬边界：不改 selectable/recommendation、不参与删除门控；单测 53 → 59 条，新增 references/enrichment-protocol.md。
 - 2026-10-28：0.3.0 报告与协议升级。建议分级扩为五档（新增 suggest 建议清理，首批 12 条规则；keep/review 标签改为建议保留/待定）；规则库 94 条开发规则标注 language；报告页引入 Tailwind Play CDN（shadcn 风格、暗色模式、离线降级提示）、默认按建议度排序、大类+语言两级筛选、逐条删除方式 tabs、分页渲染；选择协议升 schema 2（可选 modes 逐条方式，schema 1 兼容），执行器按方式分组、cleanup.json 逐项记录 mode；单测 42 → 53 条。
-- 2026-10-27：0.2.0 经验闭环。新增 `scripts/memory.py`（search/record/used/graduate/retire/list/check/index）、public/local 两层经验库、检索/写回/used/毕业、SKILL 检索与写回钩子、42 条单测、references/经验闭环.md、测试集 M-1~M-8；0.1.0 首版：规则库 226 条；扫描/报告/选择/删除/清理报告全链路；真实仓库与 AppData 扫描、浏览器交互与 page→CLI 协议验证。
+- 2026-10-27：0.2.0 经验闭环。新增 `scripts/memory.py`（search/record/used/graduate/retire/list/check/index）、public/local 两层经验库、检索/写回/used/毕业、SKILL 检索与写回钩子、42 条单测、references/memory-loop.md、测试集 M-1~M-8；0.1.0 首版：规则库 226 条；扫描/报告/选择/删除/清理报告全链路；真实仓库与 AppData 扫描、浏览器交互与 page→CLI 协议验证。

@@ -419,5 +419,5 @@
 ## 7. 渐进披露拆分（v0.6.0）
 
 - **动因**：SKILL.md 178 行 / 18.4KB，超过规范 §2.1 的 16KB 预算；源码六步与交付模板属条件加载内容。
-- **方案**：阶段 4 源码调研六步与普通调研纪律移入 `references/执行纪律.md`；阶段 5 REPORT / REFERENCES 模板移入 `references/交付模板.md`；SKILL.md 保留阶段 0~3 确认门、阶段 4~6 核心流程与按需读取表。
+- **方案**：阶段 4 源码调研六步与普通调研纪律移入 `references/execution-discipline.md`；阶段 5 REPORT / REFERENCES 模板移入 `references/delivery-template.md`；SKILL.md 保留阶段 0~3 确认门、阶段 4~6 核心流程与按需读取表。
 - **取舍**：确认门是每次调研的必经主路径，必须常驻；源码细节与模板只在对应阶段读取。语义不变，升次位版本。

@@ -18,8 +18,8 @@
 | L1 文案档 | 转写 → 校对 → 语义分段 → 口播数据 → 逻辑骨架 → 主张与合规核查 | 约 6–10 分钟、40–130 万 token |
 | L2 画面档 | 追加抽帧拼版、帧差量化、定帧回查、局部放大、音频三层检测、区域取色，产出分级问题清单与优化动作清单 | 约 30–40 分钟（实测 27–37）、330–480 万 token |
 
-- **无口播 / 批量**：无口播分支（帧差逐屏 + 读图 / OCR 回退）与多视频批量（清单、失败隔离、批报告、可选并发）的完整协议见 [references/无口播与批量.md](references/无口播与批量.md)。
-- **判断纪律**：实测 / 约 / 推断三档表述、交付前自检见 [references/证据纪律.md](references/证据纪律.md)。
+- **无口播 / 批量**：无口播分支（帧差逐屏 + 读图 / OCR 回退）与多视频批量（清单、失败隔离、批报告、可选并发）的完整协议见 [references/no-speech-batch.md](references/no-speech-batch.md)。
+- **判断纪律**：实测 / 约 / 推断三档表述、交付前自检见 [references/evidence-discipline.md](references/evidence-discipline.md)。
 - **经验闭环**：判断类经验沉淀在 `memory/`，开工检索、失败先查、收尾写回，见 [SKILL.md](SKILL.md) §5 与 [memory/INDEX.md](memory/INDEX.md)。
 
 每个脚本把运行状态与产物清单写进 `manifest.json`，归档失败会在校验中直接暴露。
@@ -67,12 +67,12 @@ cp .env.example .env   # 然后编辑 .env，填入 VOLC_BIGMODEL_API_KEY
 ## 文档
 
 - [SKILL.md](SKILL.md) — 流程与判断（权威正文）
-- [references/无口播与批量.md](references/无口播与批量.md) — 无口播分支与多视频批量
-- [references/输出模板.md](references/输出模板.md) — 报告固定骨架（L1/L2）
-- [references/证据纪律.md](references/证据纪律.md) — 三档表述、硬规则与交付前自检
-- [references/画面分析手册.md](references/画面分析手册.md) — 画面元素检查清单与 BGM 判断
+- [references/no-speech-batch.md](references/no-speech-batch.md) — 无口播分支与多视频批量
+- [references/output-template.md](references/output-template.md) — 报告固定骨架（L1/L2）
+- [references/evidence-discipline.md](references/evidence-discipline.md) — 三档表述、硬规则与交付前自检
+- [references/visual-analysis.md](references/visual-analysis.md) — 画面元素检查清单与 BGM 判断
 - [memory/INDEX.md](memory/INDEX.md) — 经验层检索入口
-- [docs/需求与设计文档.md](docs/需求与设计文档.md) — 设计规格与决策理由
-- [docs/测试集.md](docs/测试集.md) — 行为协议断言与已知答案回归基准
+- [docs/SPEC.md](docs/SPEC.md) — 设计规格与决策理由
+- [docs/TESTS.md](docs/TESTS.md) — 行为协议断言与已知答案回归基准
 
 许可：MIT（仓库根 [LICENSE](../../LICENSE)）。

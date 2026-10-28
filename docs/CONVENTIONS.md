@@ -18,14 +18,25 @@
 | --- | --- | --- |
 | `SKILL.md` | **必需** | 入口与元数据，标准见 §3；目标 ≤500 行 / ≤16KB（§2.1） |
 | `README.md` | **必需** | 面向人的导览：定位与触发场景、工作方式概要、**安装（一句可复制给 Agent 的命令）**、入门用法与边界、文档链接。安装措辞以仓库根 README 的「让 Agent 代装」块为唯一来源，skill README 不并列多种安装矩阵；完整参数、协议细节与排障留在 `SKILL.md` / `references/`，README 不复述。lint 强制存在且含可执行安装命令（L-readme-file）；不写版本号 |
-| `docs/测试集.md` | **条件必需** | 行为含可断言协议（何时触发 / 何时不触发 / 步骤约束）的 skill 必须有；新骨架默认生成；编号约定见 §7 |
-| `docs/需求与设计文档.md` | 条件必需 | 决策多、有开放问题或多方案权衡的 skill 应有。md2pdf 使用 `docs/SPEC.md` + `docs/DECISIONS.md` 变体（范围契约 + 决策记录），等价有效 |
+| `docs/TESTS.md` | **条件必需** | 行为含可断言协议（何时触发 / 何时不触发 / 步骤约束）的 skill 必须有；新骨架默认生成；编号约定见 §7 |
+| `docs/SPEC.md` | 条件必需 | 决策多、有开放问题或多方案权衡的 skill 应有。md2pdf 使用 `docs/SPEC.md` + `docs/DECISIONS.md` 变体（范围契约 + 决策记录），等价有效 |
 | `references/` | 条件必需 | 条件分支、输出模板、长清单、领域手册；只在 `SKILL.md` 指向时按需加载，距入口一层（§2.1） |
 | `.claude-plugin/plugin.json` | **必需** | Claude Code plugin 元数据；`name` == 目录名，`version` 与 frontmatter 一致；lint 强制 |
 | `bin/`、`scripts/`、`pyproject.toml` | 仅代码 skill | 位置无关启动器、实现脚本、依赖声明；形态见 §2.2 |
 | `docs/` 其他文档（研究/灵感文档等） | 自由 | 建议在本地台账明细"文档"行登记 |
 
-判定示例：theme-commit（纯提示词，但 4 步协议可断言）→ SKILL.md + README.md + docs/测试集.md + references/；ddgs-web-access（CLI）→ 全套；deep-research（纯提示词、协议复杂）→ SKILL.md + README.md + 测试集 + 设计文档 + references/。
+判定示例：theme-commit（纯提示词，但 4 步协议可断言）→ SKILL.md + README.md + docs/TESTS.md + references/；ddgs-web-access（CLI）→ 全套；deep-research（纯提示词、协议复杂）→ SKILL.md + README.md + docs/TESTS.md + docs/SPEC.md + references/。
+
+**文档命名**：文件名用英文短名（kebab-case），正文标题保持中文。
+
+| 位置 | 文件名 |
+| --- | --- |
+| 入口 | `SKILL.md`、`README.md`（大写，规范约定） |
+| skill 文档 | `docs/SPEC.md`（需求与设计）、`docs/TESTS.md`（行为断言）、`docs/DECISIONS.md`（可选，决策记录） |
+| 按需加载 | `references/<topic>.md`，如 `protocol.md`、`rules-catalog.md`、`memory-loop.md` |
+| 仓库文档 | `docs/CONVENTIONS.md`（本规范）、`docs/SCRIPT-TESTS.md`（脚本回归）、`spec/agent-skills-spec.md` |
+
+重命名文档时同步更新所有引用（README/SKILL/规范/模板/台账），跑 `skills-lint.sh` 并检查相对链接可达。
 
 ### 2.1 渐进披露预算
 
@@ -35,7 +46,7 @@
 2. **SKILL.md 正文（触发时加载）**：只放"每次都要执行的流程、硬规则、边界"和一张"按需读取"表。目标 **≤500 行且 ≤16KB**；超出时 lint warn。中文按 UTF-8 约 3 字节/字、约 1–1.5 字/token，16KB 约 4k–5.5k token；属上限而非目标。
 3. **references（按需加载）**：条件分支（如"无口播时"、"批量时"）、交付模板、长清单、领域手册。规则：
    - 必须距 `SKILL.md` **一层**（`references/foo.md`），不建嵌套引用链；
-   - `SKILL.md` 用"**何时**读**哪个**文件"指路（例："做源码调研前读 `references/执行纪律.md`"），禁止"详见 references/"；
+   - `SKILL.md` 用"**何时**读**哪个**文件"指路（例："做源码调研前读 `references/execution-discipline.md`"），禁止"详见 references/"；
    - 单个 reference >100 行时在文件头加目录；
    - 移动内容时只搬移、不改语义；搬移后升次位版本并回归。
 
@@ -165,7 +176,7 @@ Run `npx skills add "https://github.com/GitZhiQing/agent-skills"` and follow the
 
 ### 7.1 测试集
 
-- 改动任何 skill 的 SKILL.md、references 或代码后，按该 skill `docs/测试集.md` 回归。
+- 改动任何 skill 的 SKILL.md、references 或代码后，按该 skill `docs/TESTS.md` 回归。
 - 测试集编号采用「**类别前缀-序号**」（如 ddgs-web-access 的 S-/F-/P-/I-/E-，deep-research 的 V-，维护脚本的 L-/D-/K-/N-）；新场景追加编号，不重排不复用。
 - 每个用例 = 场景说明 + `▶` 触发方式（命令行或用户指令）+ `- =` 断言列表（含期望行为与明确禁止项）。
 - ddgs-web-access：搜索 / 抓取调用间隔 ≥2 秒（多引擎聚合，过频限流）。
@@ -178,7 +189,7 @@ description 是唯一的触发机制，改措辞后至少做一轮轻量校准�
 
 - 准备 8–10 条**应触发**与 8–10 条**不应触发**的真实用户说法；反例取近邻场景（共享关键词但需要别的能力）。
 - 每条跑 3 次（新会话），记录触发率；应触发组目标 ≥0.8，不应触发组目标 ≤0.2。
-- 结果与调整理由写入该 skill `docs/测试集.md` 的「触发校准」附录（日期 + 查询 + 结果），不新建独立文件。
+- 结果与调整理由写入该 skill `docs/TESTS.md` 的「触发校准」附录（日期 + 查询 + 结果），不新建独立文件。
 - 只改 description 的措辞也按 §4 升补丁位版本。
 
 ### 7.3 代码型 skill 的最小验证
@@ -211,11 +222,11 @@ description 是唯一的触发机制，改措辞后至少做一轮轻量校准�
 | `scripts/skills-unlink.sh [--agent <name\|name=path>]... <name>... \| --all` | 安全卸载链接 | 0 完成 / 1 删除失败 / 2 用法 |
 | `scripts/skills-new.sh <name> [--with-design]` | 从 `template/` 生成新 skill 骨架 | 0 创建 / 2 用法 |
 
-统一约定：状态输出 `ok:` / `warn:` / `skip (...)` / `linked:` / `removed:` 走 stdout；`ERROR:` 与提示走 stderr；脚本为纯 bash + coreutils，零外部依赖；公共函数在 `scripts/lib.sh`。脚本自身的测试集见 [维护脚本测试集.md](维护脚本测试集.md)。
+统一约定：状态输出 `ok:` / `warn:` / `skip (...)` / `linked:` / `removed:` 走 stdout；`ERROR:` 与提示走 stderr；脚本为纯 bash + coreutils，零外部依赖；公共函数在 `scripts/lib.sh`。脚本自身的测试集见 [SCRIPT-TESTS.md](SCRIPT-TESTS.md)。
 
 ## 9. 新增 skill 流程
 
-1. `bash scripts/skills-new.sh <name> [--with-design]` — 从 `template/` 生成 `SKILL.md`、`README.md`、`docs/测试集.md`、`.claude-plugin/plugin.json`（可选设计文档）。
+1. `bash scripts/skills-new.sh <name> [--with-design]` — 从 `template/` 生成 `SKILL.md`、`README.md`、`docs/TESTS.md`、`.claude-plugin/plugin.json`（可选设计文档）。
 2. 填写 SKILL.md 的三段式 description 与正文；按 §2 判定是否补设计文档；条件分支放 `references/`。
 3. 在 README Skills 表补一行（不写版本号）。
 4. 在 `.claude-plugin/marketplace.json` 补一个 plugin 条目（name / source / description / version / author / keywords）。
@@ -223,7 +234,7 @@ description 是唯一的触发机制，改措辞后至少做一轮轻量校准�
 6. 代码型 skill 在 `.github/workflows/ci.yml` 增加对应测试 job（Windows-only 用 `windows-latest`）；纯提示词 skill 仍按测试集人工回归。
 7. `bash scripts/skills-lint.sh` — 应全绿（exit 0）；新增 skill 的 category 未填时按 warn 处理并补齐。
 8. `bash scripts/skills-link.sh <name>` 分发，`bash scripts/skills-doctor.sh` 确认 linked，本地台账回填分发状态。
-9. 按 `docs/测试集.md` 做首轮回归；description 按 §7.2 校准。
+9. 按 `docs/TESTS.md` 做首轮回归；description 按 §7.2 校准。
 
 ## 10. Git 提交信息规范
 

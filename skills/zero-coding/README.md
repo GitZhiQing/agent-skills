@@ -47,6 +47,6 @@ README.md 是常规惯例，骨架期写最小版自然长成，不作为工作�
 ## 文档
 
 - [SKILL.md](SKILL.md) — 协议正文（权威来源，含 SPEC 模板与各文档标准）
-- [docs/测试集.md](docs/测试集.md) — 行为断言
+- [docs/TESTS.md](docs/TESTS.md) — 行为断言
 
 许可：MIT（仓库根 [LICENSE](../../LICENSE)）。

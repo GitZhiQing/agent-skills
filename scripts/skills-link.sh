@@ -3,7 +3,7 @@
 # （Windows junction / Unix symlink，单一来源：agent 始终经链接读本仓库）。
 #
 # 目标清单 = 内置主流 agent 清单 ⊕ agents.local.conf 本地自定义
-# （docs/开发与维护规范.md §6），目录存在才生效。
+# （docs/CONVENTIONS.md §6），目录存在才生效。
 #
 # usage: skills-link.sh [--agent <name|name=path>]... <skill-name>... | --all
 # --agent：name 只分发到该目标（可重复）；name=path 临时指定/覆盖目标目录。

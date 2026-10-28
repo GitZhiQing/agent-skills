@@ -55,7 +55,7 @@
 
 场景：用户一次给出多条视频（本地 / B站链接 / 转写稿混排），要求"都分析""逐条拆解"或"对比这几条"。
 
-- = 按 `references/无口播与批量.md` §2 处理：确认门一次覆盖整批（条数 + 总成本 = 单条 × N），确认后单条 `pipeline.py <输入1> <输入2> ... --tier <档位>`（或 `--batch` 清单文件）完成全批采集，不逐条单独调用
+- = 按 `references/no-speech-batch.md` §2 处理：确认门一次覆盖整批（条数 + 总成本 = 单条 × N），确认后单条 `pipeline.py <输入1> <输入2> ... --tier <档位>`（或 `--batch` 清单文件）完成全批采集，不逐条单独调用
 - = 批报告 `results[]` 一屏总览每条 branch/stats，不逐条重读各 OUT 的 manifest 汇总
 - = 对比类需求产出跨视频对比文档，落批根（`<批根>/06-跨视频对比.md`），不塞单视频 OUT；交付先批级总览再分报告
 
@@ -145,7 +145,7 @@
 - = 采集用单条 `pipeline.py --tier <档位> [--screen-mode ocr]` 完成，不逐步调用 fetch/transcribe/probe/extract_frames/detect_changes/screen_segments 等脚本当编排器（读 manifest 拼下一步属于模型无判断价值的中转）
 - = 单步脚本仅用于：pipeline 报告的 `failed_step` 修复后重跑（幂等）、或模型决策类定点采集（grab_frames 定帧、palette 取色、非默认 --strip-crop、audio_probe 补段）
 - = pipeline 收尾报告的 `stats`（时长/字数/语速或屏数/停留）直接引用，不模型心算重算
-- = `branch: no_speech` 时的告知与目检纠偏按 D-5 执行；`ai_next` 的指路与 SKILL.md / references/无口播与批量.md 节号一致
+- = `branch: no_speech` 时的告知与目检纠偏按 D-5 执行；`ai_next` 的指路与 SKILL.md / references/no-speech-batch.md 节号一致
 
 ### D-12 批量协议：一次门、一条命令、失败隔离、产物分层
 
@@ -161,7 +161,7 @@
 
 场景：pipeline 报告 `branch: no_speech`；另一次用户一次给多条视频。
 
-- = 无口播时读取 `references/无口播与批量.md` §1（b0/b1/b4 步骤），不要求 SKILL.md 重述
+- = 无口播时读取 `references/no-speech-batch.md` §1（b0/b1/b4 步骤），不要求 SKILL.md 重述
 - = 批量时读取同文件 §2（一次确认门、批报告、失败隔离）
 - = SKILL.md 仍含 §0 确认门、§1 两档、§2 主命令表、§3/§4 分析步骤；读取指引按场景给出，不出现"详见 references/"这类无场景指路
 
@@ -185,7 +185,7 @@
 场景：无口播视频按 L1 文案档分析。
 
 - = 产出 `transcript.screen.srt/.json`、`analysis/01-画面文案稿.md`、`analysis/02-内容分析.md`
-- = 每屏文案带起止时间（帧差实测档）、可读度标注与证据帧路径；打字机拆屏的相邻同文屏有合并记录。可读度：frames 路径用读图三档（清晰 / 放大后可读 / 不可读），ocr 路径用 pipeline 组装稿的置信度三档（清晰 / 低置信 / 不可读，阈值见 references/无口播与批量.md §1）
+- = 每屏文案带起止时间（帧差实测档）、可读度标注与证据帧路径；打字机拆屏的相邻同文屏有合并记录。可读度：frames 路径用读图三档（清晰 / 放大后可读 / 不可读），ocr 路径用 pipeline 组装稿的置信度三档（清晰 / 低置信 / 不可读，阈值见 references/no-speech-batch.md §1）
 - = 02 的口播数据节换成文案屏数据（屏数 / 每屏字数 / 每屏停留时长）
 - = 纯音频输入且转写为空 → 如实说明无画面可提取并停止分支，不产出编造的文案稿
 

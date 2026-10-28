@@ -7,7 +7,7 @@ description: >-
 license: MIT
 metadata:
   version: 0.1.0
-  # category: <领域标签，建议填写；开放值集见 docs/开发与维护规范.md §3>
+  # category: <领域标签，建议填写；开放值集见 docs/CONVENTIONS.md §3>
 ---
 
 # __NAME__：<一句话标题>
@@ -36,5 +36,5 @@ metadata:
 ## 参考文档
 
 - `references/` — 条件分支、模板与清单（按需加载）
-- `docs/测试集.md` — 行为协议断言
-- `docs/需求与设计文档.md` — 设计与决策依据（可选）
+- `docs/TESTS.md` — 行为协议断言
+- `docs/SPEC.md` — 设计与决策依据（可选）
