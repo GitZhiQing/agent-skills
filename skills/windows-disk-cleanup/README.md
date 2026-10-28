@@ -101,26 +101,30 @@ delete --selection <selection.json> [--scan scan.json] [--mode recycle|permanent
 ```
 
 - 不带 `--yes` 永远只预演，不删除。
-- `--mode` 覆盖选择 JSON 的方式；不会降低确认要求。
+- `--mode` 覆盖选择 JSON 的全部逐条方式；不会降低确认要求。
 - `--confirm`：用户已在聊天中明确确认时，替代报告页确认框。
 - `--allow-review`：选择包含 `review`（未识别目录）时必须加。
 - 退出码：0 成功；1 有失败/部分删除（报告仍生成）；2 选择/参数错误。
 
-### `doctor` / `rules`
+### `doctor` / `rules` / `enrich`
 
 - `doctor --root <path> --json`：检查系统/依赖/权限/盘类型/可写性。
 - `rules --check --json`：校验内置规则库；`rules --json` 导出规则。
+- `enrich --scan scan.json --enrichment enrichment.json [--check]`：应用 AI 深化分析（Agent 对未命中规则目录的受限只读探索结论），合并展示信息并重渲染增强报告（默认输出 `enriched/`）。**只补展示信息与「AI 参考」建议，不改删除判定**；协议见 [references/深化分析协议.md](references/深化分析协议.md)。
 
 ## 报告页
 
-`report.html` 是单文件离线页面，无外部 CDN：
+`report.html` 是单文件页面，样式经 Tailwind CDN 加载（联网打开才有样式；离线时顶部有降级提示，数据与复制功能不受影响）：
 
-- **清理建议**：默认视图，只列安全/谨慎/待确认项；可按建议、类别、关键词筛选，按大小/名称排序。
+- **清理建议**：默认视图，只列建议清理/安全/谨慎/待定项；默认按建议度排序，可切换按大小/名称。
+- **分类筛选行**（表格上方，每维一行）：清单与计数固定（按当前视图统计，不随其它维度变化，避免条目跳动），可任意组合；生效中的筛选以可移除标签列出：归属（系统/应用/开发工具/用户文件/虚拟机）、性质（缓存/日志与转储/构建产物/安装包与更新残留/临时文件/用户内容/配置与凭据/未识别）、生态（Node.js/Python/… 仅在「开发工具」下出现）；窄屏时自动堆叠到表格上方。另有建议档与 AI 分析状态筛选、关键词搜索。
 - **目录总览**：顶层目录与用户数据目录，包括标记为保留的系统项。
-- **全部条目**：完整报告条目（受 `--max-entries` 限制）。
-- 每行显示大小、文件数、建议、说明、建议操作、风险、修改时间；需管理员的条目有徽标。
-- 勾选后底部选择栏显示已选数量/大小，检测父子重叠与待确认项；必须勾选确认框才能复制。
-- 复制内容是一个带说明的 JSON 代码块，交由 Agent 保存为 `selection.json`。
+- **全部条目**：完整报告条目（受 `--max-entries` 限制，分页每页 100 条）。
+- **紧凑行 + 详情展开**：每条目单行（展开箭头 · 标题 · 路径 · 关键徽章 · 大小 · 文件数 · 方式 · 说明摘要 · 时间），行高约 36px、一屏 12+ 条；点箭头展开完整路径、说明、建议、风险、AI 依据与分类；说明列悬浮可见全文。
+- **逐条删除方式**：行内「♻ 回收站 / ✕ 彻底」图标切换（悬浮有说明），默认回收站；需管理员的条目有徽标。
+- 勾选后底部选择栏显示已选数量/大小，检测父子重叠与待定项；必须勾选确认框才能复制。
+- 复制内容是一个带说明的 JSON 代码块（schema 2，含逐条方式 `modes`），交由 Agent 保存为 `selection.json`。
+- AI 深化分析（可选）：Agent 对未命中规则的目录做受限只读探索后，`enrich` 生成增强报告。高置信判定会把「待定」提升为明确档位（**AI 定档** 徽章，提升后不再需要 `--allow-review`），其余为「AI 分析」徽章（只补分类与说明、悬浮见依据）；AI 永远不能放宽可删范围。
 
 浏览器禁止剪贴板时会弹出手动复制框；选择 JSON 也可以从弹窗全选复制。
 
@@ -137,10 +141,11 @@ delete --selection <selection.json> [--scan scan.json] [--mode recycle|permanent
 
 ## 规则库
 
-- 数据源：[assets/rules.json](assets/rules.json)（226 条，2026-10-27）。
+- 数据源：[assets/rules.json](assets/rules.json)（226 条，2026-10-28）。
 - 可读目录与来源：[references/目录规则库.md](references/目录规则库.md)。
 - 规则类型：精确路径、路径后缀、glob、正则、名称 + `requires_inside`/`requires_sibling_any`。
-- 安全等级：`safe` / `caution` / `review` / `keep`。
+- 建议等级：`suggest`（建议清理）/ `safe` / `caution` / `keep`（建议保留）；`review`（待定）是未命中规则的兜底档。
+- 语言标注：94 条开发类规则带 `language`（nodejs/python/…/tools，受控枚举），供报告页语言筛选。
 - 维护：改 JSON → `rules --check --json` → 同步规则文档 → 跑测试 → 升次位版本。
 
 ## 经验闭环
@@ -195,7 +200,7 @@ mem check --json
 - [references/扫描与删除协议.md](references/扫描与删除协议.md) — 选择 JSON、校验/保护清单、失败处理
 - [references/经验闭环.md](references/经验闭环.md) — 经验 schema、检索/写回/毕业、public/local 隐私
 - [memory/INDEX.md](memory/INDEX.md) — 当前公开经验索引（自动生成）
-- [docs/测试集.md](docs/测试集.md) — 行为协议回归（42 条自动化测试 + 人工用例）
+- [docs/测试集.md](docs/测试集.md) — 行为协议回归（63 条自动化测试 + 人工用例）
 - [docs/需求与设计文档.md](docs/需求与设计文档.md) — 架构、安全模型、扫描策略、决策
 
 许可：MIT（仓库根 [LICENSE](../../LICENSE)）。

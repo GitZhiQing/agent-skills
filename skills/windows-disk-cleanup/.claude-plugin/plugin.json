@@ -1,6 +1,6 @@
 {
   "name": "windows-disk-cleanup",
   "description": "Windows 磁盘/文件夹只读扫描 → 可勾选 HTML 报告 → 用户选择 JSON → 二次校验安全删除 → 清理报告；public/local 经验闭环",
-  "version": "0.2.0",
+  "version": "0.5.5",
   "author": { "name": "QING" }
 }

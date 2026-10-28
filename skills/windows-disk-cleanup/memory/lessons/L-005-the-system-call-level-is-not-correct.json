@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "L-005",
+  "title": "回收站模式整目录删除失败有两种错误特征：'The system call level is not correct' 表",
+  "kind": "failure",
+  "scope": "delete",
+  "trigger": [
+    "recycle bin locked admin delete failed"
+  ],
+  "finding": "回收站模式整目录删除失败有两种错误特征：'The system call level is not correct' 表示目录内有文件被运行中程序占用（编辑器缓存、Temp、资源管理器缩略图缓存），任一文件被锁整目录即失败；'This function is not supported on this system' 表示目录受系统保护或需管理员（如系统盘根的 $SysReset、C:\\Windows 下子目录），普通权限无法移入回收站。",
+  "action": "按错误分流：占用类建议关闭对应程序后仅重试失败条目；系统保护类提示以管理员重跑或放弃该项；两类都不杀进程、不改 ACL、不重试掩盖。",
+  "evidence": {
+    "rule_ids": [],
+    "error_types": [
+      "COMException"
+    ],
+    "options": {},
+    "notes": ""
+  },
+  "used": 0,
+  "status": "active",
+  "privacy": "public",
+  "skill_version": "0.2.0",
+  "created_at": "2026-10-28T21:38:49+08:00",
+  "last_used_at": null,
+  "graduated_at": null,
+  "graduated_to": null
+}

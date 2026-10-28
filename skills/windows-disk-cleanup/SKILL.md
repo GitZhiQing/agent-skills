@@ -9,7 +9,7 @@ description: >-
 license: MIT
 compatibility: Windows 10/11；Python 3.9+（推荐 uv，也可直接用 python）；回收站模式需要 Windows PowerShell 5.1+；系统级目录通常需要管理员权限
 metadata:
-  version: 0.2.0
+  version: 0.5.5
   category: system
 ---
 
@@ -69,21 +69,37 @@ $BIN scan --root "<目标>" --output-dir "$OUT" --json
 
 - 读取 stdout JSON：`scan_id`、`report`、`scan_json`、`stats`、`summary`、`top`、`notes`。
 - `stats.partial: true`：说明达到时间上限或部分目录不可读，结果不完整；在交付时明确说。
-- `summary.safe/caution/review` 为 0 且 `top` 为空：如实告诉用户没有发现可清理项，不要硬凑。
+- `summary.suggest/safe/caution/review` 为 0 且 `top` 为空：如实告诉用户没有发现可清理项，不要硬凑。
 - 不要用 `scan.json` 的全量条目刷屏；只引用 `top` 和汇总。
 - 经验命中改变了参数（如限时、排除、深扫）时，交付里说明；实际改变动作后 `mem used <ID> --json`。
+
+### 第 2.5 步：AI 深化分析（可选）
+
+触发：`summary.review` 或「其他」类条目多，或用户要更细的分类说明。字段与预算细则见 `references/深化分析协议.md`。
+
+- 对象：无 `rule_id` 的条目，按大小取 top 30~50；探索只 `ls` 一到两层、只看文件名（不递归全树、不读内容、不执行），总时长约 2 分钟，超预算就停。
+- 结论写 `$OUT/enrichment.json`（字段见协议文档），先校验再应用：
+
+   ```bash
+   $BIN enrich --scan "$OUT/scan.json" --enrichment "$OUT/enrichment.json" --check --json
+   $BIN enrich --scan "$OUT/scan.json" --enrichment "$OUT/enrichment.json" --json
+   ```
+
+- 交付增强版报告（默认 `$OUT/enriched/`），补全条目带「AI 分析」与 `AI 参考 ·` 徽章。
+- **定档权限**：`confidence: high` 时，AI 可把「待定」提升为 safe/caution/keep（提升后不再需要 `--allow-review`），也可修正归属/性质/生态；但不能把保留项变成可删、不能改成 suggest、不能放宽 `selectable`。细则见协议文档。
 
 ### 第 3 步：交付报告并等待勾选
 
 用绝对路径给用户报告链接，例如 `[report.html](E:/data/.../report.html)`，并给一句话摘要：
 
-> 扫描完成：安全清理 N 项约 X GB，谨慎清理 M 项约 Y GB，待确认 K 项。打开报告页勾选要删的条目，选择删除方式并勾选确认框，点击「复制选中路径」，把 JSON 粘贴回来。
+> 扫描完成：建议清理 N 项约 X GB，安全清理 N2 项约 X2 GB，谨慎清理 M 项约 Y GB，待定 K 项。打开报告页勾选要删的条目，逐条选择「回收站 / 彻底删除」（默认回收站）并勾选确认框，点击「复制选中路径」，把 JSON 粘贴回来。
 
 同时说明：
 
 - 本页只做选择，不会删除文件；默认不选中任何项。
+- 报告页样式经 Tailwind CDN 加载：联网打开才有样式，离线打开时数据与复制功能仍可用。
 - 回收站模式可恢复；彻底删除不可恢复。
-- 「待确认 / review」是未命中规则的目录，删除前必须核实用途。
+- 「待定 / review」是未命中规则的目录，删除前必须核实用途。
 - 父子目录同时勾选时，删除以父目录为准。
 
 **然后停止本轮，等用户粘贴选择。** 不要替用户勾选，不要先删“明显是缓存”的条目。
@@ -116,7 +132,7 @@ $BIN delete --selection "$OUT/selection.json" --yes --json
 $BIN delete --selection "$OUT/selection.json" --yes --allow-review --json
 ```
 
-- 不要加 `--mode permanent` 覆盖用户选择；除非用户在报告页选了彻底删除，或在聊天中明确要求。
+- 不要加 `--mode permanent` 覆盖用户选择；除非用户在聊天中明确要求（`--mode` 会覆盖所有条目的逐条方式）。
 - 读取返回 JSON：`cleanup_report`、`cleanup_json`、`summary`、`items`、`notes`。
 - 退出码 1 表示有 `failed/partial`，但清理报告已经生成；不要丢弃报告。
 
@@ -151,31 +167,34 @@ mem record --kind failure --scope delete --trigger "access denied" \
 | `doctor --root <path> --json` | Windows/Python/PowerShell/管理员/盘类型/可写性 | `--root` 默认当前目录 |
 | `scan --root <path> --output-dir <dir> --json` | 只读扫描，写 `scan.json` + `report.html` | `--min-size MB`（50）、`--listing-depth`（3）、`--max-entries`（1500）、`--max-seconds`（0 不限）、`--exclude PATTERN`（可重复）、`--allow-network` |
 | `delete --selection <file> --dry-run --json` | 校验 + 预演，不删除 | `--scan` 显式指定 scan.json |
-| `delete --selection <file> --yes --json` | 执行删除，写 `cleanup.json` + `cleanup-report.html` | `--mode recycle\|permanent`、`--confirm`、`--allow-review` |
+| `delete --selection <file> --yes --json` | 执行删除，写 `cleanup.json` + `cleanup-report.html` | `--mode recycle\|permanent`（覆盖全部逐条方式）、`--confirm`、`--allow-review` |
 | `rules --check --json` | 校验内置规则库 | `--rules` 自定义规则文件（维护用） |
+| `enrich --scan <file> --enrichment <file> --json` | 应用 AI 深化分析并重渲染增强报告 | `--check` 只校验；`--output-dir` 默认 scan 同目录 `enriched/` |
 | `python scripts/memory.py search/record/used/graduate/check` | 经验检索/写回/毕业/校验；默认 `memory/` | `--json`；public 可提交，local gitignored |
 
 退出码：`0` 成功；`1` 业务失败（扫描不完整、删除失败/部分删除）；`2` 用法/选择错误（路径无效、未确认、schema 不符）。`--json` 时 stdout 始终是单个 JSON 对象，进度/诊断在 stderr。
 
 ## 3. 选择协议（摘要）
 
-报告页复制的 JSON 至少包含：
+报告页复制的 JSON 至少包含（schema 2）：
 
 ```json
 {
   "skill": "windows-disk-cleanup",
-  "schema": 1,
+  "schema": 2,
   "scan_id": "...",
   "scan_file": "E:\\...\\scan.json",
   "root": "C:\\Users\\...\\AppData\\Local",
   "mode": "recycle",
+  "modes": { "C:\\Users\\...\\npm-cache-old": "permanent" },
   "confirmed": true,
-  "paths": ["C:\\Users\\...\\AppData\\Local\\npm-cache"]
+  "paths": ["C:\\Users\\...\\AppData\\Local\\npm-cache", "C:\\Users\\...\\npm-cache-old"]
 }
 ```
 
 - `paths` 只接受 `scan.json` 中存在的条目；不能手工加子文件或扫描外路径。
-- `mode` 是 `recycle`（默认）或 `permanent`。
+- `mode` 是全局默认方式（`recycle` 默认或 `permanent`）；`modes` 是可选的逐条覆盖，只包含与全局默认不同的路径，未列出的条目沿用 `mode`。
+- schema 1（无 `modes`）的旧格式仍可执行，全部条目用全局 `mode`。
 - `confirmed` 来自报告页确认框；`--confirm` 只用于用户在聊天中明确确认后替代它。
 - 选择含 `review` 项时，执行必须加 `--allow-review`。
 - 详细校验规则、保护清单、失败状态见 `references/扫描与删除协议.md`。
@@ -184,7 +203,7 @@ mem record --kind failure --scope delete --trigger "access denied" \
 
 - **报告页是选择器，不是删除器**：页面没有删除按钮；复制出的 JSON 才触发删除。
 - **大小口径**：逻辑大小；硬链接/压缩/稀疏文件与资源管理器可能不同。WinSxS 不深入统计，避免硬链接失真。
-- **安全/谨慎/待确认/保留**：分别对应“可再生成”“可能含数据”“未识别”“不可删”；不要把待确认项说成安全项。
+- **建议清理/安全清理/谨慎清理/建议保留/待定**：分别对应“确认无用的废弃文件”“可再生成”“可能含数据”“明确不可删”“未识别”；不要把待定项说成安全项。
 - **父子重叠**：报告摘要按最深可清理项合计；表格仍逐条列出，删除时以父目录为准。
 - **系统项**：C 盘系统项通常需要管理员；普通权限会话不要承诺一定成功。
 - **回收站**：`moved_bytes` 是移入量，`volume_freed` 才是可用空间变化；清空前可用空间可能不变。
@@ -196,6 +215,7 @@ mem record --kind failure --scope delete --trigger "access denied" \
 | --- | --- |
 | 某个目录是什么、为什么建议删/保留、规则分类与来源 | `references/目录规则库.md` |
 | selection JSON 字段、校验/保护清单、dry-run、权限/占用/长路径/回收站失败 | `references/扫描与删除协议.md` |
+| AI 深化分析（enrichment.json 字段、预算、安全边界） | `references/深化分析协议.md` |
 | 经验 schema、检索/写回/used/毕业、public/local 隐私 | `references/经验闭环.md`、`memory/INDEX.md` |
 | CLI 参数、安装、依赖、报告页说明、排障 | `README.md` |
 | 行为协议回归 | `docs/测试集.md` |
@@ -215,6 +235,7 @@ mem record --kind failure --scope delete --trigger "access denied" \
 
 - `references/目录规则库.md` — 226 条目录规则（系统/用户/开发/项目/凭据）与官方来源。
 - `references/扫描与删除协议.md` — 选择 JSON、二次校验、保护清单、失败处理。
+- `references/深化分析协议.md` — enrichment JSON、受限探索预算、安全边界。
 - `references/经验闭环.md` — 经验 schema、检索/写回/毕业、隐私边界。
 - `memory/INDEX.md` — 当前公开经验索引（自动生成）。
 - `README.md` — 安装、用法、报告页与排障。

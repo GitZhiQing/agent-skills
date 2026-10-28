@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "id": "L-006",
+  "title": "Tailwind Play CDN 会剔除 text/tailwindcss 里的滚动条伪元素规则",
+  "kind": "failure",
+  "scope": "report",
+  "trigger": [
+    "tailwind play cdn style not applied",
+    "scrollbar styling ignored",
+    "webkit-scrollbar missing"
+  ],
+  "finding": "把 ::-webkit-scrollbar / scrollbar-width 规则写在 <style type=\"text/tailwindcss\"> 里时，Play CDN 编译后会整块剔除这些伪元素选择器（生成的样式表与原始块里都没有该规则），页面静默退回浏览器/系统默认滚动条。表现为：改完样式看似无变化，暗色主题下是高对比度系统灰轨；getComputedStyle 查 scrollbar-color 仍是 auto。",
+  "action": "滚动条等 UA 伪元素样式必须写在普通 <style> 标签（不经 Tailwind 编译）里；验证样式是否真生效不能只看截图观感，要检查生成样式表是否含该规则、并查 getComputedStyle 实际取值。",
+  "evidence": {
+    "rule_ids": [],
+    "error_types": [],
+    "options": {
+      "affected": "report.template.html,cleanup.template.html"
+    },
+    "notes": "Play CDN 生成样式表约 25KB 但不含 webkit-scrollbar 字符串；移入普通 style 后 getComputedStyle().scrollbarColor 返回 rgba(228,228,231,0.22)。"
+  },
+  "used": 0,
+  "status": "active",
+  "privacy": "public",
+  "skill_version": "0.4.3",
+  "created_at": "2026-10-28T23:17:25+08:00",
+  "last_used_at": null,
+  "graduated_at": null,
+  "graduated_to": null
+}
