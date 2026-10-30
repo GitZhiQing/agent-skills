@@ -1,6 +1,6 @@
 # agent-skills
 
-个人 AI Coding 过程中沉淀的 Agent Skills 集合，遵循 Agent Skills 开放规范，可被 Claude Code、Codex、ZCode、DeepSeek Harness 等支持该格式的 Agent 加载和使用。
+个人 AI Coding 过程中沉淀的 Agent Skills 集合，遵循 [Agent Skills 开放规范](https://agentskills.io/specification)，可被 Claude Code、Codex、ZCode、DeepSeek Harness 等支持该格式的 Agent 加载和使用。
 
 ## Skills
 
