@@ -40,9 +40,11 @@
 
 `<OUT>/<YYMMDD>-<主题>/`（如 `<OUT>/261018-国产开源数据库格局/`）：`YYMMDD` 取创建当天（跨日不改名）；主题 slug 简短可读，中文关键词可用；同日同主题重复调研追加 `-2`、`-3`；报告与登记簿内日期用 `YYYY-MM-DD`。
 
-## 依赖
+## 环境前提与可选协作
 
-宿主须具备 web 搜索 / 抓取能力：原生 WebSearch / WebFetch 类工具，或已安装的搜索 skill（如 [ddgs-web-access](../ddgs-web-access/)）。源码调研另需 git；无 git 时可退回官方源码包。web 工具缺失但 git 可用时，可降级为仅本地源码调研并声明未做外部资料交叉验证。
+- **环境前提**：宿主具备 web 搜索 / 抓取能力——原生 WebSearch / WebFetch 类工具，或任一已安装的 web 搜索 / 抓取 skill。
+- **可选协作**：具体用哪个搜索工具由阶段 0 探测决定，本 skill 不绑定实现；无论选用哪种通道，都按 SKILL.md 内联纪律执行（调用间隔 ≥2 秒、限流退避重试、同 URL 不重复抓取）。
+- **源码调研**：另需 git；无 git 时可退回官方源码包。web 工具缺失但 git 可用时，可降级为仅本地源码调研并声明未做外部资料交叉验证。
 
 ## 安装
 
@@ -75,4 +77,4 @@ npx skills add GitZhiQing/agent-skills/deep-research
 - [docs/SPEC.md](docs/SPEC.md) — 设计与决策依据
 - [docs/TESTS.md](docs/TESTS.md) — 验证场景
 
-许可：MIT（仓库根 [LICENSE](../../LICENSE)）。
+许可：MIT（[LICENSE](LICENSE)）。
