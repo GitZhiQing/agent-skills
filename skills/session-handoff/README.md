@@ -9,10 +9,7 @@
 
 ## 工作方式
 
-1. **生成前核对**：通读会话，并用 `git status` / `git diff --stat` / `git log` 核对分支与变更（非 git 项目跳过），不凭记忆；
-2. **按骨架成文**：7 节必含（任务与目标、当前进度、关键变更、关键决策与原因、待办与下一步、已知问题与风险、开工指引）+ 第 8 节“AGENTS.md 未覆盖”条件保留；
-3. **面向 AGENTS.md 取舍**：接手方会读到自动注入的 AGENTS.md，项目背景 / 运行命令 / 目录地图 / 通用约定不重复不搬运；项目无 AGENTS.md 时回退补全；
-4. **只输出一个代码块**：交接提示词放单个 markdown 代码块内、块外零输出；一般 400–1200 字，要求具体可验证、区分（待验证）/（未决）、敏感信息用 `<占位符>`。
+先用 git 命令核对事实，再按 [SKILL.md](SKILL.md) 的交接骨架成文（任务与目标、进度、变更、决策、待办、风险、开工指引），只输出一个可整体复制的代码块。完整骨架、AGENTS.md 取舍与写作要求见 SKILL.md。
 
 ## 边界
 
@@ -47,4 +44,4 @@ npx skills add GitZhiQing/agent-skills/session-handoff
 - [SKILL.md](SKILL.md) — 协议正文（权威来源）
 - [docs/TESTS.md](docs/TESTS.md) — 行为断言（人工会话执行）
 
-许可：MIT（仓库根 [LICENSE](../../LICENSE)）。
+许可：MIT（[LICENSE](LICENSE)）。
