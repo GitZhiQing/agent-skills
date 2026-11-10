@@ -92,10 +92,29 @@ class ReportTests(unittest.TestCase):
             self.assertIn("\\u003cscript", html)
             self.assertNotIn("__TITLE__", html)
             self.assertNotIn("/*__WINDOWS_DISK_CLEANUP_DATA__*/", html)
-            # 唯一允许的外部资源是 Tailwind CDN（用户已接受离线时无样式）。
-            self.assertIn("https://cdn.tailwindcss.com", html)
-            self.assertEqual(html.count("<script src="), 1)
+            # 报告完全离线：无外部脚本/样式/字体/图片 URL。
+            self.assertNotIn("http://", html)
+            self.assertNotIn("https://", html)
+            self.assertNotIn("<script src=", html)
+            self.assertNotIn("<link ", html)
+            self.assertIn("<style>", html)
+            # 核心交互仍在。
+            for text in ("复制选中路径", "移入回收站", "彻底删除", "全部建议档", "归属", "性质", "生态"):
+                self.assertIn(text, html)
+            self.assertNotIn("AI 定档", html)
+            self.assertNotIn("AI 参考", html)
             self.assertTrue(Path(outputs["scan_json"]).exists())
+
+    def test_report_templates_have_no_external_resources(self):
+        assets = helpers.SKILL_ROOT / "assets"
+        for name in ("report.template.html", "cleanup.template.html"):
+            text = (assets / name).read_text(encoding="utf-8")
+            with self.subTest(template=name):
+                self.assertNotIn("http://", text)
+                self.assertNotIn("https://", text)
+                self.assertNotIn("<script src=", text)
+                self.assertNotIn("@import", text)
+                self.assertNotIn("cdn.", text.lower())
 
     def test_cleanup_report_renders_statuses(self):
         with tempfile.TemporaryDirectory(prefix="wdc-report-") as tmp:
@@ -131,6 +150,10 @@ class ReportTests(unittest.TestCase):
             self.assertIn("测试缓存", html)
             self.assertIn("2026-10-27", html)
             self.assertNotIn("__TITLE__", html)
+            self.assertNotIn("http://", html)
+            self.assertNotIn("https://", html)
+            self.assertNotIn("<script src=", html)
+            self.assertNotIn("<link ", html)
             self.assertTrue(Path(outputs["cleanup_json"]).exists())
 
 

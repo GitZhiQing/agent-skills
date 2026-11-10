@@ -5,159 +5,205 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>__TITLE__</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  window.addEventListener("DOMContentLoaded", function () {
-    setTimeout(function () {
-      if (!window.tailwind) {
-        var el = document.getElementById("cdnWarn");
-        if (el) el.hidden = false;
-      }
-    }, 1200);
-  });
-</script>
-<script>
-  tailwind.config = {
-    darkMode: "media",
-    theme: {
-      extend: {
-        fontFamily: {
-          sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "PingFang SC", "Microsoft YaHei", "sans-serif"],
-          mono: ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"],
-        },
-      },
-    },
-  };
-</script>
 <style>
-  /* 滚动条样式必须写普通 <style>：Tailwind Play CDN 编译 text/tailwindcss 时会剔除
-     ::-webkit-scrollbar 规则，导致这里失效而退回系统默认滚动条。 */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgb(161 161 170 / 0.35) transparent;
+  :root {
+    --bg: #fafafa;
+    --fg: #18181b;
+    --muted: #71717a;
+    --muted-2: #a1a1aa;
+    --card: #ffffff;
+    --border: #e4e4e7;
+    --hover: #f4f4f5;
+    --bar-bg: #e4e4e7;
+    --danger: #dc2626;
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, "Courier New", monospace;
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #09090b;
+      --fg: #f4f4f5;
+      --muted: #a1a1aa;
+      --muted-2: #71717a;
+      --card: #18181b;
+      --border: #27272a;
+      --hover: #27272a;
+      --bar-bg: #27272a;
+      --danger: #f87171;
+    }
+  }
+  * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: rgba(161, 161, 170, 0.35) transparent; }
   *::-webkit-scrollbar { width: 8px; height: 8px; }
   *::-webkit-scrollbar-track { background: transparent; }
-  *::-webkit-scrollbar-corner { background: transparent; }
-  *::-webkit-scrollbar-thumb {
-    background: rgb(161 161 170 / 0.35);
-    border-radius: 9999px;
-    border: 2px solid transparent;
-    background-clip: content-box;
+  *::-webkit-scrollbar-thumb { background: rgba(161, 161, 170, 0.35); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+  *::-webkit-scrollbar-thumb:hover { background-color: rgba(113, 113, 122, 0.55); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    font-size: 13px;
   }
-  *::-webkit-scrollbar-thumb:hover { background-color: rgb(113 113 122 / 0.55); }
+  h1, h2, h3, p { margin: 0; }
+  .wrap { max-width: 80rem; margin: 0 auto; padding: 24px 16px; }
+  .card { border: 1px solid var(--border); border-radius: 10px; background: var(--card); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); }
+  .hero { padding: 20px; }
+  .eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted-2); }
+  .hero h1 { margin-top: 4px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .root-line { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .root-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted-2); }
+  .root-path { display: inline-block; word-break: break-all; border-radius: 6px; background: var(--hover); padding: 2px 8px; font-family: var(--font-mono); font-size: 12px; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: var(--hover); padding: 2px 8px; font-size: 11px; color: var(--muted); }
+  .chip strong { color: var(--fg); font-weight: 600; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+  .stat-card { padding: 16px; border-left-width: 4px; border-left-style: solid; }
+  .accent-emerald { border-left-color: #10b981; }
+  .accent-zinc { border-left-color: #a1a1aa; }
+  .accent-red { border-left-color: #ef4444; }
+  .stat-label { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .stat-value { margin-top: 4px; font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+  .stat-sub { margin-top: 4px; font-size: 11px; color: var(--muted-2); }
+  .volumes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+  .volume-card { padding: 16px; }
+  .volume-card h3 { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-2); }
+  .track { height: 8px; margin-top: 12px; overflow: hidden; border-radius: 999px; background: var(--bar-bg); }
+  .track > div { height: 100%; width: 0; border-radius: 999px; transition: width 0.5s ease; }
+  .volume-row { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .volume-row strong { color: var(--fg); font-weight: 600; }
+  .results { margin-top: 16px; overflow: hidden; }
+  .results-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); padding: 12px 16px; }
+  .results-head h2 { font-size: 14px; font-weight: 600; }
+  .link { color: #0284c7; font-size: 12px; font-weight: 500; text-decoration: none; }
+  .link:hover { text-decoration: underline; }
+  @media (prefers-color-scheme: dark) { .link { color: #38bdf8; } }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; font-size: 12px; }
+  thead { background: var(--hover); }
+  thead tr { border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-2); }
+  th { padding: 10px 12px; font-weight: 500; }
+  tbody tr { border-bottom: 1px solid var(--border); vertical-align: top; }
+  tbody tr:last-child { border-bottom: 0; }
+  tbody tr:hover { background: var(--hover); }
+  td { padding: 10px 12px; }
+  .cell-path { max-width: 28rem; }
+  .item-title { font-weight: 500; }
+  .item-path { margin-top: 2px; word-break: break-all; font-family: var(--font-mono); font-size: 11px; color: var(--muted-2); }
+  .item-error { margin-top: 4px; word-break: break-word; font-size: 11px; color: var(--danger); }
+  .right { text-align: right; }
+  .mono { font-family: var(--font-mono); }
+  .nowrap { white-space: nowrap; }
+  .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 500; line-height: 16px; }
+  .badge-ok { background: #d1fae5; color: #065f46; box-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.2); }
+  .badge-warn { background: #fef3c7; color: #92400e; box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.25); }
+  .badge-bad { background: #fee2e2; color: #991b1b; box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.2); }
+  .badge-muted { background: #f4f4f5; color: #52525b; box-shadow: inset 0 0 0 1px rgba(113, 113, 122, 0.2); }
+  .badge-mode-recycle { background: #e0f2fe; color: #075985; box-shadow: inset 0 0 0 1px rgba(2, 132, 199, 0.2); }
+  .badge-mode-permanent { background: #fee2e2; color: #991b1b; box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.2); }
   @media (prefers-color-scheme: dark) {
-    * { scrollbar-color: rgb(228 228 231 / 0.22) transparent; }
-    *::-webkit-scrollbar-thumb { background: rgb(228 228 231 / 0.22); }
-    *::-webkit-scrollbar-thumb:hover { background: rgb(228 228 231 / 0.42); }
+    .badge-ok { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.2); }
+    .badge-warn { background: rgba(245, 158, 11, 0.15); color: #fcd34d; box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.2); }
+    .badge-bad { background: rgba(239, 68, 68, 0.15); color: #fca5a5; box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.2); }
+    .badge-muted { background: #27272a; color: #a1a1aa; box-shadow: inset 0 0 0 1px rgba(161, 161, 170, 0.2); }
+    .badge-mode-recycle { background: rgba(14, 165, 233, 0.15); color: #7dd3fc; box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.2); }
+    .badge-mode-permanent { background: rgba(239, 68, 68, 0.15); color: #fca5a5; box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.2); }
   }
-</style>
-<style type="text/tailwindcss">
-  @layer components {
-    .card { @apply rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900; }
-    .badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium leading-4; }
-    .badge-ok { @apply bg-emerald-100 text-emerald-800 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300; }
-    .badge-warn { @apply bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-600/25 dark:bg-amber-500/15 dark:text-amber-300; }
-    .badge-bad { @apply bg-red-100 text-red-800 ring-1 ring-inset ring-red-600/20 dark:bg-red-500/15 dark:text-red-300; }
-    .badge-muted { @apply bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-500/20 dark:bg-zinc-800 dark:text-zinc-400; }
-    .badge-mode-recycle { @apply bg-sky-100 text-sky-800 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-500/15 dark:text-sky-300; }
-    .badge-mode-permanent { @apply bg-red-100 text-red-800 ring-1 ring-inset ring-red-600/20 dark:bg-red-500/15 dark:text-red-300; }
-    .chip { @apply inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400; }
-    .stat-value { @apply text-2xl font-semibold tracking-tight; }
-    .stat-label { @apply text-xs font-medium text-zinc-500 dark:text-zinc-400; }
-    .stat-sub { @apply mt-1 text-[11px] text-zinc-400 dark:text-zinc-500; }
+  .notes { margin-top: 16px; padding: 16px; }
+  .notes h2 { font-size: 14px; font-weight: 600; }
+  .notes ul { margin: 8px 0 0; padding-left: 20px; font-size: 12px; color: var(--muted); }
+  .notes li { margin-top: 2px; }
+  .footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 16px; font-size: 11px; color: var(--muted-2); }
+  @media (max-width: 900px) {
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .volumes { grid-template-columns: 1fr; }
   }
 </style>
 </head>
-<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
-<div id="cdnWarn" hidden class="bg-amber-100 px-4 py-2 text-center text-xs text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
-  样式库（Tailwind CDN）加载失败——当前可能离线。数据仍完整可读，联网后重新打开即可恢复样式。
-</div>
+<body>
+<div class="wrap">
 
-<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-
-  <header class="card p-5">
-    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">Windows Disk Cleanup · Cleanup Report</p>
-    <h1 class="mt-1 text-lg font-semibold tracking-tight">清理报告</h1>
-    <p class="mt-1 inline-flex items-center gap-2">
-      <span class="text-[10px] font-bold tracking-widest text-zinc-400">ROOT</span>
-      <span id="rootPath" class="break-all rounded-md bg-zinc-100 px-2 py-0.5 font-mono text-xs dark:bg-zinc-800">—</span>
+  <header class="card hero">
+    <p class="eyebrow">Windows Disk Cleanup · Cleanup Report</p>
+    <h1>清理报告</h1>
+    <p class="root-line">
+      <span class="root-tag">ROOT</span>
+      <span id="rootPath" class="root-path">—</span>
     </p>
-    <div id="metaChips" class="mt-3 flex flex-wrap gap-1.5"></div>
+    <div id="metaChips" class="meta-chips"></div>
   </header>
 
-  <section class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-    <div class="card border-l-4 border-l-emerald-500 p-4">
+  <section class="stats">
+    <div class="card stat-card accent-emerald">
       <div class="stat-label">已处理空间</div>
       <div id="freedValue" class="stat-value">—</div>
       <div class="stat-sub">按删除前逻辑大小统计；回收站清空后才真正释放</div>
     </div>
-    <div class="card border-l-4 border-l-zinc-400 p-4">
+    <div class="card stat-card accent-zinc">
       <div class="stat-label">选中条目</div>
       <div id="selectedValue" class="stat-value">0</div>
       <div class="stat-sub">来自扫描报告的选择</div>
     </div>
-    <div class="card border-l-4 border-l-emerald-500 p-4">
+    <div class="card stat-card accent-emerald">
       <div class="stat-label">成功删除 / 移入回收站</div>
       <div id="deletedValue" class="stat-value">0</div>
       <div class="stat-sub">完全移除的条目</div>
     </div>
-    <div class="card border-l-4 border-l-red-500 p-4">
+    <div class="card stat-card accent-red">
       <div class="stat-label">失败 / 部分删除</div>
       <div id="failedValue" class="stat-value">0</div>
       <div class="stat-sub">需要人工处理</div>
     </div>
   </section>
 
-  <section class="mt-4 grid gap-3 md:grid-cols-2">
-    <div class="card p-4">
-      <h3 class="text-xs font-medium uppercase tracking-wide text-zinc-400">删除前磁盘</h3>
-      <div class="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-        <div id="barBefore" class="h-full rounded-full transition-all duration-500" style="width:0%"></div>
-      </div>
-      <div class="mt-2 flex justify-between text-xs text-zinc-500 dark:text-zinc-400"><span>可用</span><strong id="freeBefore" class="text-zinc-800 dark:text-zinc-200">—</strong></div>
-      <div class="mt-1 flex justify-between text-xs text-zinc-500 dark:text-zinc-400"><span>已用 / 总量</span><strong id="usedBefore" class="text-zinc-800 dark:text-zinc-200">—</strong></div>
+  <section class="volumes">
+    <div class="card volume-card">
+      <h3>删除前磁盘</h3>
+      <div class="track"><div id="barBefore"></div></div>
+      <div class="volume-row"><span>可用</span><strong id="freeBefore">—</strong></div>
+      <div class="volume-row"><span>已用 / 总量</span><strong id="usedBefore">—</strong></div>
     </div>
-    <div class="card p-4">
-      <h3 class="text-xs font-medium uppercase tracking-wide text-zinc-400">删除后磁盘</h3>
-      <div class="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-        <div id="barAfter" class="h-full rounded-full transition-all duration-500" style="width:0%"></div>
-      </div>
-      <div class="mt-2 flex justify-between text-xs text-zinc-500 dark:text-zinc-400"><span>可用</span><strong id="freeAfter" class="text-zinc-800 dark:text-zinc-200">—</strong></div>
-      <div class="mt-1 flex justify-between text-xs text-zinc-500 dark:text-zinc-400"><span>已用 / 总量</span><strong id="usedAfter" class="text-zinc-800 dark:text-zinc-200">—</strong></div>
+    <div class="card volume-card">
+      <h3>删除后磁盘</h3>
+      <div class="track"><div id="barAfter"></div></div>
+      <div class="volume-row"><span>可用</span><strong id="freeAfter">—</strong></div>
+      <div class="volume-row"><span>已用 / 总量</span><strong id="usedAfter">—</strong></div>
     </div>
   </section>
 
-  <section class="card mt-4 overflow-hidden">
-    <div class="flex items-center justify-between gap-3 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-      <h2 class="text-sm font-semibold">逐项结果</h2>
-      <a href="report.html" class="text-xs font-medium text-sky-600 hover:underline dark:text-sky-400">查看扫描报告 →</a>
+  <section class="card results">
+    <div class="results-head">
+      <h2>逐项结果</h2>
+      <a href="report.html" class="link">查看扫描报告 →</a>
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse text-left text-xs">
-        <thead class="bg-zinc-50 dark:bg-zinc-900/60">
-          <tr class="border-b border-zinc-200 text-[11px] uppercase tracking-wide text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
-            <th class="px-4 py-2.5 font-medium">目录 / 文件</th>
-            <th class="px-3 py-2.5 font-medium">建议</th>
-            <th class="px-3 py-2.5 text-right font-medium">大小</th>
-            <th class="px-3 py-2.5 font-medium">方式</th>
-            <th class="px-3 py-2.5 font-medium">结果</th>
-            <th class="px-4 py-2.5 text-right font-medium">释放 / 移入</th>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>目录 / 文件</th>
+            <th>建议</th>
+            <th class="right">大小</th>
+            <th>方式</th>
+            <th>结果</th>
+            <th class="right">释放 / 移入</th>
           </tr>
         </thead>
-        <tbody id="tbody" class="divide-y divide-zinc-100 dark:divide-zinc-800/70"></tbody>
+        <tbody id="tbody"></tbody>
       </table>
     </div>
   </section>
 
-  <section class="card mt-4 p-4">
-    <h2 class="text-sm font-semibold">说明</h2>
-    <ul id="notesList" class="mt-2 list-disc space-y-1 pl-5 text-xs text-zinc-600 dark:text-zinc-400"></ul>
+  <section class="card notes">
+    <h2>说明</h2>
+    <ul id="notesList"></ul>
   </section>
 
-  <div class="mt-4 flex flex-wrap justify-between gap-3 text-[11px] text-zinc-400 dark:text-zinc-500">
+  <div class="footer">
     <span id="generated"></span>
-    <span>windows-disk-cleanup · 只删除用户在报告页勾选并确认的条目 · 样式经 CDN 加载</span>
+    <span>windows-disk-cleanup · 只删除用户勾选并确认的条目 · 单文件离线报告，无网络请求</span>
   </div>
 </div>
 
@@ -170,7 +216,8 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
 
   function fmtBytes(v) {
     if (v === null || v === undefined || Number.isNaN(v)) return "—";
-    const u = ["B","KB","MB","GB","TB"]; let n = Number(v), i = 0;
+    const u = ["B", "KB", "MB", "GB", "TB"];
+    let n = Number(v), i = 0;
     while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
     return i === 0 ? Math.round(n) + " B" : n.toFixed(1) + " " + u[i];
   }
@@ -180,20 +227,26 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     return Number.isNaN(x.getTime()) ? v : x.toLocaleString("zh-CN", { hour12: false });
   }
   function chip(label, value) {
-    const el = document.createElement("span"); el.className = "chip";
+    const el = document.createElement("span");
+    el.className = "chip";
     el.appendChild(document.createTextNode(label + " "));
-    const b = document.createElement("strong"); b.textContent = value; el.appendChild(b);
+    const b = document.createElement("strong");
+    b.textContent = value;
+    el.appendChild(b);
     return el;
   }
   function badge(text, cls) {
-    const el = document.createElement("span"); el.className = "badge " + cls; el.textContent = text; return el;
+    const el = document.createElement("span");
+    el.className = "badge " + cls;
+    el.textContent = text;
+    return el;
   }
   function setBar(id, v) {
     const pct = (v && v.used_pct !== null && v.used_pct !== undefined) ? v.used_pct : 0;
     paintUsage($(id), pct);
   }
 
-  // 使用率分档：颜色内联写死，不依赖 Tailwind 运行时生成类。
+  // 使用率分档：颜色内联写死，不依赖任何运行时样式库。
   const USAGE_TIERS = [
     { below: 60, from: "#10b981", to: "#34d399" },
     { below: 80, from: "#f59e0b", to: "#fbbf24" },
@@ -236,7 +289,8 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   $("failedValue").textContent = (s.failed || 0) + (s.partial || 0);
 
   const before = d.volume_before || {}, after = d.volume_after || {};
-  setBar("barBefore", before); setBar("barAfter", after);
+  setBar("barBefore", before);
+  setBar("barAfter", after);
   $("freeBefore").textContent = before.free_h || "—";
   $("freeAfter").textContent = after.free_h || "—";
   $("usedBefore").textContent = (before.used_h || "—") + " / " + (before.total_h || "—");
@@ -245,37 +299,35 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   const tbody = $("tbody");
   for (const item of items) {
     const tr = document.createElement("tr");
-    tr.className = "align-top hover:bg-zinc-50 dark:hover:bg-zinc-800/40";
 
     const tdPath = document.createElement("td");
-    tdPath.className = "max-w-md px-4 py-2.5";
+    tdPath.className = "cell-path";
     const title = document.createElement("div");
-    title.className = "font-medium text-zinc-800 dark:text-zinc-200";
+    title.className = "item-title";
     title.textContent = item.title || "目录";
     const path = document.createElement("div");
-    path.className = "mt-0.5 break-all font-mono text-[11px] text-zinc-400 dark:text-zinc-500";
+    path.className = "item-path";
     path.textContent = item.path || "";
-    tdPath.appendChild(title); tdPath.appendChild(path);
+    tdPath.appendChild(title);
+    tdPath.appendChild(path);
     if (item.error) {
       const err = document.createElement("div");
-      err.className = "mt-1 break-words text-[11px] text-red-600 dark:text-red-400";
+      err.className = "item-error";
       err.textContent = item.error;
       tdPath.appendChild(err);
     }
     tr.appendChild(tdPath);
 
     const tdRec = document.createElement("td");
-    tdRec.className = "px-3 py-2.5";
     tdRec.appendChild(badge(item.recommendation_label || "—", "badge-muted"));
     tr.appendChild(tdRec);
 
     const tdSize = document.createElement("td");
-    tdSize.className = "whitespace-nowrap px-3 py-2.5 text-right font-mono";
+    tdSize.className = "right mono nowrap";
     tdSize.textContent = item.size_h || "—";
     tr.appendChild(tdSize);
 
     const tdMode = document.createElement("td");
-    tdMode.className = "px-3 py-2.5";
     tdMode.appendChild(badge(
       item.mode === "permanent" ? "彻底删除" : "回收站",
       item.mode === "permanent" ? "badge-mode-permanent" : "badge-mode-recycle"
@@ -283,12 +335,11 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     tr.appendChild(tdMode);
 
     const tdStatus = document.createElement("td");
-    tdStatus.className = "px-3 py-2.5";
     tdStatus.appendChild(badge(item.status_label || item.status || "—", item.status_class || "badge-muted"));
     tr.appendChild(tdStatus);
 
     const tdFreed = document.createElement("td");
-    tdFreed.className = "whitespace-nowrap px-4 py-2.5 text-right font-mono";
+    tdFreed.className = "right mono nowrap";
     tdFreed.textContent = item.freed_h || "—";
     tr.appendChild(tdFreed);
 
@@ -298,7 +349,9 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   const notes = $("notesList");
   const base = (d.notes || []).slice();
   for (const n of base) {
-    const li = document.createElement("li"); li.textContent = n; notes.appendChild(li);
+    const li = document.createElement("li");
+    li.textContent = n;
+    notes.appendChild(li);
   }
   $("generated").textContent = "报告生成：" + fmtTime(d.generated_at) + " · 规则库：" + (d.rules_version || "—");
 })();

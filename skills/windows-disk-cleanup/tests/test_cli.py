@@ -134,7 +134,7 @@ class CliTests(unittest.TestCase):
             )
             self.assertIn(execute.returncode, (0, 1), execute.stderr)
             result = json.loads(execute.stdout)
-            # 回收站在受限环境可能失败（见 memory L-005），只断言方式字段贯穿执行结果。
+            # 回收站在受限环境可能失败，只断言方式字段贯穿执行结果。
             item_modes = {item["path"]: item["mode"] for item in result["items"]}
             self.assertEqual(item_modes[temp], "recycle")
             self.assertEqual(item_modes[modules], "permanent")
@@ -187,6 +187,14 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(proc.returncode, 2, proc.stderr)
             self.assertFalse(json.loads(proc.stdout)["ok"])
+
+    def test_enrich_subcommand_is_gone(self):
+        proc = run_cli(["--help"], helpers.SKILL_ROOT)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertNotIn("enrich", proc.stdout)
+        proc = run_cli(["enrich", "--help"], helpers.SKILL_ROOT)
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("invalid choice", proc.stderr)
 
 
 if __name__ == "__main__":

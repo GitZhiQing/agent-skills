@@ -1,8 +1,10 @@
 # windows-disk-cleanup 测试集
 
-版本：v0.5.0（AI 定档 + 三维分类导航）。行为协议断言，人工会话执行；代码部分另有 `python -m unittest discover -s tests`（当前 63 条）。
+版本：v0.6.0（离线报告 + 核心工作流）。行为协议断言，人工会话执行；代码部分另有 `python -m unittest discover -s tests`（当前 47 条）。
 
-编号采用「类别前缀-序号」：W 工作流与触发、S 扫描、D 删除与安全、R 报告页、E 边界、M 经验闭环、T 触发校准。新场景追加编号，不重排、不复用。
+> 0.6.0 破坏性变更：经验闭环（memory）与 AI 深化分析（enrich）已移除，对应 W-15/W-16、S-11、R-9/R-11 与 M 段用例不再存在；报告改为全内联 CSS 的单文件离线页面，不加载任何外部资源。
+
+编号采用「类别前缀-序号」：W 工作流与触发、S 扫描、D 删除与安全、R 报告页、E 边界、T 触发校准。新场景追加编号，不重排、不复用。
 
 ## 1. 工作流与触发（W）
 
@@ -149,29 +151,6 @@
 - = 不自动重新扫描、不清空回收站、不继续删除未选项。
 - = 可以询问是否再清另一个盘/文件夹，但不主动执行。
 
-### W-15 经验检索与写回
-
-场景：第二次清理同类目录，或本次出现可复用的权限/参数问题。
-
-▶ 固定工作流。
-
-- = doctor 后执行 `memory.py search --query "<目标类型> scan timeout permission appdata" --json`。
-- = dry-run 前执行 `memory.py search --query "delete permission recycle locked long path" --json`。
-- = 命中且实际改变动作后执行 `memory.py used <ID>`；只命中未改变动作不记 used。
-- = 收尾只写高信号经验；例行成功、单次偏好、完整用户路径、凭据不写 public。
-- = 不自动改 `rules.json`；毕业必须人工改规则/文档 + 跑 `rules --check` + 全量测试。
-
-### W-16 AI 深化分析流程（可选步骤）
-
-场景：扫描后 review/「其他」类条目较多，或用户要求更细的分类说明。
-
-▶ Agent 执行第 2.5 步。
-
-- = 只分析无 `rule_id` 的条目，按大小取 top 30~50；探索只 `ls` 一到两层、只看文件名，总时长约 2 分钟内。
-- = 结论写 `enrichment.json`（含 evidence 与 confidence），先 `enrich --check` 再应用。
-- = 交付 `enriched/report.html` 并说明哪些是 AI 补充的；不分析就不写、不伪装。
-- = 不因一次分析直接改 `rules.json`；高置信结论记经验（`scope=rule`）走毕业。
-
 ## 2. 扫描（S）
 
 ### S-1 大缓存目录作为叶子
@@ -273,19 +252,6 @@
 - = 升级残留/旧版缓存条目为 `suggest`（建议清理），统计卡有独立计数；`rules --check` 通过。
 - = 开发类条目带 `language`（如 nodejs/python），报告页“编程语言”筛选可按语言过滤；非开发条目 language 为空。
 - = 其余条目仍按 safe/caution/keep/review 归档，原有断言（S-1/S-2/S-3）不变。
-
-### S-11 AI 深化分析合并与安全边界
-
-场景：scan 后 Agent 写 enrichment.json（含未命中规则目录的 category/title/description/advice/evidence），运行 `enrich`。
-
-▶ `enrich --check` 通过后应用，打开 `enriched/report.html`。
-
-- = 补全条目的展示字段被覆盖（title/description/language/group/nature/advice），带「AI 分析」或「AI 定档」徽章（悬浮见 evidence）。
-- = **定档规则**：只有 `confidence: high` 且在 `recommendation=review` 上的 `advice` 会改档（提升后不再需要 `--allow-review`）；`advice=keep` 同时置为不可选；非 review 条目、medium/low 置信只展示不改档；`advice=suggest` 被校验拒绝。
-- = **只收紧不放宽**：AI 不能把规则判为保留的项变成可删；`method` / `requires_admin` 等始终由规则决定。
-- = path 不在 scan、language/advice/confidence 非法、无任何展示字段的条目，校验报错拒绝（退出码 2）。
-- = 增强后的 scan.json `scan_id` 不变；selection → delete 流程不受影响。
-- = 探索只读：不递归全树、不读文件内容、不执行目录内程序；超预算停止并如实不写剩余条目。
 
 ## 3. 删除与安全（D）
 
@@ -412,11 +378,11 @@
 
 场景：打开 `report.html`。
 
-▶ 点击三个 tab、点归属/性质/生态 chips、按建议档与 AI 状态筛选、搜索、切换排序。
+▶ 点击三个 tab、点归属/性质/生态 chips、按建议档筛选、搜索、切换排序。
 
 - = 清理建议只含 suggest/safe/caution/review；目录总览含顶层/用户数据（包括保留项）；全部条目含全部。
 - = 默认按建议度排序（建议清理 → 安全清理 → 谨慎清理 → 建议保留 → 待定，同档按大小）；可切换按大小/名称。
-- = 归属/性质/生态各占一行，位于表格上方；每项显示名称与条数（体积在悬浮提示里），工具栏（搜索/建议档/AI 状态/排序/仅可操作）保持单行。
+- = 归属/性质/生态各占一行，位于表格上方；每项显示名称与条数（体积在悬浮提示里），工具栏（搜索/建议档/排序/仅可操作）保持单行。
 - = **清单与计数固定**：点任一维度筛选，其余维度的条目与数字都不变化、顺序不变（不做交叉分面计数）；计数只代表当前 tab 的库存。
 - = 每维首项为「不限」且不带数字，点它取消该维度；当前视图没有条目的分类项置灰不可点。
 - = 筛选生效时出现「已筛选」标签行，逐个可点 × 移除，另有「清除全部」；无筛选时该行隐藏。
@@ -454,14 +420,15 @@
 - = 确认文案变为风险提示。
 - = 不隐藏风险、不自动取消选择。
 
-### R-5 样式 CDN 与离线降级
+### R-5 离线报告与无外部请求
 
-场景：联网与断网分别打开 `report.html`。
+场景：断网打开 `report.html`。
 
-▶ 浏览器打开。
+▶ 浏览器打开（可抓包或查看源码确认）。
 
-- = 联网时唯一外部请求是 Tailwind Play CDN；页面呈现完整样式（暗色模式跟随系统）。
-- = 断网时页面顶部出现“样式库加载失败”提示；条目、筛选、排序、勾选、复制 JSON 全部仍可用（无样式）。
+- = 页面样式完整（亮/暗主题跟随系统），不出现“样式加载失败”提示。
+- = 源码中没有任何外部脚本、样式、字体或图片 URL；不发起任何网络请求。
+- = 条目、tab、三维筛选、排序、勾选、展开详情、复制 JSON 全部可用。
 - = 页面内嵌数据，不依赖 `scan.json` 才能显示（但复制 JSON 仍引用 scan_file）。
 
 ### R-6 剪贴板回退
@@ -493,17 +460,6 @@
 - = 复制的 JSON 中 `mode` 为全局默认，`modes` 只含切到“彻底删除”的路径。
 - = 底部提示区分“N 项彻底删除 / M 项移入回收站”；全选彻底时确认文案变为风险确认版。
 
-### R-9 AI 深化分析徽章
-
-场景：打开 `enriched/report.html`（含 AI 补全条目）。
-
-▶ 查看补全条目并与其余条目对比。
-
-- = 被定档的条目显示「AI 定档·高/中/低」徽章，档位徽章随之变为 AI 判定值（如「安全清理」）。
-- = 未定档但已分析的条目显示「AI 高/中/低」徽章 + 「AI·安全/谨慎/保留」参考徽章；两者都悬浮显示依据。
-- = AI 状态筛选「已定档」只列出 `tier_source=ai` 的条目；「已分析 / 未分析」按是否 enriched 划分。
-- = 未分析条目没有任何 AI 徽章，不伪装已分析。
-
 ### R-10 紧凑行与详情展开
 
 场景：打开报告，浏览列表并展开个别条目。
@@ -511,21 +467,10 @@
 ▶ 浏览、展开、收起、翻页。
 
 - = 每条目单行（约 36px）：展开箭头、标题、路径（截断）、关键徽章、大小、文件数、方式图标、说明摘要、时间；一屏可见 12 条以上。
-- = 点箭头展开详情：完整路径、说明、建议、风险、AI 依据、分类（role/scope/language/规则 id）；再点收起。
+- = 点箭头展开详情：完整路径、说明、建议、风险、分类（role/scope/language/规则 id）；再点收起。
 - = 说明摘要截断，悬浮显示「说明 + 建议 + 风险」全文。
 - = 方式列是「♻/✕」图标切换（悬浮有文字说明），选中态清晰；勾选、行点击勾选、翻页、筛选后展开状态不丢。
 - = 展开行不参与勾选与「全选可见」。
-
-### R-11 AI 定档对门控的影响
-
-场景：AI 高置信把某「待定」目录定为「安全清理」。
-
-▶ 在报告页勾选该条目并复制选择，执行预演。
-
-- = 预演 `planned` 中该条目 `recommendation` 为 `safe`、`review` 列表不含它，`requires_allow_review` 为 false。
-- = `cleanup.json` / `scan.json` 保留 `tier_source: "ai"`，可回溯是 AI 改了档。
-- = 若 AI 判定为「保留」，该条目变为不可勾选，selection 校验会拒绝。
-- = 未定档的 `review` 条目行为不变（仍需 `--allow-review`）。
 
 ## 5. 边界（E）
 
@@ -592,98 +537,17 @@
 - = 退出码 2，错误信息说明“用报告页复制”“缺 scan_id”“schema 不支持”“paths 为空”。
 - = 不猜测、不执行删除。
 
-## 6. 经验闭环（M）
-
-### M-1 开工检索命中并改变动作
-
-场景：经验库有一条 `appdata + timeout` 的成功路径。
-
-▶ doctor 后检索。
-
-- = 命中条目的 `finding/action` 被读入本次判断。
-- = 本次扫描参数按 action 调整（如 `--max-seconds 60`）。
-- = 实际改变动作后 `used` +1；未改变不记。
-
-### M-2 删除前检索
-
-场景：经验库有一条 `access denied` / `locked` 的删除教训。
-
-▶ dry-run 前检索。
-
-- = 命中后失败提示优先给“管理员/关闭占用程序”，不自动停服务或改 ACL。
-- = 不因检索命中就跳过 dry-run 或用户确认。
-
-### M-3 写回成功路径
-
-场景：本次用某个参数组合显著改善了大目录扫描。
-
-▶ 收尾 `memory.py record --kind success --scope scan ...`。
-
-- = 生成 `memory/lessons/L-NNN-*.json`，`INDEX.md` 自动更新。
-- = public 内容不含完整用户路径/用户名/凭据。
-- = 例行“扫描成功”不写。
-
-### M-4 写回失败教训
-
-场景：删除出现 `PermissionError` 或 `partial`。
-
-▶ 收尾 `record --kind failure --scope delete --error-type PermissionError`。
-
-- = 条目含 `finding`、`action`、`rule_id`/`error_type`。
-- = 不把失败写成成功；不记录“删父目录绕过”的做法。
-
-### M-5 差集推导规则误判/漏判
-
-场景：`scan.json` 中 safe 项未被用户选中；或 review 项被选中并成功删除。
-
-▶ 收尾分析。
-
-- = safe 未选 → 记为可能的误判候选，`scope=rule`。
-- = review 被选中且成功 → 记为可能的漏判候选。
-- = 候选只记录，不直接改 rules.json。
-
-### M-6 used 与毕业门
-
-场景：同一条经验连续 3 次实际改变动作。
-
-▶ `memory.py used <ID>` 三次，再决定是否毕业。
-
-- = used 达 3 时状态从 active 变 candidate。
-- = 毕业前必须人工改规则/文档并跑 `rules --check` + 全量测试。
-- = `graduate` 后默认检索不再返回；`--all-status` 可查。
-- = 只 used 不改规则不算毕业。
-
-### M-7 隐私脱敏与密钥拦截
-
-场景：public 记录含 `C:\Users\alice\...` 或 `password=...`。
-
-▶ `record --privacy public`。
-
-- = 用户名被脱敏为 `C:\Users\<user>`；环境变量路径替换为占位。
-- = 含密码/Token/私钥的记录被拒绝，退出码 1。
-- = 完整路径/项目名改走 `--privacy local`；`memory/local/` 不入库。
-
-### M-8 check 与索引一致性
-
-场景：手工改坏一个 lesson、制造重复 ID 或未脱敏 public 路径。
-
-▶ `memory.py check --json`。
-
-- = 返回 `ok:false`，列出字段/重复/隐私错误。
-- = `memory.py index` 可重建 INDEX；表与 JSON 一致。
-- = 不因内存库错误而静默继续扫描/删除。
-
-## 7. 自动化测试
+## 6. 自动化测试
 
 ```bash
 python -m unittest discover -s tests
 ```
 
-当前 63 条，覆盖：规则库校验/匹配/标记文件/language 枚举、suggest 档规则集合与标签、扫描叶子和剪枝、suggest 分类与语言透传、安全保护清单、选择校验（schema 1/2、modes 逐条方式、--mode 覆盖）、reparse、永久删除与混合方式执行、报告转义与五档汇总、AI 深化分析（enrichment 校验/合并/安全字段不变/CLI 应用）、CLI 扫描→预演→删除闭环（含 schema 2）、review 拒绝、无效路径与缺失根目录、经验 record/search/used/graduate/check、public 脱敏与密钥拦截、local 层隔离。
+当前 47 条，覆盖：规则库校验/匹配/标记文件/language 枚举、suggest 档规则集合与标签、扫描叶子和剪枝、suggest 分类与语言透传、安全保护清单、选择校验（schema 1/2、modes 逐条方式、--mode 覆盖）、reparse、永久删除与混合方式执行、报告转义与五档汇总、报告模板无外部 URL/无 enrich 子命令、CLI 扫描→预演→删除闭环（含 schema 2）、review 拒绝、无效路径与缺失根目录。
 
 真实托管 API/管理员/回收站用例在人工会话执行；回收站测试会写入当前用户回收站，默认不在自动化里跑。
 
-## 8. 触发校准（T）
+## 7. 触发校准（T）
 
 description 变更后按仓库规范做轻量校准。首轮目标：应触发组 ≥0.8，不应触发组 ≤0.2（每条 3 次新会话）。
 

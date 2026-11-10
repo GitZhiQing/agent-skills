@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
 from disk_cleanup.model import (
-    ADVICE_LABELS,
     GROUP_LABELS,
     NATURE_LABELS,
     RECOMMENDATION_LABELS,
@@ -178,7 +177,6 @@ def _entry_for_js(entry: Entry) -> Dict[str, Any]:
             "scope_label": SCOPE_LABELS.get(entry.scope, entry.scope),
             "group_label": GROUP_LABELS.get(entry.group, ""),
             "nature_label": NATURE_LABELS.get(entry.nature, ""),
-            "advice_label": ADVICE_LABELS.get(entry.advice, ""),
             "is_actionable": entry.selectable
             and entry.recommendation in ("suggest", "safe", "caution", "review"),
         }

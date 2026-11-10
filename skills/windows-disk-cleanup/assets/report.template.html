@@ -3,227 +3,339 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>__TITLE__</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  // Tailwind Play CDN 加载失败（离线）时给出提示；数据展示与复制 JSON 不依赖样式。
-  window.addEventListener("DOMContentLoaded", function () {
-    setTimeout(function () {
-      if (!window.tailwind) {
-        var el = document.getElementById("cdnWarn");
-        if (el) el.hidden = false;
-      }
-    }, 1200);
-  });
-</script>
-<script>
-  tailwind.config = {
-    darkMode: "media",
-    theme: {
-      extend: {
-        fontFamily: {
-          sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "PingFang SC", "Microsoft YaHei", "sans-serif"],
-          mono: ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"],
-        },
-      },
-    },
-  };
-</script>
 <style>
-  /* 步骤条：编号徽章 + 步骤间引导箭头。箭头用普通 CSS，不经 Tailwind 编译。 */
-  .step-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    flex: 0 0 auto;
-    border-radius: 9999px;
-    background: #18181b;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 600;
-    line-height: 1;
+  :root {
+    --bg: #fafafa;
+    --fg: #18181b;
+    --muted: #71717a;
+    --muted-2: #a1a1aa;
+    --card: #ffffff;
+    --border: #e4e4e7;
+    --border-soft: #f4f4f5;
+    --hover: #f4f4f5;
+    --selected: #ecfdf5;
+    --bar-bg: #e4e4e7;
+    --accent: #18181b;
+    --accent-fg: #ffffff;
+    --danger: #dc2626;
+    --warn: #b45309;
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, "Courier New", monospace;
   }
   @media (prefers-color-scheme: dark) {
-    .step-num { background: #e4e4e7; color: #18181b; }
-  }
-  @media (min-width: 640px) {
-    .steps > li { position: relative; }
-    .steps > li:not(:last-child)::after {
-      content: "›";
-      position: absolute;
-      right: -0.6rem;
-      top: 0;
-      color: rgba(161, 161, 170, 0.75);
-      font-size: 15px;
-      line-height: 20px;
+    :root {
+      --bg: #09090b;
+      --fg: #f4f4f5;
+      --muted: #a1a1aa;
+      --muted-2: #71717a;
+      --card: #18181b;
+      --border: #27272a;
+      --border-soft: #27272a;
+      --hover: #27272a;
+      --selected: #052e22;
+      --bar-bg: #27272a;
+      --accent: #e4e4e7;
+      --accent-fg: #18181b;
+      --danger: #f87171;
+      --warn: #fbbf24;
     }
   }
-  /* 滚动条样式必须写普通 <style>：Tailwind Play CDN 编译 text/tailwindcss 时会剔除
-     ::-webkit-scrollbar 规则，导致这里失效而退回系统默认滚动条。 */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgb(161 161 170 / 0.35) transparent;
-  }
+  * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: rgba(161, 161, 170, 0.35) transparent; }
   *::-webkit-scrollbar { width: 8px; height: 8px; }
   *::-webkit-scrollbar-track { background: transparent; }
   *::-webkit-scrollbar-corner { background: transparent; }
-  *::-webkit-scrollbar-thumb {
-    background: rgb(161 161 170 / 0.35);
-    border-radius: 9999px;
-    border: 2px solid transparent;
-    background-clip: content-box;
+  *::-webkit-scrollbar-thumb { background: rgba(161, 161, 170, 0.35); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+  *::-webkit-scrollbar-thumb:hover { background-color: rgba(113, 113, 122, 0.55); }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    font-size: 13px;
   }
-  *::-webkit-scrollbar-thumb:hover { background-color: rgb(113 113 122 / 0.55); }
+  h1, h3, p { margin: 0; }
+  button { font-family: inherit; }
+  .wrap { max-width: 80rem; margin: 0 auto; padding: 24px 16px; }
+  .card { border: 1px solid var(--border); border-radius: 10px; background: var(--card); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); }
+  .hero { padding: 20px; }
+  .hero-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .hero h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .root-path { margin-top: 4px; word-break: break-all; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .meta-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 36rem; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: var(--hover); padding: 2px 8px; font-size: 11px; color: var(--muted); }
+  .chip strong { color: var(--fg); font-weight: 600; }
+  .usage { margin-top: 16px; }
+  .usage-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .usage-pct { font-family: var(--font-mono); font-weight: 500; }
+  .usage-track { margin-top: 6px; height: 8px; overflow: hidden; border-radius: 999px; background: var(--bar-bg); }
+  #usedBar { height: 100%; width: 0; border-radius: 999px; transition: width 0.5s ease; }
+  .usage-note { margin-top: 6px; font-size: 12px; color: var(--muted-2); }
+
+  .stats { margin-top: 16px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+  .stat-label { margin-top: 4px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .stat-bytes { margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .stat-hint { margin-top: 4px; font-size: 12px; color: var(--muted-2); }
+  .text-emerald { color: #059669; }
+  .text-sky { color: #0284c7; }
+  .text-amber { color: #d97706; }
+  .text-violet { color: #7c3aed; }
   @media (prefers-color-scheme: dark) {
-    * { scrollbar-color: rgb(228 228 231 / 0.22) transparent; }
-    *::-webkit-scrollbar-thumb { background: rgb(228 228 231 / 0.22); }
-    *::-webkit-scrollbar-thumb:hover { background: rgb(228 228 231 / 0.42); }
+    .text-emerald { color: #34d399; }
+    .text-sky { color: #38bdf8; }
+    .text-amber { color: #fbbf24; }
+    .text-violet { color: #a78bfa; }
   }
-</style>
-<style type="text/tailwindcss">
-  @layer components {
-    .card { @apply rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900; }
-    .btn { @apply inline-flex h-8 items-center justify-center gap-1 rounded-md border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800; }
-    .btn-primary { @apply border-transparent bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300; }
-    .input { @apply h-8 rounded-md border border-zinc-200 bg-white px-2 text-xs text-zinc-900 outline-none focus:ring-2 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100; }
-    .badge { @apply inline-flex items-center rounded px-1.5 py-0 text-[10px] font-medium leading-4 whitespace-nowrap; }
-    .badge-rec-suggest { @apply bg-emerald-100 text-emerald-800 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20; }
-    .badge-rec-safe { @apply bg-sky-100 text-sky-800 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-400/20; }
-    .badge-rec-caution { @apply bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-600/25 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20; }
-    .badge-rec-keep { @apply bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-500/20 dark:bg-zinc-500/15 dark:text-zinc-400 dark:ring-zinc-400/20; }
-    .badge-rec-review { @apply bg-violet-100 text-violet-800 ring-1 ring-inset ring-violet-600/20 dark:bg-violet-500/15 dark:text-violet-300 dark:ring-violet-400/20; }
-    .badge-plain { @apply bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-500/15 dark:bg-zinc-800 dark:text-zinc-400; }
-    .badge-ai { @apply bg-fuchsia-100 text-fuchsia-800 ring-1 ring-inset ring-fuchsia-600/25 dark:bg-fuchsia-500/15 dark:text-fuchsia-300 dark:ring-fuchsia-400/25; }
-    .badge-advice-safe { @apply bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/25 dark:bg-emerald-500/10 dark:text-emerald-300; }
-    .badge-advice-caution { @apply bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/25 dark:bg-amber-500/10 dark:text-amber-300; }
-    .badge-advice-keep { @apply bg-zinc-50 text-zinc-500 ring-1 ring-inset ring-zinc-500/25 dark:bg-zinc-800/60 dark:text-zinc-400; }
-    .chip { @apply inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400; }
-    .pill { @apply inline-flex h-6 cursor-pointer items-center rounded-md px-2 text-[11px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800; }
-    .pill-active { @apply bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300; }
-    .pill-danger-active { @apply bg-red-600 text-white hover:bg-red-500; }
-    .tabbtn { @apply -mb-px inline-flex h-9 items-center gap-1.5 border-b-2 border-transparent px-1 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200; }
-    .tabbtn-active { @apply border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100; }
-    .chipf { @apply inline-flex h-6 items-center gap-1 rounded-md border border-zinc-200 bg-white px-1.5 text-[11px] font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800; }
-    .chipf-active { @apply border-transparent bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300; }
-    .chipf-count { @apply text-[10px] opacity-55; }
-    .chipf-empty { @apply cursor-not-allowed opacity-40 hover:bg-white dark:hover:bg-zinc-900; }
-    .facet-item { @apply flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-[11px] text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800; }
-    .facet-item-active { @apply bg-zinc-900 font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200; }
-    .facet-head { @apply px-2 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500; }
-    .facet-item-empty { @apply cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent; }
-    .facet-count { @apply ml-auto shrink-0 font-mono text-[10px] opacity-60; }
-    .facet-tag { @apply inline-flex items-center gap-1 rounded-md border border-zinc-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200; }
-    .facet-tag-x { @apply rounded px-0.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-100; }
-    .stat-value { @apply text-2xl font-semibold tracking-tight; }
-    .stat-label { @apply mt-1 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400; }
+
+  .badge { display: inline-flex; align-items: center; border-radius: 4px; padding: 0 6px; font-size: 10px; font-weight: 500; line-height: 16px; white-space: nowrap; }
+  .badge-rec-suggest { background: #d1fae5; color: #065f46; box-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.2); }
+  .badge-rec-safe { background: #e0f2fe; color: #075985; box-shadow: inset 0 0 0 1px rgba(2, 132, 199, 0.2); }
+  .badge-rec-caution { background: #fef3c7; color: #92400e; box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.25); }
+  .badge-rec-keep { background: #f4f4f5; color: #52525b; box-shadow: inset 0 0 0 1px rgba(113, 113, 122, 0.2); }
+  .badge-rec-review { background: #ede9fe; color: #5b21b6; box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.2); }
+  .badge-plain { background: #f4f4f5; color: #52525b; box-shadow: inset 0 0 0 1px rgba(113, 113, 122, 0.15); }
+  @media (prefers-color-scheme: dark) {
+    .badge-rec-suggest { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.2); }
+    .badge-rec-safe { background: rgba(14, 165, 233, 0.15); color: #7dd3fc; box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.2); }
+    .badge-rec-caution { background: rgba(245, 158, 11, 0.15); color: #fcd34d; box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.2); }
+    .badge-rec-keep { background: rgba(113, 113, 122, 0.15); color: #a1a1aa; box-shadow: inset 0 0 0 1px rgba(161, 161, 170, 0.2); }
+    .badge-rec-review { background: rgba(139, 92, 246, 0.15); color: #c4b5fd; box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.2); }
+    .badge-plain { background: #27272a; color: #a1a1aa; box-shadow: inset 0 0 0 1px rgba(161, 161, 170, 0.15); }
+  }
+
+  .steps-card { margin-top: 16px; padding: 12px 16px; }
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+  .step { display: flex; align-items: flex-start; gap: 10px; }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 20px; height: 20px; border-radius: 999px; background: var(--accent); color: var(--accent-fg); font-size: 10px; font-weight: 600; line-height: 1; }
+  .step-title { font-size: 12px; font-weight: 500; }
+  .step-text { margin-top: 2px; font-size: 11px; line-height: 16px; color: var(--muted); }
+  @media (min-width: 640px) {
+    .steps > li { position: relative; }
+    .steps > li:not(:last-child)::after { content: "›"; position: absolute; right: -0.6rem; top: 0; color: var(--muted-2); font-size: 15px; line-height: 20px; }
+  }
+
+  .notes-card { margin-top: 12px; padding: 16px; font-size: 12px; color: var(--muted); }
+  .notes-card summary { cursor: pointer; font-weight: 500; color: var(--fg); }
+  .notes-card ul { margin: 8px 0 0; padding-left: 20px; }
+  .notes-card li { margin-top: 2px; }
+
+  .panel { margin-top: 16px; overflow: hidden; }
+  .tabs { display: flex; gap: 16px; border-bottom: 1px solid var(--border); padding: 0 16px; }
+  .tabbtn { display: inline-flex; align-items: center; gap: 6px; height: 36px; margin-bottom: -1px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.15s; }
+  .tabbtn:hover { color: var(--fg); }
+  .tabbtn-active { border-bottom-color: var(--fg); color: var(--fg); }
+
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding: 10px 16px; }
+  .input { height: 32px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 0 8px; color: var(--fg); font-size: 12px; outline: none; }
+  .input:focus { box-shadow: 0 0 0 2px rgba(161, 161, 170, 0.4); }
+  .search { width: 208px; flex: 0 0 auto; }
+  .check-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .checkbox { width: 14px; height: 14px; border-radius: 3px; accent-color: #059669; }
+  .spacer { flex: 1; min-width: 16px; }
+  .btn { display: inline-flex; height: 32px; align-items: center; justify-content: center; gap: 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 0 12px; color: var(--fg); font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.15s, opacity 0.15s; white-space: nowrap; }
+  .btn:hover { background: var(--hover); }
+  .btn:disabled { pointer-events: none; opacity: 0.5; }
+  .btn-primary { border-color: transparent; background: var(--accent); color: var(--accent-fg); }
+  .btn-primary:hover { background: var(--accent); opacity: 0.88; }
+
+  .facets { display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid var(--border); padding: 8px 16px; }
+  .facet-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .facet-label { width: 28px; flex: 0 0 28px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-2); }
+  .chipf { display: inline-flex; height: 24px; align-items: center; gap: 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 0 6px; color: var(--muted); font-size: 11px; font-weight: 500; cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .chipf:hover { background: var(--hover); }
+  .chipf-active { border-color: transparent; background: var(--accent); color: var(--accent-fg); }
+  .chipf-active:hover { background: var(--accent); opacity: 0.9; }
+  .chipf-count { font-size: 10px; opacity: 0.55; }
+  .chipf-empty { cursor: not-allowed; opacity: 0.4; }
+  .chipf-empty:hover { background: var(--card); }
+
+  .active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); background: rgba(244, 244, 245, 0.6); padding: 6px 16px; }
+  @media (prefers-color-scheme: dark) { .active-filters { background: rgba(24, 24, 27, 0.4); } }
+  .filters-head { font-size: 11px; color: var(--muted-2); }
+  .facet-tag { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 2px 6px; font-size: 11px; font-weight: 500; color: var(--fg); }
+  .facet-tag-x { border: 0; border-radius: 4px; background: none; padding: 0 2px; color: var(--muted); font-size: 12px; line-height: 1; cursor: pointer; }
+  .facet-tag-x:hover { background: var(--border); color: var(--fg); }
+  .clear-link { margin-left: 4px; border: 0; background: none; padding: 0; color: var(--muted); font-size: 11px; cursor: pointer; }
+  .clear-link:hover { text-decoration: underline; }
+
+  .table-scroll { max-height: 68vh; overflow: auto; }
+  .entry-table { width: 100%; min-width: 900px; border-collapse: collapse; table-layout: fixed; text-align: left; font-size: 12px; }
+  .entry-table thead { position: sticky; top: 0; z-index: 10; background: var(--card); }
+  .entry-table thead tr { border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-2); }
+  .entry-table th { padding: 8px; font-weight: 500; }
+  .col-check { width: 36px; }
+  .col-size { width: 78px; text-align: right; }
+  .col-files { width: 62px; text-align: right; }
+  .col-mode { width: 64px; padding: 8px 4px !important; text-align: center; }
+  .col-desc { width: 208px; }
+  .col-time { width: 112px; }
+  .entry-table tbody tr { border-bottom: 1px solid var(--border-soft); }
+  .entry-table td { padding: 4px 8px; vertical-align: middle; }
+  .entry-row { height: 36px; cursor: pointer; transition: background 0.15s; }
+  .entry-row:hover { background: var(--hover); }
+  .entry-row.selected { background: var(--selected); }
+  .entry-row.unselectable { cursor: default; opacity: 0.55; }
+  .cell-check { width: 36px; }
+  .cb { width: 14px; height: 14px; border-radius: 3px; accent-color: #059669; cursor: pointer; }
+  .cb:disabled { cursor: not-allowed; }
+  .name-line { display: flex; min-width: 0; align-items: center; gap: 6px; }
+  .expand-btn { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 20px; height: 20px; border: 0; border-radius: 4px; background: none; color: var(--muted-2); font-size: 9px; cursor: pointer; transition: transform 0.15s, background 0.15s; }
+  .expand-btn:hover { background: var(--border); }
+  .expand-btn.open { transform: rotate(90deg); }
+  .entry-title { flex: 0 1 auto; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; color: var(--fg); }
+  .entry-path { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-mono); font-size: 10px; color: var(--muted-2); }
+  .badges { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; }
+  .cell-size { text-align: right; font-family: var(--font-mono); white-space: nowrap; }
+  .cell-files { text-align: right; font-family: var(--font-mono); color: var(--muted); white-space: nowrap; }
+  .cell-mode { padding: 4px !important; text-align: center; }
+  .mode-group { display: inline-flex; overflow: hidden; border: 1px solid var(--border); border-radius: 6px; }
+  .mode-btn { width: 28px; height: 24px; border: 0; background: none; color: var(--muted-2); font-size: 12px; line-height: 1; cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .mode-btn:hover { background: var(--hover); }
+  .mode-recycle-active { background: var(--accent); color: var(--accent-fg); }
+  .mode-permanent-active { background: #dc2626; color: #ffffff; }
+  .cell-desc { overflow: hidden; }
+  .desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+  .cell-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted-2); white-space: nowrap; }
+  .detail-row { background: var(--hover); }
+  .detail-cell { padding: 10px 44px; font-size: 11px; line-height: 1.6; }
+  .detail-cell > div { margin-top: 2px; }
+  .detail-text { color: var(--fg); }
+  .detail-label { margin-right: 6px; font-weight: 500; color: var(--muted-2); }
+  .detail-path { word-break: break-all; font-family: var(--font-mono); font-size: 10px; color: var(--muted-2); }
+  .detail-risk { color: var(--danger); }
+  .empty { padding: 48px 16px; text-align: center; font-size: 13px; color: var(--muted-2); }
+  .link-btn { border: 0; background: none; padding: 0; color: var(--muted); font-size: 12px; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .link-btn:hover { color: var(--fg); }
+  .pager-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--border); padding: 10px 16px; color: var(--muted); font-size: 12px; }
+  .pager { display: flex; align-items: center; gap: 8px; }
+  .page-info { font-family: var(--font-mono); }
+  .footnote { margin-top: 24px; text-align: center; font-size: 11px; color: var(--muted-2); }
+
+  .selectbar { position: sticky; bottom: 0; z-index: 20; border-top: 1px solid var(--border); background: var(--card); box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04); }
+  .selectbar-inner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; max-width: 80rem; margin: 0 auto; padding: 12px 16px; }
+  .sel-count { font-size: 13px; font-weight: 600; }
+  .sel-size { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .sel-warn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--warn); font-size: 12px; }
+  .toast { position: fixed; bottom: 80px; left: 50%; z-index: 30; transform: translateX(-50%); pointer-events: none; border-radius: 6px; background: #18181b; padding: 8px 16px; color: #ffffff; font-size: 12px; opacity: 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); transition: opacity 0.2s; }
+  .toast.show { opacity: 1; }
+  @media (prefers-color-scheme: dark) { .toast { background: #f4f4f5; color: #18181b; } }
+  .modal { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center; background: rgba(9, 9, 11, 0.6); padding: 16px; }
+  .modal.open { display: flex; }
+  .modal-card { width: 100%; max-width: 32rem; padding: 20px; }
+  .modal-card h3 { font-size: 14px; font-weight: 600; }
+  .modal-card p { margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .modal-text { width: 100%; height: 14rem; margin-top: 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); padding: 8px; color: var(--fg); font-family: var(--font-mono); font-size: 11px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+  @media (max-width: 1024px) {
+    .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 720px) {
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .steps { grid-template-columns: 1fr; }
+    .steps > li::after { content: none !important; }
+    .search { width: 100%; }
   }
 </style>
 </head>
-<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
-<noscript><p class="bg-red-600 p-2 text-center text-sm text-white">本报告需要启用 JavaScript 才能浏览与复制选择。</p></noscript>
-<div id="cdnWarn" hidden class="bg-amber-100 px-4 py-2 text-center text-xs text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
-  样式库（Tailwind CDN）加载失败——当前可能离线。数据与筛选、复制选择 JSON 仍可使用，但页面无样式。联网后重新打开即可恢复。
-</div>
+<body>
+<noscript><p style="background:#dc2626;color:#fff;padding:8px;text-align:center;font-size:13px">本报告需要启用 JavaScript 才能浏览与复制选择。</p></noscript>
 
-<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+<div class="wrap">
 
-  <!-- hero -->
-  <header class="card p-5">
-    <div class="flex flex-wrap items-start justify-between gap-4">
+  <header class="card hero">
+    <div class="hero-top">
       <div>
-        <h1 class="text-lg font-semibold tracking-tight">磁盘扫描报告</h1>
-        <p id="rootPath" class="mt-1 break-all font-mono text-xs text-zinc-500 dark:text-zinc-400">—</p>
+        <h1>磁盘扫描报告</h1>
+        <p id="rootPath" class="root-path">—</p>
       </div>
-      <div id="metaChips" class="flex max-w-xl flex-wrap justify-end gap-1.5"></div>
+      <div id="metaChips" class="meta-chips"></div>
     </div>
-    <div class="mt-4">
-      <div class="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+    <div class="usage">
+      <div class="usage-head">
         <span id="usedText">已用 —</span>
-        <span id="usedPct" class="font-mono font-medium text-zinc-700 dark:text-zinc-300">—</span>
+        <span id="usedPct" class="usage-pct">—</span>
       </div>
-      <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-        <div id="usedBar" class="h-full rounded-full transition-all duration-500" style="width:0%"></div>
-      </div>
-      <p id="freeText" class="mt-1.5 text-xs text-zinc-400 dark:text-zinc-500">可用 — / 共 —</p>
+      <div class="usage-track"><div id="usedBar"></div></div>
+      <p id="freeText" class="usage-note">可用 — / 共 —</p>
     </div>
   </header>
 
-  <!-- stats: five recommendation tiers -->
-  <section class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-    <div class="card p-4">
-      <div id="suggestCount" class="stat-value text-emerald-600 dark:text-emerald-400">0</div>
+  <section class="stats">
+    <div class="card stat-card">
+      <div id="suggestCount" class="stat-value text-emerald">0</div>
       <div class="stat-label"><span class="badge badge-rec-suggest">建议清理</span></div>
-      <div id="suggestBytes" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">—</div>
+      <div id="suggestBytes" class="stat-bytes">—</div>
     </div>
-    <div class="card p-4">
-      <div id="safeCount" class="stat-value text-sky-600 dark:text-sky-400">0</div>
+    <div class="card stat-card">
+      <div id="safeCount" class="stat-value text-sky">0</div>
       <div class="stat-label"><span class="badge badge-rec-safe">安全清理</span></div>
-      <div id="safeBytes" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">—</div>
+      <div id="safeBytes" class="stat-bytes">—</div>
     </div>
-    <div class="card p-4">
-      <div id="cautionCount" class="stat-value text-amber-600 dark:text-amber-400">0</div>
+    <div class="card stat-card">
+      <div id="cautionCount" class="stat-value text-amber">0</div>
       <div class="stat-label"><span class="badge badge-rec-caution">谨慎清理</span></div>
-      <div id="cautionBytes" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">—</div>
+      <div id="cautionBytes" class="stat-bytes">—</div>
     </div>
-    <div class="card p-4">
+    <div class="card stat-card">
       <div id="keepCount" class="stat-value">0</div>
       <div class="stat-label"><span class="badge badge-rec-keep">建议保留</span></div>
-      <div class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">本工具拒绝删除</div>
+      <div class="stat-hint">本工具拒绝删除</div>
     </div>
-    <div class="card p-4">
-      <div id="reviewCount" class="stat-value text-violet-600 dark:text-violet-400">0</div>
+    <div class="card stat-card">
+      <div id="reviewCount" class="stat-value text-violet">0</div>
       <div class="stat-label"><span class="badge badge-rec-review">待定</span></div>
-      <div id="reviewBytes" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">—</div>
+      <div id="reviewBytes" class="stat-bytes">—</div>
     </div>
   </section>
 
-  <!-- how to use -->
-  <section class="card mt-4 px-4 py-3">
-    <ol class="steps grid gap-3 sm:grid-cols-3 sm:gap-4">
-      <li class="flex items-start gap-2.5">
+  <section class="card steps-card">
+    <ol class="steps">
+      <li class="step">
         <span class="step-num">1</span>
-        <div class="min-w-0">
-          <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200">勾选条目</p>
-          <p class="mt-0.5 text-[11px] leading-4 text-zinc-500 dark:text-zinc-400">逐条选「回收站 / 彻底」，默认回收站</p>
+        <div>
+          <p class="step-title">勾选条目</p>
+          <p class="step-text">逐条选「回收站 / 彻底」，默认回收站</p>
         </div>
       </li>
-      <li class="flex items-start gap-2.5">
+      <li class="step">
         <span class="step-num">2</span>
-        <div class="min-w-0">
-          <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200">复制选择</p>
-          <p class="mt-0.5 text-[11px] leading-4 text-zinc-500 dark:text-zinc-400">勾选底部确认框，点「复制选中路径」</p>
+        <div>
+          <p class="step-title">复制选择</p>
+          <p class="step-text">勾选底部确认框，点「复制选中路径」</p>
         </div>
       </li>
-      <li class="flex items-start gap-2.5">
+      <li class="step">
         <span class="step-num">3</span>
-        <div class="min-w-0">
-          <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200">交回 Agent</p>
-          <p class="mt-0.5 text-[11px] leading-4 text-zinc-500 dark:text-zinc-400">把复制内容粘贴回会话，由 Agent 预演并执行</p>
+        <div>
+          <p class="step-title">交回 Agent</p>
+          <p class="step-text">把复制内容粘贴回会话，由 Agent 预演并执行</p>
         </div>
       </li>
     </ol>
   </section>
 
-  <details class="card mt-3 p-4 text-xs text-zinc-600 dark:text-zinc-400">
-    <summary class="cursor-pointer font-medium text-zinc-800 dark:text-zinc-200">扫描说明</summary>
-    <ul id="notesList" class="mt-2 list-disc space-y-1 pl-5"></ul>
+  <details class="card notes-card">
+    <summary>扫描说明</summary>
+    <ul id="notesList"></ul>
   </details>
 
-  <!-- main panel -->
-  <section class="card mt-4">
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-zinc-200 px-4 dark:border-zinc-800">
-      <nav class="flex gap-4" role="tablist" aria-label="视图">
-        <button class="tabbtn tabbtn-active" data-tab="cleanup" role="tab" aria-selected="true">清理建议 <span id="tabCleanupCount" class="chip">0</span></button>
-        <button class="tabbtn" data-tab="overview" role="tab" aria-selected="false">目录总览 <span id="tabOverviewCount" class="chip">0</span></button>
-        <button class="tabbtn" data-tab="all" role="tab" aria-selected="false">全部 <span id="tabAllCount" class="chip">0</span></button>
-      </nav>
+  <section class="card panel">
+    <div class="tabs" role="tablist" aria-label="视图">
+      <button class="tabbtn tabbtn-active" data-tab="cleanup" role="tab" aria-selected="true">清理建议 <span id="tabCleanupCount" class="chip">0</span></button>
+      <button class="tabbtn" data-tab="overview" role="tab" aria-selected="false">目录总览 <span id="tabOverviewCount" class="chip">0</span></button>
+      <button class="tabbtn" data-tab="all" role="tab" aria-selected="false">全部 <span id="tabAllCount" class="chip">0</span></button>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2 border-b border-zinc-200 px-4 py-2.5 dark:border-zinc-800">
-      <input id="search" type="search" placeholder="搜索路径 / 名称 / 说明…" class="input w-52 shrink-0" aria-label="搜索">
-      <select id="recFilter" class="input shrink-0" aria-label="按建议档筛选">
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="搜索路径 / 名称 / 说明…" class="input search" aria-label="搜索">
+      <select id="recFilter" class="input" aria-label="按建议档筛选">
         <option value="all">全部建议档</option>
         <option value="suggest">建议清理</option>
         <option value="safe">安全清理</option>
@@ -231,104 +343,98 @@
         <option value="keep">建议保留</option>
         <option value="review">待定</option>
       </select>
-      <select id="aiFilter" class="input shrink-0" aria-label="按 AI 分析状态筛选">
-        <option value="all">AI 全部分析状态</option>
-        <option value="analyzed">AI 已分析</option>
-        <option value="missing">AI 未分析</option>
-        <option value="retiered">AI 已定档</option>
-      </select>
-      <select id="sortBy" class="input shrink-0" aria-label="排序">
+      <select id="sortBy" class="input" aria-label="排序">
         <option value="rec">按建议度</option>
         <option value="size-desc">按大小（大 → 小）</option>
         <option value="size-asc">按大小（小 → 大）</option>
         <option value="name">按名称</option>
       </select>
-      <label class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
-        <input id="onlySelectable" type="checkbox" checked class="h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-800">仅可操作项
+      <label class="check-label">
+        <input id="onlySelectable" type="checkbox" checked class="checkbox">仅可操作项
       </label>
-      <span class="min-w-4 flex-1"></span>
-      <button id="selectVisible" class="btn shrink-0" type="button">全选可见</button>
-      <button id="clearSelection" class="btn shrink-0" type="button">清空选择</button>
+      <span class="spacer"></span>
+      <button id="selectVisible" class="btn" type="button">全选可见</button>
+      <button id="clearSelection" class="btn" type="button">清空选择</button>
     </div>
 
-    <!-- 分类导航：表格上方，每维一行；计数静态（按当前视图），不随其它维度变化 -->
-    <div class="space-y-1 border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
-      <div id="groupFacet" class="flex flex-wrap items-center gap-1" role="group" aria-label="按归属筛选"></div>
-      <div id="natureFacet" class="flex flex-wrap items-center gap-1" role="group" aria-label="按性质筛选"></div>
-      <div id="langFacet" class="flex flex-wrap items-center gap-1" role="group" aria-label="按生态筛选"></div>
+    <div class="facets">
+      <div id="groupFacet" class="facet-row" role="group" aria-label="按归属筛选"></div>
+      <div id="natureFacet" class="facet-row" role="group" aria-label="按性质筛选"></div>
+      <div id="langFacet" class="facet-row" role="group" aria-label="按生态筛选"></div>
     </div>
 
-    <div id="activeFilters" hidden class="flex flex-wrap items-center gap-1.5 border-b border-zinc-200 bg-zinc-50/60 px-4 py-1.5 dark:border-zinc-800 dark:bg-zinc-900/40"></div>
+    <div id="activeFilters" class="active-filters" hidden></div>
 
-    <div class="max-h-[68vh] overflow-auto">
-      <table class="w-full table-fixed border-collapse text-left text-xs">
-        <thead class="sticky top-0 z-10 bg-zinc-50/95 backdrop-blur dark:bg-zinc-900/95">
-          <tr class="border-b border-zinc-200 text-[11px] uppercase tracking-wide text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
-            <th class="w-9 px-2 py-2"></th>
-            <th class="px-2 py-2 font-medium">条目</th>
-            <th class="w-[78px] px-2 py-2 text-right font-medium">大小</th>
-            <th class="w-[62px] px-2 py-2 text-right font-medium">文件</th>
-            <th class="w-[64px] px-1 py-2 text-center font-medium" title="逐条删除方式：默认跟随底部全局设置，点击行内图标可覆盖">方式</th>
-            <th class="w-[208px] px-2 py-2 font-medium">说明</th>
-            <th class="w-[112px] px-2 py-2 font-medium">修改时间</th>
+    <div class="table-scroll">
+      <table class="entry-table">
+        <colgroup>
+          <col class="col-check"><col><col class="col-size"><col class="col-files"><col class="col-mode"><col class="col-desc"><col class="col-time">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-check"></th>
+            <th>条目</th>
+            <th class="col-size">大小</th>
+            <th class="col-files">文件</th>
+            <th class="col-mode" title="逐条删除方式：默认跟随底部全局设置，点击行内图标可覆盖">方式</th>
+            <th class="col-desc">说明</th>
+            <th class="col-time">修改时间</th>
           </tr>
         </thead>
-        <tbody id="tbody" class="divide-y divide-zinc-100 dark:divide-zinc-800/70"></tbody>
+        <tbody id="tbody"></tbody>
       </table>
     </div>
 
-    <div id="emptyState" hidden class="px-4 py-12 text-center text-sm text-zinc-400">
+    <div id="emptyState" class="empty" hidden>
       当前筛选没有匹配的条目。
-      <button id="clearFiltersEmpty" type="button" class="ml-2 text-xs text-zinc-600 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">清除全部筛选</button>
+      <button id="clearFiltersEmpty" type="button" class="link-btn">清除全部筛选</button>
     </div>
 
-    <!-- pagination -->
-    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-200 px-4 py-2.5 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+    <div class="pager-bar">
       <span id="tableNote"></span>
-      <div id="pager" class="flex items-center gap-2">
+      <div id="pager" class="pager">
         <button id="pagePrev" class="btn" type="button">‹ 上一页</button>
-        <span id="pageInfo" class="font-mono"></span>
+        <span id="pageInfo" class="page-info"></span>
         <button id="pageNext" class="btn" type="button">下一页 ›</button>
       </div>
     </div>
   </section>
 
-  <p class="mt-6 text-center text-[11px] text-zinc-400 dark:text-zinc-600">
-    windows-disk-cleanup · 只读扫描 · 删除始终经确认后由 Agent 执行 · 样式经 CDN 加载，离线时无样式
+  <p class="footnote">
+    windows-disk-cleanup · 只读扫描 · 删除始终经确认后由 Agent 执行 · 单文件离线报告，无网络请求
   </p>
 </div>
 
-<!-- selection bar -->
-<footer class="sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95">
-  <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
-    <div class="flex items-baseline gap-2">
-      <span id="selCount" class="text-sm font-semibold">已选 0 项</span>
-      <span id="selSize" class="font-mono text-xs text-zinc-500 dark:text-zinc-400">0 B</span>
+<footer class="selectbar">
+  <div class="selectbar-inner">
+    <div>
+      <span id="selCount" class="sel-count">已选 0 项</span>
+      <span id="selSize" class="sel-size">0 B</span>
     </div>
-    <p id="selWarn" class="min-w-0 flex-1 truncate text-xs text-amber-700 dark:text-amber-400"></p>
-    <label class="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+    <p id="selWarn" class="sel-warn"></p>
+    <label class="check-label">
       默认方式
       <select id="mode" class="input" aria-label="默认删除方式">
         <option value="recycle">移入回收站</option>
         <option value="permanent">彻底删除</option>
       </select>
     </label>
-    <label id="confirmLabel" class="inline-flex cursor-pointer items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
-      <input id="confirm" type="checkbox" class="h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-800">
+    <label id="confirmLabel" class="check-label">
+      <input id="confirm" type="checkbox" class="checkbox">
       <span>我已确认以上选中项可以删除；删除前请再核对路径。</span>
     </label>
     <button id="copyBtn" class="btn btn-primary" type="button" disabled>复制选中路径</button>
   </div>
 </footer>
 
-<div id="toast" role="status" aria-live="polite" class="pointer-events-none fixed bottom-20 left-1/2 z-30 -translate-x-1/2 rounded-md bg-zinc-900 px-4 py-2 text-xs text-white opacity-0 shadow-lg transition-opacity dark:bg-zinc-100 dark:text-zinc-900"></div>
+<div id="toast" role="status" aria-live="polite" class="toast"></div>
 
-<div id="modal" hidden class="fixed inset-0 z-40 items-center justify-center bg-zinc-950/60 p-4">
-  <div class="card w-full max-w-lg p-5" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <h3 id="modalTitle" class="text-sm font-semibold">手动复制选择</h3>
-    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">浏览器没有授予剪贴板权限。下面是完整的选择 JSON，请全选复制后粘贴给 Agent。</p>
-    <textarea id="modalText" readonly spellcheck="false" class="mt-3 h-56 w-full rounded-md border border-zinc-200 bg-white p-2 font-mono text-[11px] text-zinc-800 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"></textarea>
-    <div class="mt-3 flex justify-end gap-2">
+<div id="modal" class="modal" hidden>
+  <div class="card modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">手动复制选择</h3>
+    <p>浏览器没有授予剪贴板权限。下面是完整的选择 JSON，请全选复制后粘贴给 Agent。</p>
+    <textarea id="modalText" readonly spellcheck="false" class="modal-text"></textarea>
+    <div class="modal-actions">
       <button id="modalClose" class="btn" type="button">关闭</button>
       <button id="modalCopy" class="btn" type="button">再次复制</button>
     </div>
@@ -366,7 +472,6 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     group: "all",
     nature: "all",
     lang: "all",
-    ai: "all",
     onlySelectable: true,
     sort: "rec",
     mode: "recycle",
@@ -404,7 +509,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     return el;
   }
 
-  // 使用率分档：颜色内联写死，不依赖 Tailwind 运行时生成类。
+  // 使用率分档：颜色内联写死，不依赖任何运行时样式库。
   const USAGE_TIERS = [
     { below: 60, from: "#10b981", to: "#34d399", label: "空间充足", text: "#047857", dark: "#34d399" },
     { below: 80, from: "#f59e0b", to: "#fbbf24", label: "开始吃紧", text: "#b45309", dark: "#fbbf24" },
@@ -448,22 +553,12 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     return e.selectable && ["suggest", "safe", "caution", "review"].includes(e.recommendation);
   }
 
-  function matchesAI(e) {
-    if (state.ai === "all") return true;
-    if (state.ai === "analyzed") return !!e.enriched;
-    if (state.ai === "missing") return !e.enriched;
-    if (state.ai === "retiered") return e.tier_source === "ai";
-    return true;
-  }
-
-  // dim 为要跳过的维度（用于分面计数），null 表示全部维度都生效。
-  function matches(e, dim) {
+  function matches(e) {
     const q = state.search.trim().toLowerCase();
     if (state.rec !== "all" && e.recommendation !== state.rec) return false;
-    if (dim !== "group" && state.group !== "all" && e.group !== state.group) return false;
-    if (dim !== "nature" && state.nature !== "all" && e.nature !== state.nature) return false;
-    if (dim !== "lang" && state.lang !== "all" && e.language !== state.lang) return false;
-    if (dim !== "ai" && !matchesAI(e)) return false;
+    if (state.group !== "all" && e.group !== state.group) return false;
+    if (state.nature !== "all" && e.nature !== state.nature) return false;
+    if (state.lang !== "all" && e.language !== state.lang) return false;
     if (state.tab === "cleanup" && state.onlySelectable && !e.selectable) return false;
     if (q) {
       const hay = [e.path, e.name, e.title, e.description, e.action, e.category, e.rule_id || "", e.language || ""]
@@ -480,7 +575,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   }
 
   function filtered() {
-    let rows = tabBase().filter((e) => matches(e, null));
+    let rows = tabBase().filter(matches);
     if (state.sort === "size-desc") rows.sort((a, b) => (b.size || 0) - (a.size || 0));
     else if (state.sort === "size-asc") rows.sort((a, b) => (a.size || 0) - (b.size || 0));
     else if (state.sort === "name") rows.sort((a, b) => a.path.localeCompare(b.path, "zh-CN"));
@@ -503,7 +598,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     const box = $(boxId);
     box.textContent = "";
     const head = document.createElement("span");
-    head.className = "w-7 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500";
+    head.className = "facet-label";
     head.textContent = label;
     box.appendChild(head);
 
@@ -571,7 +666,6 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
 
   // 已选筛选条：把当前生效的筛选显式列出来，避免用户去侧栏里找。
   const REC_FILTER_LABEL = { suggest: "建议清理", safe: "安全清理", caution: "谨慎清理", keep: "建议保留", review: "待定" };
-  const AI_FILTER_LABEL = { analyzed: "AI 已分析", missing: "AI 未分析", retiered: "AI 已定档" };
 
   function renderActiveFilters() {
     const box = $("activeFilters");
@@ -580,7 +674,6 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     if (state.nature !== "all") items.push(["nature", NATURE_LABEL[state.nature] || state.nature]);
     if (state.lang !== "all") items.push(["lang", LANG_LABEL[state.lang] || state.lang]);
     if (state.rec !== "all") items.push(["rec", REC_FILTER_LABEL[state.rec] || state.rec]);
-    if (state.ai !== "all") items.push(["ai", AI_FILTER_LABEL[state.ai] || state.ai]);
 
     box.textContent = "";
     if (!items.length) {
@@ -589,7 +682,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     }
     box.hidden = false;
     const head = document.createElement("span");
-    head.className = "text-[11px] text-zinc-400 dark:text-zinc-500";
+    head.className = "filters-head";
     head.textContent = "已筛选";
     box.appendChild(head);
 
@@ -613,17 +706,15 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
 
     const clear = document.createElement("button");
     clear.type = "button";
-    clear.className = "ml-1 text-[11px] text-zinc-500 underline-offset-2 hover:underline dark:text-zinc-400";
+    clear.className = "clear-link";
     clear.textContent = "清除全部";
     clear.addEventListener("click", () => {
       state.group = "all";
       state.nature = "all";
       state.lang = "all";
       state.rec = "all";
-      state.ai = "all";
       state.page = 1;
       $("recFilter").value = "all";
-      $("aiFilter").value = "all";
       renderTable();
     });
     box.appendChild(clear);
@@ -632,19 +723,8 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   function rowBadges(e) {
     // 行内只保留影响浏览判断的徽章；role 等低密度信息移入展开详情。
     const wrap = document.createElement("span");
-    wrap.className = "inline-flex shrink-0 items-center gap-1";
+    wrap.className = "badges";
     wrap.appendChild(badge(e.recommendation_label, "badge-rec-" + e.recommendation));
-    if (e.enriched) {
-      const conf = e.confidence === "high" ? "高" : e.confidence === "medium" ? "中" : e.confidence === "low" ? "低" : "";
-      const isTier = e.tier_source === "ai";
-      const ai = badge(isTier ? "AI 定档" + (conf ? "·" + conf : "") : "AI" + (conf ? "·" + conf : ""), "badge-ai");
-      ai.title = (isTier ? "档位由 AI 高置信判定（原为待定）" : "AI 辅助分析，不改变档位")
-        + (e.evidence && e.evidence.length ? "；依据：" + e.evidence.join("、") : "");
-      wrap.appendChild(ai);
-    }
-    if (e.advice_label && e.tier_source !== "ai") {
-      wrap.appendChild(badge(e.advice_label.replace("AI 参考 · ", "AI·"), "badge-advice-" + (e.advice || "keep")));
-    }
     if (e.requires_admin) wrap.appendChild(badge("管理员", "badge-plain"));
     if (e.partial) wrap.appendChild(badge("部分统计", "badge-plain"));
     if (e.reparse) wrap.appendChild(badge("链接", "badge-plain"));
@@ -671,10 +751,10 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
 
   function modeCell(e) {
     const td = document.createElement("td");
-    td.className = "px-1 py-1 text-center";
+    td.className = "cell-mode";
     if (!e.selectable || e.recommendation === "keep") { td.textContent = "—"; return td; }
     const group = document.createElement("div");
-    group.className = "inline-flex overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700";
+    group.className = "mode-group";
     group.setAttribute("role", "group");
     group.setAttribute("aria-label", "选择 " + (e.title || e.path) + " 的删除方式");
     const current = effectiveMode(e.path);
@@ -683,15 +763,13 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       b.type = "button";
       b.textContent = label;
       b.title = title;
-      b.className = "h-6 w-7 text-[12px] leading-none transition-colors " +
-        (current === value
-          ? activeCls
-          : "text-zinc-400 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800");
+      b.className = "mode-btn" + (current === value ? " " + activeCls : "");
+      b.setAttribute("aria-pressed", String(current === value));
       b.addEventListener("click", (ev) => { ev.stopPropagation(); setMode(e.path, value); });
       return b;
     };
-    group.appendChild(mk("recycle", "♻", "移入回收站（默认，可恢复）", "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"));
-    group.appendChild(mk("permanent", "✕", "彻底删除（不可恢复）", "bg-red-600 text-white"));
+    group.appendChild(mk("recycle", "♻", "移入回收站（默认，可恢复）", "mode-recycle-active"));
+    group.appendChild(mk("permanent", "✕", "彻底删除（不可恢复）", "mode-permanent-active"));
     td.appendChild(group);
     return td;
   }
@@ -721,17 +799,17 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     for (const e of pageRows) {
       const tr = document.createElement("tr");
       tr.dataset.path = e.path;
-      tr.className = "h-9 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40";
-      if (selected.has(e.path)) tr.classList.add("bg-emerald-50/60", "dark:bg-emerald-950/20");
-      if (!e.selectable) tr.classList.add("opacity-55");
+      tr.className = "entry-row";
+      if (selected.has(e.path)) tr.classList.add("selected");
+      if (!e.selectable) tr.classList.add("unselectable");
 
       const tdCheck = document.createElement("td");
-      tdCheck.className = "px-2 py-1";
+      tdCheck.className = "cell-check";
       const cb = document.createElement("input");
       cb.type = "checkbox";
       cb.checked = selected.has(e.path);
       cb.disabled = !e.selectable;
-      cb.className = "h-3.5 w-3.5 rounded border-zinc-300 accent-emerald-600";
+      cb.className = "cb";
       cb.setAttribute("aria-label", "选择 " + e.path);
       cb.addEventListener("change", () => toggle(e.path));
       tdCheck.appendChild(cb);
@@ -739,24 +817,24 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
 
       // 条目列：展开箭头 + 标题 + 路径 + 关键徽章，全部单行内截断。
       const tdName = document.createElement("td");
-      tdName.className = "px-2 py-1";
+      tdName.className = "cell-name";
       const line = document.createElement("div");
-      line.className = "flex min-w-0 items-center gap-1.5";
+      line.className = "name-line";
       const exp = document.createElement("button");
       exp.type = "button";
       exp.title = "展开 / 收起详情";
       exp.textContent = "▶";
-      exp.className = "h-5 w-5 shrink-0 rounded text-[9px] text-zinc-400 transition-transform hover:bg-zinc-200 dark:hover:bg-zinc-700" +
-        (expandedRows.has(e.path) ? " rotate-90" : "");
+      exp.className = "expand-btn" + (expandedRows.has(e.path) ? " open" : "");
+      exp.setAttribute("aria-expanded", String(expandedRows.has(e.path)));
       exp.addEventListener("click", (ev) => { ev.stopPropagation(); toggleExpand(e.path); });
       line.appendChild(exp);
       const title = document.createElement("span");
-      title.className = "shrink-0 max-w-[60%] truncate font-medium text-zinc-800 dark:text-zinc-200";
+      title.className = "entry-title";
       title.textContent = e.title || e.name || "目录";
       title.title = e.title || e.name || "";
       line.appendChild(title);
       const path = document.createElement("span");
-      path.className = "min-w-0 flex-1 truncate font-mono text-[10px] text-zinc-400 dark:text-zinc-500";
+      path.className = "entry-path";
       path.textContent = e.path;
       path.title = e.path;
       line.appendChild(path);
@@ -765,7 +843,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       tr.appendChild(tdName);
 
       const tdSize = document.createElement("td");
-      tdSize.className = "px-2 py-1 text-right font-mono align-middle";
+      tdSize.className = "cell-size";
       const size = document.createElement("div");
       size.textContent = e.size_h || fmtBytes(e.size);
       if (e.size_known === false) size.title = "未深入统计";
@@ -773,7 +851,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       tr.appendChild(tdSize);
 
       const tdFiles = document.createElement("td");
-      tdFiles.className = "px-2 py-1 text-right align-middle font-mono text-zinc-500 dark:text-zinc-400";
+      tdFiles.className = "cell-files";
       tdFiles.textContent = e.files_h && e.files_h !== "—" ? e.files_h : "—";
       if (e.size_known === false) tdFiles.textContent = "—";
       tr.appendChild(tdFiles);
@@ -781,9 +859,9 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       tr.appendChild(modeCell(e));
 
       const tdDesc = document.createElement("td");
-      tdDesc.className = "px-2 py-1 align-middle";
+      tdDesc.className = "cell-desc";
       const desc = document.createElement("div");
-      desc.className = "truncate text-zinc-500 dark:text-zinc-400";
+      desc.className = "desc";
       desc.textContent = e.description || "—";
       desc.title = [
         e.description || "",
@@ -794,7 +872,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       tr.appendChild(tdDesc);
 
       const tdTime = document.createElement("td");
-      tdTime.className = "px-2 py-1 align-middle font-mono text-[10px] text-zinc-400 dark:text-zinc-500";
+      tdTime.className = "cell-time";
       const t = e.mtime_display || "—";
       tdTime.textContent = t.length > 16 ? t.slice(0, 16) : t;
       tdTime.title = t;
@@ -808,27 +886,26 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
 
       if (expandedRows.has(e.path)) {
         const trX = document.createElement("tr");
-        trX.className = "bg-zinc-50 dark:bg-zinc-900/60";
+        trX.className = "detail-row";
         const tdX = document.createElement("td");
         tdX.colSpan = 7;
-        tdX.className = "space-y-1 px-11 py-2.5 text-[11px] leading-5";
+        tdX.className = "detail-cell";
         const addLine = (label, text, cls) => {
           const div = document.createElement("div");
-          div.className = cls || "text-zinc-600 dark:text-zinc-300";
+          div.className = cls || "detail-text";
           if (label) {
             const b = document.createElement("span");
-            b.className = "mr-1.5 font-medium text-zinc-400 dark:text-zinc-500";
+            b.className = "detail-label";
             b.textContent = label;
             div.appendChild(b);
           }
           div.appendChild(document.createTextNode(text));
           tdX.appendChild(div);
         };
-        addLine("路径", e.path, "break-all font-mono text-[10px] text-zinc-400 dark:text-zinc-500");
+        addLine("路径", e.path, "detail-path");
         if (e.description) addLine("说明", e.description);
         if (e.action) addLine("建议", e.action);
-        if (e.risk) addLine("风险", e.risk, "text-red-600/80 dark:text-red-400/80");
-        if (e.evidence && e.evidence.length) addLine("AI 依据", e.evidence.join("、"), "text-fuchsia-700 dark:text-fuchsia-300");
+        if (e.risk) addLine("风险", e.risk, "detail-risk");
         const meta = [];
         if (e.group_label) meta.push(e.group_label);
         if (e.nature_label) meta.push(e.nature_label);
@@ -939,9 +1016,9 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
   function toast(message) {
     const el = $("toast");
     el.textContent = message;
-    el.classList.remove("opacity-0");
+    el.classList.add("show");
     clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => el.classList.add("opacity-0"), 3200);
+    toast._timer = setTimeout(() => el.classList.remove("show"), 3200);
   }
 
   function fallbackCopy(text) {
@@ -956,6 +1033,19 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     try { ok = document.execCommand("copy"); } catch (_) { ok = false; }
     document.body.removeChild(ta);
     return ok;
+  }
+
+  function openModal(text) {
+    $("modalText").value = text;
+    $("modal").hidden = false;
+    $("modal").classList.add("open");
+    $("modalText").focus();
+    $("modalText").select();
+  }
+
+  function closeModal() {
+    $("modal").hidden = true;
+    $("modal").classList.remove("open");
   }
 
   async function copySelection() {
@@ -976,11 +1066,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       btn.textContent = "已复制 ✓";
       setTimeout(() => { btn.textContent = old; }, 1800);
     } else {
-      $("modalText").value = text;
-      $("modal").hidden = false;
-      $("modal").classList.add("flex");
-      $("modalText").focus();
-      $("modalText").select();
+      openModal(text);
     }
   }
 
@@ -1025,7 +1111,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
     notes.textContent = "";
     const baseNotes = (DATA.meta.notes || []).slice();
     baseNotes.push("报告生成时间：" + fmtTime(DATA.generated_at) + "；规则库更新：" + (DATA.meta.rules_version || "—") + "。");
-    baseNotes.push("本页样式通过 Tailwind CDN 加载；离线打开时无样式，但数据与复制功能不受影响。");
+    baseNotes.push("本报告为单文件离线页面：样式、脚本与数据全部内联，不发起任何网络请求。");
     for (const n of baseNotes) {
       const li = document.createElement("li");
       li.textContent = n;
@@ -1052,7 +1138,6 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       timer = setTimeout(() => { state.search = ev.target.value; state.page = 1; renderTable(); }, 120);
     });
     $("recFilter").addEventListener("change", (ev) => { state.rec = ev.target.value; state.page = 1; renderTable(); });
-    $("aiFilter").addEventListener("change", (ev) => { state.ai = ev.target.value; state.page = 1; renderTable(); });
     $("sortBy").addEventListener("change", (ev) => { state.sort = ev.target.value; state.page = 1; renderTable(); });
     $("onlySelectable").addEventListener("change", (ev) => { state.onlySelectable = ev.target.checked; state.page = 1; renderTable(); });
     $("selectVisible").addEventListener("click", () => {
@@ -1085,28 +1170,25 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       state.nature = "all";
       state.lang = "all";
       state.rec = "all";
-      state.ai = "all";
       state.search = "";
       state.page = 1;
       $("search").value = "";
       $("recFilter").value = "all";
-      $("aiFilter").value = "all";
       renderTable();
     });
     $("pagePrev").addEventListener("click", () => { state.page -= 1; renderTable(); $("tbody").scrollIntoView({ block: "start" }); });
     $("pageNext").addEventListener("click", () => { state.page += 1; renderTable(); $("tbody").scrollIntoView({ block: "start" }); });
     $("copyBtn").addEventListener("click", copySelection);
-    $("modalClose").addEventListener("click", () => { $("modal").hidden = true; $("modal").classList.remove("flex"); });
+    $("modalClose").addEventListener("click", closeModal);
     $("modal").addEventListener("click", (ev) => {
-      if (ev.target === $("modal")) { $("modal").hidden = true; $("modal").classList.remove("flex"); }
+      if (ev.target === $("modal")) closeModal();
     });
     $("modalCopy").addEventListener("click", async () => {
       const text = $("modalText").value;
       try {
         await navigator.clipboard.writeText(text);
         toast("已复制，粘贴回 Agent 会话即可。");
-        $("modal").hidden = true;
-        $("modal").classList.remove("flex");
+        closeModal();
       } catch (_) {
         $("modalText").focus();
         $("modalText").select();
@@ -1114,7 +1196,7 @@ const DATA = /*__WINDOWS_DISK_CLEANUP_DATA__*/;
       }
     });
     document.addEventListener("keydown", (ev) => {
-      if (ev.key === "Escape") { $("modal").hidden = true; $("modal").classList.remove("flex"); }
+      if (ev.key === "Escape") closeModal();
     });
   }
 

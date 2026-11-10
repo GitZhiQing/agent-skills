@@ -1,6 +1,6 @@
 # windows-disk-cleanup 需求与设计文档
 
-版本：v0.5.0　日期：2026-10-28
+版本：v0.6.0　日期：2026-11-11
 
 ## 1. 问题与目标
 
@@ -56,14 +56,7 @@ skills/windows-disk-cleanup/
   references/
     rules-catalog.md                      # 规则可读目录 + 来源
     protocol.md                  # 选择/保护/失败协议
-    memory-loop.md                        # 经验 schema/检索/写回/毕业/隐私
-  scripts/
-    memory.py                         # 经验库 CLI（search/record/used/graduate/check）
-  memory/
-    INDEX.md                          # public 经验索引（生成物）
-    lessons/*.json                    # public 经验（可提交）
-    local/                            # 本机私有经验（gitignored）
-  tests/                              # 42 条 unittest
+  tests/                              # 47 条 unittest
 ```
 
 ### 2.2 数据流
@@ -132,7 +125,7 @@ skills/windows-disk-cleanup/
 - `requires_inside`：目录内必须存在匹配文件；`requires_sibling_any`：父目录必须有项目标记。
 - `mode`：`leaf` / `skip` / `container` / `normal`。
 - `recommendation`：`suggest`（确认无用的废弃文件，最高优先级）/ `safe` / `caution` / `keep`；`review`（待定）是未命中规则的兜底档，不出现在规则里。
-- `language`（可选）：开发类规则的语言/生态标注（nodejs/python/rust/…/vscode/jetbrains/git/ai/tools，受控枚举），用于报告页「编程语言」筛选；非开发规则留空。
+- `language`（可选）：开发类规则的语言/生态标注（nodejs/python/rust/…/vscode/jetbrains/git/ai/tools，受控枚举），用于报告页「生态」筛选；非开发规则留空。
 - `target`：`dir`（默认）/ `file`；文件规则走单独 `match_file`，避免对百万文件逐条正则。
 - `selectable` 可覆盖默认；`keep` 和 `manual` 默认不可选。
 
@@ -147,9 +140,9 @@ skills/windows-disk-cleanup/
 
 ### 2.6 报告设计
 
-- 单文件 HTML，内联 JS；样式经 Tailwind Play CDN 加载（用户已接受离线打开无样式，页面顶部有降级提示；数据、筛选与复制 JSON 不依赖样式）。
+- 单文件 HTML，完全离线：CSS 与 JS 全部内联，不加载 CDN、字体或任何外部资源，断网打开样式完整。
 - 三个视图：清理建议（suggest/safe/caution/review）、目录总览（顶层/用户数据）、全部条目；默认按建议度排序（suggest→safe→caution→keep→review），可切换按大小/名称。
-- 三维筛选导航（chips，带条数与体积，可组合）：归属（5 值）/ 性质（8 值）/ 生态（17 值，仅「开发工具」归属下显示）；另有建议档与 AI 状态筛选。
+- 三维筛选导航（chips，带条数与体积，可组合）：归属（5 值）/ 性质（8 值）/ 生态（17 值，仅「开发工具」归属下显示）；另有建议档筛选。
 - 每行：勾选框、名称/路径、大小、文件数、逐条删除方式（回收站/彻底，默认回收站）、说明/建议操作/风险、修改时间、徽标（需管理员/部分统计/链接）。
 - 列表分页渲染（每页 100 条），大列表不全量重建 DOM。
 - 底部选择栏：已选数量/大小、父子重叠提示、review/permanent 提示、全局默认方式、确认框、复制按钮。
@@ -168,17 +161,6 @@ skills/windows-disk-cleanup/
 | `C:\Users\<user>\AppData\Local` 首次未去噪 | 78k dirs / 539k files / 48GB | 45s（上限 45s） | 9,082 条，主要噪音为 reparse/嵌套通用目录 |
 
 优化点：叶子缓存不展开、系统目录白名单剪枝、深层 reparse 不记录、通用大目录只留最外层、`match_file` 只对文件名 hint 调用。
-
-### 2.8 经验闭环
-
-目标：跨会话沉淀**可复用**的成功路径与失败教训，而不是记录每次运行的流水账。
-
-- **两层存储**：public `memory/lessons/` + `memory/INDEX.md`（可提交，只存规则 id/路径后缀/错误类型/参数）；local `memory/local/`（gitignored，可存完整路径）。
-- **检索**：doctor 后、scan 前检索目标类型/超时/权限/appdata；dry-run 前检索删除权限/占用/回收站/长路径。命中后读 `finding/action`，实际改变动作才 `used`。
-- **写回**：scan/delete 收尾四问（环境坑、规则误判/漏判、流程摩擦、成功路径）；例行成功、单次偏好、完整路径、凭据不写 public。
-- **差集信号**：`scan.json` 的 safe/caution 未出现在 `selection.json` → 可能误判；review 被选中并成功 → 可能漏判；作为 `scope=rule` 候选记录。
-- **毕业**：`used>=3` → candidate；人工改 `rules.json`/`SKILL.md`/`references/`，跑 `rules --check` + 全量测试，再 `graduate`。经验从不自动改规则。
-- **隐私**：public 自动脱敏 `C:\Users\<name>` 为 `C:\Users\<user>`；拒绝密码/Token/私钥；local 可保留路径但不入库。
 
 ## 3. 关键决策
 
@@ -202,15 +184,11 @@ skills/windows-disk-cleanup/
 | D16 | 报告条目上限 + scan.json 全量 | 页面要能打开；审计数据不能丢 |
 | D17 | 分类值 `system` | 现有 category 值集无系统维护类；本 skill 首次引入，规范 §3 同步 |
 | D18 | uv 启动器用 `--no-project` | 纯标准库，无需安装项目/构建后端；避免首次运行因网络拉 hatchling 失败 |
-| D19 | 经验分 public/local 两层 | public 可随仓库进化；local 保留本机路径细节，不泄露到公开历史 |
-| D20 | 经验不自动改规则，used>=3 + 人工毕业 | 一次会话可能是偶发；规则变更必须过 `rules --check` + 全量测试 |
 | D21 | 建议分级扩为五档，suggest 只标「确认无用的废弃文件」 | 升级残留/旧版缓存值得与普通可再生成缓存区分；首批 12 条（系统升级残留 8 + 旧版 IE/npm 缓存 4） |
-| D22 | 开发规则标注受控 language 枚举 | 「编程语言」筛选需要语言粒度；受控枚举（17 值）防拼写漂移，`rules --check` 兜底 |
+| D22 | 开发规则标注受控 language 枚举 | 「生态」筛选需要语言粒度；受控枚举（17 值）防拼写漂移，`rules --check` 兜底 |
 | D23 | 逐条删除方式用 schema 2 + 平行 modes 映射 | paths 保持字符串数组，向后兼容 schema 1；modes 只含显式覆盖，payload 简洁 |
-| D24 | 报告样式改 Tailwind Play CDN | 用户接受离线无样式换取 shadcn 风格；留降级提示，数据与复制不依赖样式 |
-| D25 | AI 深化分析是 Agent 驱动的 enrichment 阶段，不是扫描器内置 | 长尾目录判断需要 AI 现场分析；CLI 只做确定性校验/合并/渲染（`enrich` 子命令），判断力在 Agent |
-| D26 | 高置信 AI 可把「待定」提升为明确档位并放宽门控 | 用户判断 AI 结论可信；只有 `confidence=high` 且在 `review` 上生效；只收紧不放宽（keep→不可选允许，反过来禁止），不允许改成 suggest；`tier_source=ai` 留痕 |
-| D27 | 分类改为三个正交维度：归属/性质/生态 | 清理工具的心智模型是「我要清 Chrome/npm/系统」；原「大类+细类」把归属与性质混在一层（虚拟化被塞进「编程语言」、构建产物与语言并列）。受控词表由 `model.py` 唯一定义，规则与 AI 共用，自由文本归「未识别」 |
+| D24 | 报告样式全部内联，不依赖 CDN | 单文件离线可用，无网络请求；避免 CDN 不可达时样式全失，报告可在断网/隔离环境直接打开 |
+| D27 | 分类改为三个正交维度：归属/性质/生态 | 清理工具的心智模型是「我要清 Chrome/npm/系统」；原「大类+细类」把归属与性质混在一层（虚拟化被塞进「编程语言」、构建产物与语言并列）。受控词表由 `model.py` 唯一定义，规则与报告共用，自由文本归「未识别」 |
 
 ## 4. 数据与接口
 
@@ -258,10 +236,6 @@ skills/windows-disk-cleanup/
 - `1`：业务失败（扫描失败、删除有 failed/partial、IO 错误）。
 - `2`：用法/选择错误（目标不存在、选择 schema/scan_id/路径无效、未确认、review 未加 `--allow-review`）。
 
-### 4.5 经验 JSON
-
-见 `references/memory-loop.md`；核心字段：`kind`（success/failure/preference）、`scope`（scan/delete/report/rule/general）、`trigger`、`finding`、`action`、`evidence`（rule_ids/error_types/options）、`used`、`status`（active/candidate/graduated/retired）、`privacy`（public/local）。
-
 ## 5. 安全与隐私
 
 - 全部本地运行；无网络上传、无遥测、无外部 API。
@@ -271,15 +245,15 @@ skills/windows-disk-cleanup/
 - PowerShell 只传路径与临时 JSON 文件，不拼接执行用户输入的命令。
 - 规则库不含可执行代码；匹配器不 `eval`。
 - 删除前二次校验；系统保护清单独立于规则库。
-- 经验库 public 层不写完整用户路径/用户名/凭据；local 层 gitignored；`memory.py check` 校验重复 ID/字段/未脱敏路径/密钥模式。
+- 报告页无任何外部资源请求，路径与统计只留在本机生成的 HTML/JSON 中。
 
 ## 6. 测试与验收
 
-- 自动化：`python -m unittest discover -s tests`（42 条）。
+- 自动化：`python -m unittest discover -s tests`（47 条）。
 - 真实扫描：本仓库（0.5s）、AppData\Local（30s 上限，62k dirs）。
-- 浏览器验收：Edge headless + Playwright，验证暗/亮主题、tab、搜索、勾选、确认、复制、page→CLI 预演闭环。
-- 经验验收：public/local 写回、检索命中、used/candidate、graduate、public 脱敏、密钥拦截、`check` 错误检测。
-- 人工回归：`docs/TESTS.md` W/S/D/R/E/M/T。
+- 浏览器验收：Edge headless + Playwright，验证亮/暗主题、tab、搜索、筛选、勾选、确认、复制、page→CLI 预演闭环。
+- 报告离线验收：断网打开 `report.html` / `cleanup-report.html`，样式与交互完整，无外部 URL 请求。
+- 人工回归：`docs/TESTS.md` W/S/D/R/E/T。
 
 ## 7. 开放问题
 
@@ -291,12 +265,9 @@ skills/windows-disk-cleanup/
 6. **长路径**：已加 `\\?\`，但 PowerShell 回收站 API 对超长路径支持有限；需要真实样本。
 7. **本地化**：规则文案为中文；英文用户可能需要 i18n，当前未做。
 8. **Docker/WSL 压缩**：只给建议，不自动执行 `Optimize-VHD`/`diskpart`；是否提供可选半自动步骤待评估。
-9. **经验质量**：经验条目的“可复用”标准依赖 Agent 判断；需要真实会话回填，观察是否出现过拟合/噪声。
-10. **经验检索排序**：当前为关键词+used 的简单评分；若条目增长，可能需要按 scope/目标盘/规则 id 加权或引入标签。
 
 ## 8. 变更记录
 
-- 2026-10-28：0.5.0 AI 定档与三维分类。AI 高置信判定可把「待定」提升为 safe/caution/keep 并放宽 `--allow-review`（只收紧不放宽，档位来源 `tier_source` 留痕）；新增归属/性质/生态三个正交受控维度（`model.py` 唯一定义，规则与 AI 共用），报告页改为带条数与体积计数的 chips 导航，生态行按需出现；AI 状态筛选项（已分析/未分析/已定档）；单测 59 → 63 条。
-- 2026-10-28：0.4.0 AI 深化分析。新增 `enrich` 子命令与 `enrichment.json` 协议（schema 1）：Agent 对未命中规则目录做受限只读探索（top 30~50、ls 一到两层、约 2 分钟预算），结论由 CLI 校验（path/language/advice/confidence 枚举）后合并展示字段并重渲染增强报告（`enriched/`）；Entry 新增 enriched/advice/confidence/evidence 字段；报告页「AI 分析」与「AI 参考 ·」徽章；硬边界：不改 selectable/recommendation、不参与删除门控；单测 53 → 59 条，新增 references/enrichment-protocol.md。
-- 2026-10-28：0.3.0 报告与协议升级。建议分级扩为五档（新增 suggest 建议清理，首批 12 条规则；keep/review 标签改为建议保留/待定）；规则库 94 条开发规则标注 language；报告页引入 Tailwind Play CDN（shadcn 风格、暗色模式、离线降级提示）、默认按建议度排序、大类+语言两级筛选、逐条删除方式 tabs、分页渲染；选择协议升 schema 2（可选 modes 逐条方式，schema 1 兼容），执行器按方式分组、cleanup.json 逐项记录 mode；单测 42 → 53 条。
-- 2026-10-27：0.2.0 经验闭环。新增 `scripts/memory.py`（search/record/used/graduate/retire/list/check/index）、public/local 两层经验库、检索/写回/used/毕业、SKILL 检索与写回钩子、42 条单测、references/memory-loop.md、测试集 M-1~M-8；0.1.0 首版：规则库 226 条；扫描/报告/选择/删除/清理报告全链路；真实仓库与 AppData 扫描、浏览器交互与 page→CLI 协议验证。
+- 2026-11-11：0.6.0 破坏性重构。彻底移除经验闭环与 AI 深化分析：删除 `memory/`、`scripts/memory.py`、`src/disk_cleanup/enrich.py`、`references/memory-loop.md`、`references/enrichment-protocol.md`、CLI `enrich` 子命令，以及 `Entry` 的 enriched/advice/confidence/tier_source/evidence 字段；报告移除 AI 定档/AI 参考徽章与 AI 状态筛选。两个报告模板改为全内联 CSS 的单文件离线页面，移除 Tailwind CDN 与所有外部资源请求。单测 63 → 47 条。
+- 2026-10-28：0.5.x 报告与分类升级。建议分级扩为五档（新增 suggest 建议清理）；新增归属/性质/生态三个正交受控维度（`model.py` 唯一定义），报告页改为带条数与体积计数的 chips 导航；逐条删除方式与 schema 2（`modes` 可选覆盖）；分页渲染与紧凑行详情。
+- 2026-10-27：0.1.0 首版。规则库 226 条；扫描/报告/选择/删除/清理报告全链路；真实仓库与 AppData 扫描、浏览器交互与 page→CLI 协议验证。

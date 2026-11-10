@@ -9,7 +9,7 @@ description: >-
 license: MIT
 compatibility: Windows 10/11；Python 3.9+（推荐 uv，也可直接用 python）；回收站模式需要 Windows PowerShell 5.1+；系统级目录通常需要管理员权限
 metadata:
-  version: 0.5.8
+  version: 0.6.0
   category: system
 ---
 
@@ -27,20 +27,8 @@ metadata:
 8. **不自动提权**：需要管理员权限的系统项，提示用户以管理员身份重跑，不自行提权。
 9. **不伪造结果**：失败/部分删除/跳过都写进报告；回收站模式不说成“空间已释放”。
 10. **不改证据**：不编辑 `scan.json` / `selection.json` 来加入路径；发现选择无效就停下来说明。
-11. **经验不泄密**：public 经验不写完整用户路径、用户名、凭据或用户文件名；本机路径用 `--privacy local`。
-12. **不自动改规则**：经验只是候选；毕业必须人工改 `rules.json` / `SKILL.md` / `references/`，并跑 `rules --check` + 全量测试。
 
-## 0.5 经验闭环（跨会话）
-
-设 `S` = 本 skill 根目录；bash 用 `mem() { python "$S/scripts/memory.py" "$@"; }`（PowerShell 直接 `python "$S\scripts\memory.py" ...`）。
-
-- doctor 后/scan 前：`mem search --scope scan --query "<目标类型> scan timeout permission appdata" --json`
-- dry-run 前：`mem search --scope delete --query "delete permission recycle locked long path" --json`
-- 命中读 `finding/action`；实际改变动作才 `mem used <ID> --json`。
-- 收尾四问：环境坑/规则误判漏判/流程摩擦/成功路径；只写可复用结论。
-- public/local；`used>=3`→candidate；人工改规则+测试后 `mem graduate`；schema 见 `references/memory-loop.md`。
-
-## 1. 固定工作流（6 步）
+## 1. 固定工作流（确认目标 + 6 步）
 
 设 `S` = 本 skill 根目录，`BIN` = `bash "$S/bin/windows-disk-cleanup"`（Windows cmd/PowerShell 用 `"$S\bin\windows-disk-cleanup.cmd"`）。`OUT` = 本次输出目录。
 
@@ -51,7 +39,7 @@ metadata:
 - 全盘扫描可能几分钟；AppData/项目大目录可先加 `--max-seconds 30–60`，全盘可 900；告诉用户“扫描只读，先出报告，删除要你勾选确认”。
 - 用户指定输出目录时用用户的；否则用默认目录，不要写到用户项目源码目录里。
 
-### 第 1 步：环境检查
+### 第 1 步：环境检查（doctor）
 
 ```bash
 $BIN doctor --root "<目标>" --json
@@ -59,9 +47,8 @@ $BIN doctor --root "<目标>" --json
 
 - `ok: false`：只处理 error 级检查（非 Windows、目标不存在、光驱/不可读），修不了就停止。
 - `uv`/`powershell`/`admin` 是 warn：记下来。无 PowerShell 时回收站模式不可用，报告里要说明“只能彻底删除”；非管理员时系统项可能失败。
-- 检索经验：`mem search --scope scan --query "<目标类型> scan timeout permission appdata" --json`；命中就把相关 `finding/action` 并入本次环境判断。
 
-### 第 2 步：只读扫描
+### 第 2 步：只读扫描（scan）
 
 ```bash
 $BIN scan --root "<目标>" --output-dir "$OUT" --json
@@ -71,22 +58,6 @@ $BIN scan --root "<目标>" --output-dir "$OUT" --json
 - `stats.partial: true`：说明达到时间上限或部分目录不可读，结果不完整；在交付时明确说。
 - `summary.suggest/safe/caution/review` 为 0 且 `top` 为空：如实告诉用户没有发现可清理项，不要硬凑。
 - 不要用 `scan.json` 的全量条目刷屏；只引用 `top` 和汇总。
-- 经验命中改变了参数（如限时、排除、深扫）时，交付里说明；实际改变动作后 `mem used <ID> --json`。
-
-### 第 2.5 步：AI 深化分析（可选）
-
-触发：`summary.review` 或「其他」类条目多，或用户要更细的分类说明。字段与预算细则见 `references/enrichment-protocol.md`。
-
-- 对象：无 `rule_id` 的条目，按大小取 top 30~50；探索只 `ls` 一到两层、只看文件名（不递归全树、不读内容、不执行），总时长约 2 分钟，超预算就停。
-- 结论写 `$OUT/enrichment.json`（字段见协议文档），先校验再应用：
-
-   ```bash
-   $BIN enrich --scan "$OUT/scan.json" --enrichment "$OUT/enrichment.json" --check --json
-   $BIN enrich --scan "$OUT/scan.json" --enrichment "$OUT/enrichment.json" --json
-   ```
-
-- 交付增强版报告（默认 `$OUT/enriched/`），补全条目带「AI 分析」与 `AI 参考 ·` 徽章。
-- **定档权限**：`confidence: high` 时，AI 可把「待定」提升为 safe/caution/keep（提升后不再需要 `--allow-review`），也可修正归属/性质/生态；但不能把保留项变成可删、不能改成 suggest、不能放宽 `selectable`。细则见协议文档。
 
 ### 第 3 步：交付报告并等待勾选
 
@@ -97,24 +68,23 @@ $BIN scan --root "<目标>" --output-dir "$OUT" --json
 同时说明：
 
 - 本页只做选择，不会删除文件；默认不选中任何项。
-- 报告页样式经 Tailwind CDN 加载：联网打开才有样式，离线打开时数据与复制功能仍可用。
+- 报告是**单文件离线页面**：样式、脚本、数据全部内联，不发起任何网络请求，断网也能完整使用。
 - 回收站模式可恢复；彻底删除不可恢复。
 - 「待定 / review」是未命中规则的目录，删除前必须核实用途。
 - 父子目录同时勾选时，删除以父目录为准。
 
 **然后停止本轮，等用户粘贴选择。** 不要替用户勾选，不要先删“明显是缓存”的条目。
 
-### 第 4 步：接收选择并预演
+### 第 4 步：接收选择并预演（dry-run）
 
 1. 把用户粘贴的内容**原样**保存为 `$OUT/selection.json`（UTF-8）。不要把 paths 摘出来单独传，不要改 `scan_id`。
-2. 检索删除经验：`mem search --scope delete --query "delete permission recycle locked long path" --json`；命中就按 `action` 调整重试/提示策略。
-3. 预演：
+2. 预演：
 
    ```bash
    $BIN delete --selection "$OUT/selection.json" --dry-run --json
    ```
 
-4. 按返回 JSON 处理：
+3. 按返回 JSON 处理：
    - `invalid` 非空 → **停止**，逐条说明 `reason`（路径不在扫描结果、被保护、扫描过期等），让用户重新从报告页复制。
    - `missing` 非空 → 说明哪些条目已不存在；可继续，最终报告会标记 `skipped_missing`。
    - `covered` 非空 → 父子重叠，正常；只删父目录。
@@ -122,7 +92,7 @@ $BIN scan --root "<目标>" --output-dir "$OUT" --json
    - `confirmed: false` → 用户没在报告页勾确认框；请用户重新复制，或在用户明确说“确认删除”后加 `--confirm`。
    - `planned` 为空 → 没有可执行项，停止。
 
-### 第 5 步：执行删除并生成清理报告
+### 第 5 步：执行删除（delete）
 
 预演通过后：
 
@@ -136,7 +106,7 @@ $BIN delete --selection "$OUT/selection.json" --yes --allow-review --json
 - 读取返回 JSON：`cleanup_report`、`cleanup_json`、`summary`、`items`、`notes`。
 - 退出码 1 表示有 `failed/partial`，但清理报告已经生成；不要丢弃报告。
 
-### 第 6 步：汇报与经验写回
+### 第 6 步：汇报
 
 给用户：
 
@@ -145,18 +115,6 @@ $BIN delete --selection "$OUT/selection.json" --yes --allow-review --json
 - 失败项前 3 条的路径 + 错误 + 处理建议（关闭占用程序、管理员重跑、改用彻底删除）。
 - 回收站模式：提醒“文件在回收站，清空后才释放空间”。
 - 审计文件：`scan.json`、`selection.json`、`cleanup.json` 留在 `OUT`。
-
-收尾四问：**环境坑？规则误判/漏判？流程摩擦？可复用的成功路径？** 有可复用结论才写回：
-
-```bash
-mem record --kind failure --scope delete --trigger "access denied" \
-  --finding "<发生了什么>" --action "<下次怎么做>" \
-  --rule-id <rule_id> --error-type PermissionError --privacy public --json
-```
-
-- 例行成功不记；单次用户偏好、完整用户路径、凭据不写 public。
-- 经验实际改变了动作 → `mem used <ID> --json`。
-- `used >= 3` 或反复验证稳定 → 只提议毕业；人工改规则/文档并跑测试后 `mem graduate <ID> --to "<位置>"`。
 
 不要重新扫描、不要自动清空回收站、不要继续删除用户没选的条目。需要再清一个盘时让用户重新发起。
 
@@ -169,8 +127,6 @@ mem record --kind failure --scope delete --trigger "access denied" \
 | `delete --selection <file> --dry-run --json` | 校验 + 预演，不删除 | `--scan` 显式指定 scan.json |
 | `delete --selection <file> --yes --json` | 执行删除，写 `cleanup.json` + `cleanup-report.html` | `--mode recycle\|permanent`（覆盖全部逐条方式）、`--confirm`、`--allow-review` |
 | `rules --check --json` | 校验内置规则库 | `--rules` 自定义规则文件（维护用） |
-| `enrich --scan <file> --enrichment <file> --json` | 应用 AI 深化分析并重渲染增强报告 | `--check` 只校验；`--output-dir` 默认 scan 同目录 `enriched/` |
-| `python scripts/memory.py search/record/used/graduate/check` | 经验检索/写回/毕业/校验；默认 `memory/` | `--json`；public 可提交，local gitignored |
 
 退出码：`0` 成功；`1` 业务失败（扫描不完整、删除失败/部分删除）；`2` 用法/选择错误（路径无效、未确认、schema 不符）。`--json` 时 stdout 始终是单个 JSON 对象，进度/诊断在 stderr。
 
@@ -202,6 +158,7 @@ mem record --kind failure --scope delete --trigger "access denied" \
 ## 4. 报告与判断纪律
 
 - **报告页是选择器，不是删除器**：页面没有删除按钮；复制出的 JSON 才触发删除。
+- **报告完全离线**：单文件 HTML，内联样式与脚本，不加载 CDN、字体或任何外部资源。
 - **大小口径**：逻辑大小；硬链接/压缩/稀疏文件与资源管理器可能不同。WinSxS 不深入统计，避免硬链接失真。
 - **建议清理/安全清理/谨慎清理/建议保留/待定**：分别对应“确认无用的废弃文件”“可再生成”“可能含数据”“明确不可删”“未识别”；不要把待定项说成安全项。
 - **父子重叠**：报告摘要按最深可清理项合计；表格仍逐条列出，删除时以父目录为准。
@@ -215,8 +172,6 @@ mem record --kind failure --scope delete --trigger "access denied" \
 | --- | --- |
 | 某个目录是什么、为什么建议删/保留、规则分类与来源 | `references/rules-catalog.md` |
 | selection JSON 字段、校验/保护清单、dry-run、权限/占用/长路径/回收站失败 | `references/protocol.md` |
-| AI 深化分析（enrichment.json 字段、预算、安全边界） | `references/enrichment-protocol.md` |
-| 经验 schema、检索/写回/used/毕业、public/local 隐私 | `references/memory-loop.md`、`memory/INDEX.md` |
 | 环境限制、失败排查 | `references/protocol.md` §5–§6 |
 | 行为协议回归 | `docs/TESTS.md` |
 
@@ -228,16 +183,11 @@ mem record --kind failure --scope delete --trigger "access denied" \
 - 默认拒绝网络位置/光驱；确需扫描网络位置加 `--allow-network`，但删除仍受保护清单约束。
 - 不监控实时磁盘变化；每次清理都从新的 scan 开始。
 - 不保证释放量：硬链接、压缩、稀疏文件、回收站、被占用文件都会影响实际可用空间。
-- 经验库是本机数据：public 层不得写凭据/完整用户路径；local 层不入库。
-- 经验不会自动改规则；毕业是人工代码/文档变更，必须过 `rules --check` + 全量测试。
 
 ## 7. 参考
 
 - `references/rules-catalog.md` — 226 条目录规则（系统/用户/开发/项目/凭据）与官方来源。
 - `references/protocol.md` — 选择 JSON、二次校验、保护清单、失败处理。
-- `references/enrichment-protocol.md` — enrichment JSON、受限探索预算、安全边界。
-- `references/memory-loop.md` — 经验 schema、检索/写回/毕业、隐私边界。
-- `memory/INDEX.md` — 当前公开经验索引（自动生成）。
-- `README.md` — 面向人的介绍与效果预览。
+- `README.md` — 面向人的介绍与使用方式。
 - `docs/SPEC.md` — 架构、安全模型、规则 schema、扫描策略与决策。
 - `docs/TESTS.md` — 固定工作流的行为断言。

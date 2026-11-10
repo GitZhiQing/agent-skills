@@ -14,17 +14,6 @@ LANGUAGES = (
     "nodejs", "python", "rust", "go", "java", "dotnet", "php", "ruby",
     "swift", "cpp", "dart", "docker", "vscode", "jetbrains", "git", "ai", "tools",
 )
-# AI 深化分析（enrichment）允许写入的参考建议档：高置信时可提升 review 档。
-ADVICE_LEVELS = ("safe", "caution", "keep")
-CONFIDENCE_LEVELS = ("high", "medium", "low")
-# 档位来源：空 = 规则/通用分类；ai = 由高置信 AI 判定提升。
-TIER_SOURCES = ("", "ai")
-
-ADVICE_LABELS = {
-    "safe": "AI 参考 · 安全",
-    "caution": "AI 参考 · 谨慎",
-    "keep": "AI 参考 · 保留",
-}
 
 # --- 分类词表（三维正交，筛选的唯一依据）--------------------------------------
 # 归属：这些东西属于谁。用户的心智模型是「我要清理 Chrome / npm / 系统」。
@@ -49,7 +38,7 @@ NATURE_LABELS = {
     "other": "未识别",
 }
 # 规则库既有 category -> 性质。规则库是自由文本，此处收敛为受控值；
-# AI 写入的新 category 走「其他」，不污染词表。
+# 未收录的自由文本归「其他」，不污染词表。
 CATEGORY_NATURES = {
     "应用缓存": "cache",
     "开发工具缓存": "cache",
@@ -177,12 +166,6 @@ class Entry:
     # 分类三维（筛选依据）：归属 / 性质 / 生态
     group: str = ""
     nature: str = ""
-    # AI 深化分析（enrichment）合并进来的展示字段；删除安全属性只允许被收紧。
-    enriched: bool = False
-    advice: str = ""
-    confidence: str = ""
-    tier_source: str = ""
-    evidence: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -215,11 +198,6 @@ class Entry:
             "classification": self.classification,
             "group": self.group,
             "nature": self.nature,
-            "enriched": self.enriched,
-            "advice": self.advice,
-            "confidence": self.confidence,
-            "tier_source": self.tier_source,
-            "evidence": list(self.evidence),
         }
 
 
