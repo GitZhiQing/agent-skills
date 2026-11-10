@@ -3,6 +3,9 @@
 > 本文是 video-insight 技能的当前设计规格：定位、档位、流程、结构、决策理由、输出契约与验证方式。
 > 行为约束见 `references/evidence-discipline.md`，画面方法见 `references/visual-analysis.md`，报告骨架见 `references/output-template.md`，无口播与批量分支见 `references/no-speech-batch.md`；对外接口以 `SKILL.md` 为准。
 
+| 文档版本 | v1.0 | 日期 | 2026-11-11 | 实现版本 | video-insight v0.8.2 |
+| --- | --- | --- | --- | --- | --- |
+
 ## 1. 定位与边界
 
 | 项 | 内容 |

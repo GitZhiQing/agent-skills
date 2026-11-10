@@ -86,4 +86,4 @@ cp .env.example .env   # 然后编辑 .env，填入 VOLC_BIGMODEL_API_KEY
 - [docs/SPEC.md](docs/SPEC.md) — 设计规格与决策理由
 - [docs/TESTS.md](docs/TESTS.md) — 行为协议断言与已知答案回归基准
 
-许可：MIT（仓库根 [LICENSE](../../LICENSE)）。
+许可：MIT（[LICENSE](LICENSE)）。
