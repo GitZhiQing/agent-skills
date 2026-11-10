@@ -1,6 +1,6 @@
 # theme-commit
 
-工作区混杂多轮、多主题变更时，先给提交计划预览，再按逻辑主题分批提交。每个提交只承载一个主题；提交信息遵循项目规范（本仓库为 `type(scope): 摘要` + 列表式 body）；提交前做快速检查，提交后核对，不推送、不改写历史。
+工作区混杂多轮、多主题变更时，先给提交计划预览，再按逻辑主题分批提交。每个提交只承载一个主题；提交信息优先遵循目标项目规范，项目未提供时使用内置默认格式；提交前做快速检查，提交后核对，不推送、不改写历史。
 
 ## 何时触发
 
@@ -17,7 +17,7 @@
 
 ## 提交信息
 
-默认遵循 Conventional Commits：`type(scope): 摘要` + 空行 + `- ` 列表式 body；摘要中文声明式动词开头、≤50 字、不写版本号；版本变更写 body。项目有 commitlint / 模板 / hook 时以其为准；本仓库规范见 [docs/CONVENTIONS.md](../../docs/CONVENTIONS.md) §10。
+优先使用目标项目的提交规范（`AGENTS.md` / `CONTRIBUTING` / commitlint / 模板 / hook）；项目未提供时使用内置默认格式：`type(scope): 摘要` + 空行 + `- ` 列表式 body，摘要中文声明式动词开头、≤50 字、不写版本号，版本变更写 body。完整默认规范见 [references/commit-format.md](references/commit-format.md)。
 
 ## 边界
 
@@ -55,4 +55,4 @@ npx skills add GitZhiQing/agent-skills/theme-commit
 - [docs/SPEC.md](docs/SPEC.md) — 设计依据、关键取舍与风险
 - [docs/TESTS.md](docs/TESTS.md) — 行为断言
 
-许可：MIT（仓库根 [LICENSE](../../LICENSE)）。
+许可：MIT（[LICENSE](LICENSE)）。

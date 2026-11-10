@@ -2,7 +2,7 @@
 name: theme-commit
 description: >-
   工作区混杂多轮、多主题变更时，先给提交计划预览，再用宿主可用的结构化提问工具确认，
-  按逻辑主题分批提交；提交信息遵循仓库的 Conventional Commits 规范（type(scope): 摘要 + 列表式 body），
+  按逻辑主题分批提交；提交信息优先遵循目标项目的提交规范，项目缺失时使用本 skill 内置的默认格式，
   显式暂存路径、提交前检查、提交后验证，不改写历史、不推送。
   当用户要求"提交一下""把改动分开提交""整理提交历史"且变更涉及多个主题时使用；
   英文触发词包括 "commit" "split commits" "organize commit history"；
@@ -10,7 +10,7 @@ description: >-
   明确要求改写历史、推送或只查看 diff 时不要使用本 skill。
 license: MIT
 metadata:
-  version: 0.3.1
+  version: 0.3.2
   category: git
 ---
 
@@ -19,7 +19,7 @@ metadata:
 多轮开发后的工作区常混杂互不相关的变更。目标不是"尽量多拆"，而是让每个提交：
 
 - 只承载一个逻辑主题；
-- 提交信息符合仓库规范（本仓库见 `docs/CONVENTIONS.md` §10）；
+- 提交信息优先遵循目标项目规范；项目未提供时使用本 skill 的 `references/commit-format.md` 默认格式；
 - 提交前经过可用的快速检查，提交后可核对；
 - 不推送、不改写已发布历史。
 
@@ -29,7 +29,7 @@ metadata:
 2. 检查进行中的操作：合并 / 变基 / cherry-pick / 冲突 / detached HEAD。命中任一项即停止并报告，不在半完成状态上提交。
 3. 盘点全部变更：`git diff`（未暂存）、`git diff --cached`（已暂存）、`git status --short`（untracked / 删除 / 重命名）。untracked 文本文件直接读内容，不按文件名猜主题；二进制 / 大文件不按文本读，按路径和大小归类并询问。
 4. **已有 staged 改动不静默混入**：`git diff --cached --name-status` 非空时，逐项列出并询问——纳入某个主题、由用户自行处理，或经同意后 `git restore --staged -- <paths>`。不要擅自丢弃用户的暂存状态；用户选择自行处理时暂停本批次，不带着 staged 改动提交其他主题。
-5. 读取项目规范与检查命令：`AGENTS.md`、`CONTRIBUTING`、`README`、`docs/CONVENTIONS.md`、`package.json` / `pyproject.toml` / CI 配置。项目有 commitlint / 模板 / hook 时以其为准；没有时使用下方默认格式。检查命令只使用项目文档写明的，不自行发明。
+5. 读取目标项目规范与检查命令：项目内的 `AGENTS.md`、`CONTRIBUTING`、`README`、提交规范文档、`package.json` / `pyproject.toml` / CI 配置。项目有 commitlint / 模板 / hook 时以其为准；没有时使用 `references/commit-format.md` 的默认格式。检查命令只使用项目文档写明的，不自行发明。
 6. 安全预检（最佳努力）：不要 stage ignored 文件；对 `.env`、`*.pem`、`*.key`、`id_rsa`、credentials、token 等敏感文件名先询问；对 >5MB 文件先询问，>50MB 默认不提交；生成物 / 缓存 / 构建目录（`dist/`、`build/`、`node_modules/`、`coverage/` 等）默认不入库，除非项目明确要求。
 
 ## 阶段 1 · 分组与计划
@@ -37,7 +37,7 @@ metadata:
 按逻辑主题分组，而不是按文件类型或提交时间机械切分：
 
 - 测试随对应功能 / 修复；纯补测试可单独 `test`。
-- 纯格式化 / 空白改动尽量独立；同一文件内混入多主题时，整文件归主主题并在 body 说明，**不做 hunk 级拆分**（项目 §10；`git add -p` 对 agent 不可靠）。
+- 纯格式化 / 空白改动尽量独立；同一文件内混入多主题时，整文件归主主题并在 body 说明，**不做 hunk 级拆分**（`git add -p` 对 agent 不可靠）。
 - 重构与功能 / 修复尽量分开；依赖锁文件随依赖变更，或单独 `build` / `chore`。
 - 文档随对应功能；纯文档清理用 `docs`。
 - 共享文件 / 配置归入需要它的主题；确实跨主题时单独 `chore` 并在 body 说明。
@@ -98,9 +98,9 @@ metadata:
 
 ## 提交信息规范
 
-默认 `type(scope): 摘要` + 空行 + `- ` 列表式 body；`type` 取 `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `build`；摘要中文声明式动词开头、≤50 字、不加句号、不写版本号；版本变更写 body。项目有 commitlint / 模板 / hook 时以项目为准。
+**优先级**：目标项目规范（`AGENTS.md` / `CONTRIBUTING` / commitlint / 模板 / hook）> 本 skill 默认格式。项目未提供可识别规范时，使用 `references/commit-format.md` 的默认格式：`type(scope): 摘要` + 空行 + `- ` 列表式 body；`type` 取 `feat` / `fix` / `docs` / `refactor` / `test` / `chore` / `build`；摘要中文声明式动词开头、≤50 字、不加句号、不写版本号；版本变更写 body。
 
-完整规范（scope 约定、footer、`BREAKING CHANGE`、示例）见 `references/commit-format.md`。
+完整默认规范（scope 约定、footer、`BREAKING CHANGE`、示例）见 `references/commit-format.md`；目标项目另有约定时以其为准。
 
 ## 边界与失败处理
 

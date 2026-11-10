@@ -2,7 +2,7 @@
 
 按需加载：写提交信息，或项目对 footer / `BREAKING CHANGE` / scope 有额外约定时读取。默认格式已摘要进 `SKILL.md`；本文件是完整版。
 
-默认遵循 Conventional Commits；项目有 commitlint / 模板 / hook 时以其为准。本仓库规范见 `docs/CONVENTIONS.md` §10。
+优先遵循目标项目的提交规范（`AGENTS.md` / `CONTRIBUTING` / commitlint / 模板 / hook）；项目未提供可识别规范时，使用本文件作为默认格式。
 
 ## Subject
 

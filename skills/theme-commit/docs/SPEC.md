@@ -1,14 +1,14 @@
 # theme-commit · 需求与设计文档
 
-| 文档版本 | v1.1 | 日期 | 2026-10-19 | 状态 | 已实现（SKILL.md v0.3.0） |
+| 文档版本 | v1.2 | 日期 | 2026-11-11 | 状态 | 已实现（SKILL.md v0.3.2） |
 | --- | --- | --- | --- | --- | --- |
-| 适用范围 | theme-commit skill（纯提示词，无运行时） | 实现版本 | v0.3.0 | 分发目标 | 各 agent 的 skills 目录 |
+| 适用范围 | theme-commit skill（纯提示词，无运行时） | 实现版本 | v0.3.2 | 分发目标 | 各 agent 的 skills 目录 |
 
 ## 1. 背景与目标
 
 ### 1.1 背景
 
-工作区常混杂多轮、多主题的变更。一次性全量提交会让历史难以回溯、回滚与 bisect；只按文件类型拆分又会把同一逻辑变更切碎。2026-10-19 本仓库把提交规范固化为 `docs/CONVENTIONS.md` §10：`type(scope): 摘要` + 列表式 body；theme-commit 原 0.1.1 只生成一句话摘要，已与项目规范脱节。
+工作区常混杂多轮、多主题的变更。一次性全量提交会让历史难以回溯、回滚与 bisect；只按文件类型拆分又会把同一逻辑变更切碎。2026-10-19 起所在仓库采用 `type(scope): 摘要` + 列表式 body 的提交规范；theme-commit 原 0.1.1 只生成一句话摘要，已与目标项目规范脱节。
 
 ### 1.2 目标
 
@@ -26,7 +26,7 @@
 | --- | --- | --- |
 | NG-1 | 不推送 / 不建 PR / 不合并 | 推送与 PR 是独立的高风险步骤，应有单独确认 |
 | NG-2 | 不 amend / rebase / reset / force push | 不改写已发布历史；错误提交交由用户决定 |
-| NG-3 | 不做 hunk 级拆分 | 项目 §10 明确不做；`git add -p` 是交互式命令，纯提示词 agent 不可靠 |
+| NG-3 | 不做 hunk 级拆分 | `git add -p` 是交互式命令，纯提示词 agent 不可靠；整文件归主主题并在 body 说明 |
 | NG-4 | 不替代 commitlint / hook / CI | 纯提示词只能建议；可靠拦截依赖项目工具链 |
 | NG-5 | 不做通用 git 客户端 | 只覆盖"按主题提交"这一件事 |
 
@@ -34,7 +34,7 @@
 
 | 维度 | 0.1.1 | 影响 |
 | --- | --- | --- |
-| 消息格式 | 一句话摘要 | 与 §10 的 type/scope/body 冲突；可能被 commit-msg hook 拒绝 |
+| 消息格式 | 一句话摘要 | 与目标项目的 type/scope/body 规范冲突；可能被 commit-msg hook 拒绝 |
 | staged 状态 | 只看 `git status` / `git diff` | 已有暂存改动会被静默混入首个提交 |
 | 暂存方式 | `git add <file>` 但无显式路径约束 | 易误用 `git add -A`；无法保证提交边界 |
 | 空提交 | 无守卫 | 主题为空时提交失败或产生空提交 |
@@ -47,9 +47,9 @@
 
 ## 3. 设计决策
 
-### D1 对齐项目 §10 / Conventional Commits
+### D1 优先对齐目标项目规范 / Conventional Commits
 
-消息格式、type/scope 词表、subject 长度与 body 列表以项目规范为准；项目没有规范时使用本 skill 的默认格式。subject 采用项目 §10 的 ≤50 字，不套用社区 72 列硬换行；body 用列表优先保证 Markdown / 终端可读性。这样本仓库与通用项目都能用。
+消息格式、type/scope 词表、subject 长度与 body 列表以目标项目规范为准；项目没有可识别规范时使用本 skill 的默认格式（`references/commit-format.md`）。默认 subject 采用 ≤50 字，不套用社区 72 列硬换行；body 用列表优先保证 Markdown / 终端可读性。这样不同项目都能用，且不依赖某个仓库的专有路径。
 
 ### D2 默认计划预览 + 结构化提问确认
 
@@ -61,7 +61,7 @@
 
 ### D4 不做 hunk 级拆分
 
-项目 §10 明确不做；`git add -p` / `git add -e` 依赖交互式编辑器，纯提示词 agent 无法可靠完成。单文件多主题时整文件归主主题，body 列出次要改动；用户要求更高纯度时请其手动拆分或调整实现顺序。
+本 skill 不做 hunk 级拆分；`git add -p` / `git add -e` 依赖交互式编辑器，纯提示词 agent 无法可靠完成。单文件多主题时整文件归主主题，body 列出次要改动；用户要求更高纯度时请其手动拆分或调整实现顺序。
 
 ### D5 显式暂存，禁止 `git add -A`
 
@@ -154,6 +154,7 @@ docs(repo): 清理文档版本沿革与失效记录
 | C-10 单主题调用 | FR-13 |
 | C-11 合并 / 变基 / detached HEAD | FR-1 |
 | C-12 无变更 / 只读 / 询问 | 触发边界 |
+| C-13 渐进披露按需读取 | NFR-5、SKILL.md 按需读取表 |
 
 ## 8. 风险与开放问题
 
@@ -174,4 +175,4 @@ docs(repo): 清理文档版本沿革与失效记录
 - Git 官方 Contributing 指南：https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project
 - Google Engineering Practices, Small CLs：https://google.github.io/eng-practices/review/developer/small-cls.html
 - GitLab commit message guidelines：https://docs.gitlab.com/development/contributing/merge_request_workflow/
-- 本仓库提交规范：`docs/CONVENTIONS.md` §10
+- 内置默认提交格式：[references/commit-format.md](../references/commit-format.md)
