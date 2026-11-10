@@ -4,20 +4,22 @@
 # 检查项（标准见 docs/CONVENTIONS.md）：
 #   L-frontmatter  每个 skill 有 SKILL.md + 合法 frontmatter
 #   L-spec         name 符合官方约束（字符集 / 长度 / 连字符）且与目录名一致
-#   L-description  description 非空、<=1024 字符、不含 <>；过短（<30）warn
+#   L-description  description 非空、<=1024 字符、目标 <=500、三段式、不含 <>
 #   L-category     metadata.category 缺失时 warn
-#   L-readme-file  每个 skill 目录含 README.md（面向人的导览，规范 §2）
-#   L-version      metadata.version 必须存在且为 semver；与 pyproject.toml、
-#                  .claude-plugin/plugin.json、marketplace.json、本地台账一致
+#   L-fields       frontmatter 顶层字段限于官方 6 字段
+#   L-independence SKILL.md 不得引用其他 skill 的目录路径
+#   L-readme-file  每个 skill 目录含 README.md 与 LICENSE，安装命令含当前 skill 名
+#   L-version      metadata.version 必须存在且为 semver；与 pyproject、src __version__、
+#                  plugin.json、marketplace.json、本地台账、docs 标称版本一致
 #   L-plugin       每个 skill 有 plugin.json，且被 marketplace 收录、source 正确
 #   L-readme       README Skills 目录表 <-> 磁盘双向一致（不校验版本列）
 #   L-ledger       本机存在 SKILLS.local.md 时：总览 <-> 磁盘双向一致，
 #                  总览每行有对应明细小节，明细无孤儿小节；无本地台账则跳过
 #   L-size         SKILL.md 超过 500 行或 16KB 时 warn（规范 §2.1）
-#   L-refs         SKILL.md 引用的 references/ 路径必须存在
+#   L-refs         SKILL.md 引用的 references/ 路径必须存在；>100 行无目录 warn
 #   L-docs         缺少 docs/TESTS.md 时 warn
 #   L-layout       skill 必须位于 skills/ 子目录（skills/<name>/SKILL.md）
-#   L-artifacts    运行产物（.venv/ .cache/ __pycache__/ *.egg-info/）未入库
+#   L-artifacts    运行产物与 .env 未入库；.env.example 不得被忽略
 #
 # 退出码：0 全部通过 / 1 存在失配 / 2 用法错误。
 set -euo pipefail
@@ -97,6 +99,33 @@ plugin_field() {
   ' "$f"
 }
 
+# fm_top_keys：frontmatter 顶层字段（缩进为 0 的 key:）。
+fm_top_keys() {
+  awk '
+    NR == 1 && $0 == "---" { fm = 1; next }
+    fm && $0 == "---" { exit }
+    fm && /^[A-Za-z][A-Za-z0-9_-]*:/ { sub(/:.*/, "", $0); print $0 }
+  ' "$SKILLS_DIR/$1/SKILL.md"
+}
+
+# doc_declared_version <file> <label>：提取“适用版本/实现版本”旁的 semver。
+doc_declared_version() {
+  [ -f "$1" ] || return 0
+  grep -m1 -E "$2" "$1" 2>/dev/null \
+    | grep -Eo "$2[^0-9]*[0-9]+\.[0-9]+\.[0-9]+" \
+    | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1
+  return 0
+}
+
+# ledger_detail_version <skill>：本地台账明细 `| 版本 |` 行中的首个 semver。
+ledger_detail_version() {
+  awk -v skill="$1" '
+    /^### / { in_skill = ($2 == skill) }
+    in_skill && /^\| 版本[[:space:]]*\|/ { print; exit }
+  ' "$LEDGER" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1
+  return 0
+}
+
 # ledger_rows / ledger_details：维护者本地台账，存在时才校验。
 ledger_rows() { catalog_rows "$LEDGER" '^## 总览'; }
 ledger_details() {
@@ -122,6 +151,13 @@ for skill in $skills_list; do
     err "$skill: SKILL.md 缺少 YAML frontmatter（首行 --- 起始，存在闭合 ---）"
     continue
   fi
+
+  while IFS= read -r field; do
+    case "$field" in
+      name|description|license|compatibility|metadata|allowed-tools) ;;
+      *) err "$skill: frontmatter 顶层字段 $field 不是官方可移植字段（规范 §3）" ;;
+    esac
+  done < <(fm_top_keys "$skill")
 
   fm_name="$(fm_value "$skill" name)"
   name_ok=1
@@ -160,13 +196,30 @@ for skill in $skills_list; do
     err "$skill: description ${desc_chars} 字符，超过官方上限 1024"
     desc_ok=0
   fi
+  if [ "$desc_chars" -gt 500 ]; then
+    warn "$skill: description ${desc_chars} 字符，超过仓库目标 500（规范 §3.1）"
+  fi
+  if ! printf '%s' "$desc_text" | grep -q '当用户'; then
+    warn "$skill: description 缺少显式正向触发段（当用户…时使用，规范 §3.1）"
+  fi
+  if ! printf '%s' "$desc_text" | grep -qE '不要使用本 skill|不适用|不触发'; then
+    warn "$skill: description 缺少反向不触发段（规范 §3.1）"
+  fi
   if printf '%s' "$desc_text" | grep -q '[<>]'; then
-    err "$skill: description 含 < 或 >（官方规范禁止 XML 标签 / 尖括号）"
+    err "$skill: description 含 < 或 >（仓库约定禁止尖括号）"
     desc_ok=0
   fi
   if [ "$desc_ok" -eq 1 ]; then
     ok "$skill: description 非空（${desc_chars} 字符）"
   fi
+
+  # 独立性：SKILL.md 不得引用其他 skill 的目录路径或内部文件。
+  while IFS= read -r other; do
+    [ "$other" = "$skill" ] && continue
+    if grep -Eq "(\.\./$other(/|\])|skills/$other/)" "$SKILLS_DIR/$skill/SKILL.md"; then
+      err "$skill: SKILL.md 引用了其他 skill 目录 $other（规范 §1 可选协作）"
+    fi
+  done <<<"$skills_list"
 
   catv="$(fm_subvalue "$skill" metadata category)"
   if [ -z "$catv" ]; then
@@ -181,11 +234,19 @@ for skill in $skills_list; do
       err "$skill: README 缺少「## 安装」章节（规范 §5）"
     elif ! grep -q 'npx skills add' "$SKILLS_DIR/$skill/README.md"; then
       err "$skill: README 安装章节缺少可交给 Agent 执行的命令（规范 §5）"
+    elif ! grep -q "agent-skills/$skill" "$SKILLS_DIR/$skill/README.md"; then
+      err "$skill: README 安装命令未指向当前 skill（agent-skills/$skill）"
     else
-      ok "$skill: README 安装章节含可执行命令"
+      ok "$skill: README 安装章节含当前 skill 的可执行命令"
     fi
   else
     err "$skill: 缺少 README.md（规范 §2：面向人的目录导览，全部 skill 必备）"
+  fi
+
+  if [ -f "$SKILLS_DIR/$skill/LICENSE" ]; then
+    ok "$skill: LICENSE 存在"
+  else
+    err "$skill: 缺少 LICENSE（规范 §2：单 skill 自包含）"
   fi
 
   ver="$(fm_subvalue "$skill" metadata version)"
@@ -203,27 +264,42 @@ for skill in $skills_list; do
 
   if [ -f "$SKILLS_DIR/$skill/pyproject.toml" ]; then
     pp_ver="$(awk -F'"' '/^version[[:space:]]*=/ { print $2; exit }' "$SKILLS_DIR/$skill/pyproject.toml")"
-    if [ -n "$ver" ] && [ -n "$pp_ver" ] && [ "$ver" != "$pp_ver" ]; then
+    if [ -z "$pp_ver" ]; then
+      err "$skill: pyproject.toml 缺少 version 字段"
+    elif [ -n "$ver" ] && [ "$ver" != "$pp_ver" ]; then
       err "$skill: 版本不一致：SKILL.md $ver != pyproject.toml $pp_ver"
     else
       ok "$skill: pyproject.toml 版本一致（$pp_ver）"
     fi
   fi
 
-  # 包内 __version__ 是 CLI --version 与经验记录的版本来源，必须同步。
+  # 包内 __version__ 是 CLI --version 与任务元数据的版本来源，必须同步。
   # 包名不一定等于 skill 名（如 windows-disk-cleanup 的包是 disk_cleanup），
   # 因此扫描 src/*/__init__.py 而不是按名字推导路径。
   for init_file in "$SKILLS_DIR/$skill"/src/*/__init__.py; do
     [ -f "$init_file" ] || continue
-    init_ver="$(awk -F'"' '/^__version__[[:space:]]*=/ { print $2; exit }' "$init_file")"
-    [ -n "$init_ver" ] || continue
     init_pkg="$(basename "$(dirname "$init_file")")"
-    if [ -n "$ver" ] && [ "$ver" != "$init_ver" ]; then
+    init_ver="$(awk -F'"' '/^__version__[[:space:]]*=/ { print $2; exit }' "$init_file")"
+    if [ -z "$init_ver" ]; then
+      err "$skill: src/$init_pkg/__init__.py 缺少 __version__"
+    elif [ -n "$ver" ] && [ "$ver" != "$init_ver" ]; then
       err "$skill: 版本不一致：SKILL.md $ver != src/$init_pkg/__init__.py __version__ $init_ver"
     else
       ok "$skill: src/$init_pkg/__init__.py 版本一致（$init_ver）"
     fi
   done
+
+  # docs 标称版本只做漂移检测：不存在对应文档时由 L-docs/自由文档规则处理。
+  tests_doc="$SKILLS_DIR/$skill/docs/TESTS.md"
+  spec_doc="$SKILLS_DIR/$skill/docs/SPEC.md"
+  tests_ver="$(doc_declared_version "$tests_doc" '适用版本')"
+  if [ -n "$tests_ver" ] && [ -n "$ver" ] && [ "$tests_ver" != "$ver" ]; then
+    warn "$skill: docs/TESTS.md 适用版本 $tests_ver 与 frontmatter $ver 不一致"
+  fi
+  spec_ver="$(doc_declared_version "$spec_doc" '实现版本')"
+  if [ -n "$spec_ver" ] && [ -n "$ver" ] && [ "$spec_ver" != "$ver" ]; then
+    warn "$skill: docs/SPEC.md 实现版本 $spec_ver 与 frontmatter $ver 不一致"
+  fi
 
   plugin_file="$SKILLS_DIR/$skill/.claude-plugin/plugin.json"
   if [ ! -f "$plugin_file" ]; then
@@ -274,9 +350,15 @@ for skill in $skills_list; do
     refs_ok=1
     while IFS= read -r ref; do
       [ -n "$ref" ] || continue
-      if [ ! -e "$SKILLS_DIR/$skill/$ref" ]; then
+      ref_path="$SKILLS_DIR/$skill/$ref"
+      if [ ! -e "$ref_path" ]; then
         err "$skill: SKILL.md 引用的 $ref 不存在"
         refs_ok=0
+        continue
+      fi
+      ref_lines="$(wc -l < "$ref_path" | tr -d ' ')"
+      if [ "$ref_lines" -gt 100 ] && ! grep -q '^## 目录' "$ref_path"; then
+        warn "$skill: $ref ${ref_lines} 行且文件头无目录（规范 §2.1）"
       fi
     done <<< "$refs"
     if [ "$refs_ok" -eq 1 ]; then
@@ -335,6 +417,10 @@ if [ -f "$LEDGER" ]; then
         else
           ok "$skill: 本地台账总览版本一致（$ver）"
         fi
+        detail_ver="$(ledger_detail_version "$skill")"
+        if [ -n "$detail_ver" ] && [ "$detail_ver" != "$ver" ]; then
+          warn "$skill: 本地台账明细版本「$detail_ver」与 frontmatter「$ver」不一致"
+        fi
       fi
     else
       err "$skill: 本地台账总览缺少该 skill 的行（SKILLS.local.md）"
@@ -375,14 +461,24 @@ done
 
 # --- 运行产物未入库 -----------------------------------------------------------
 
-tracked_bad="$(git -C "$REPO_ROOT" ls-files 2>/dev/null | grep -E '(^|/)(\.venv|\.cache|__pycache__)/|\.egg-info/' || true)"
+tracked_bad="$(git -C "$REPO_ROOT" ls-files 2>/dev/null | grep -E '(^|/)(\.venv|\.cache|__pycache__)/|\.egg-info/|(^|/)\.env$|(^|/)(SKILLS\.local\.md|agents\.local\.conf)$' || true)"
 if [ -n "$tracked_bad" ]; then
   while IFS= read -r line; do
-    err "运行产物已入库：$line"
+    err "运行产物或本机敏感文件已入库：$line"
   done <<< "$tracked_bad"
 else
-  ok "无运行产物入库（.venv/.cache/__pycache__/*.egg-info）"
+  ok "无运行产物/敏感本机文件入库"
 fi
+
+env_example_ignored=""
+while IFS= read -r example; do
+  [ -n "$example" ] || continue
+  if git -C "$REPO_ROOT" check-ignore -q "$example"; then
+    env_example_ignored="$env_example_ignored$example\n"
+    err ".env 模板被忽略，无法入库：$example"
+  fi
+done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name '.env.example' -type f 2>/dev/null)
+[ -n "$env_example_ignored" ] || ok ".env.example 未被忽略规则排除"
 
 # --- 汇总 ---------------------------------------------------------------------
 

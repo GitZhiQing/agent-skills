@@ -157,6 +157,53 @@
 - = warn：缺少 docs/TESTS.md（规范 §2）
 - = exit 0（warn 不阻塞）；还原后恢复
 
+### L-17 非官方 frontmatter 字段检出
+
+场景：临时在某 skill frontmatter 顶层加入 `when-to-use: test`。
+
+▶ `bash scripts/skills-lint.sh`
+
+- = ERROR：该字段不是官方可移植字段
+- = exit 1；还原后恢复
+
+### L-18 description 形态与预算 warn
+
+场景：临时把某 skill description 改成一句话、删除“当用户/不要使用”结构；另一次超过 500 字符但低于 1024。
+
+▶ `bash scripts/skills-lint.sh`
+
+- = warn：缺少正向触发段或反向不触发段
+- = warn：description 超过仓库目标 500 字符
+- = exit 0；还原后恢复
+
+### L-19 跨 skill 引用检出
+
+场景：临时在 `skills/theme-commit/SKILL.md` 中加入 `../zero-coding/`。
+
+▶ `bash scripts/skills-lint.sh`
+
+- = ERROR：theme-commit 引用了其他 skill 目录 zero-coding
+- = exit 1；还原后恢复
+
+### L-20 自包含文件检出
+
+场景：临时移走某 skill 的 `LICENSE`；另一次把 README 安装命令中的当前 skill 名改成其他名字。
+
+▶ `bash scripts/skills-lint.sh`
+
+- = ERROR：缺少 LICENSE
+- = ERROR：README 安装命令未指向当前 skill
+- = exit 1；还原后恢复
+
+### L-21 docs 版本漂移 warn
+
+场景：临时把 `skills/md2pdf/docs/TESTS.md` 的“适用版本”改为 `9.9.9`。
+
+▶ `bash scripts/skills-lint.sh`
+
+- = warn：docs/TESTS.md 适用版本 9.9.9 与 frontmatter 不一致
+- = exit 0；还原后恢复
+
 ## 2. doctor 场景（D）
 
 ### D-1 健康矩阵

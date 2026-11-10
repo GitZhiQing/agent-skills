@@ -21,6 +21,26 @@ jobs:
           bash scripts/skills-link.sh --agent agents --all
           bash scripts/skills-doctor.sh
 
+  api-web-access:
+    name: api-web-access unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: unittest
+        run: python -m unittest discover -s skills/api-web-access/tests
+
+  md2pdf:
+    name: md2pdf unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: unittest
+        run: uv run --project skills/md2pdf python -m unittest discover -s skills/md2pdf/tests
+
   video-insight:
     name: video-insight unit tests
     runs-on: ubuntu-latest
@@ -46,5 +66,3 @@ jobs:
           python-version: "3.12"
       - name: unittest
         run: python -m unittest discover -s skills/windows-disk-cleanup/tests
-      - name: memory check
-        run: python skills/windows-disk-cleanup/scripts/memory.py check --json

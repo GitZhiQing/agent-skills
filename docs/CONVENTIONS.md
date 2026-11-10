@@ -1,13 +1,15 @@
 # Skills 开发与维护规范
 
-版本：v2.0
+版本：v3.0
 
 适用范围：本仓库全部 skill 及仓库级维护脚本（`scripts/`）。README Skills 目录表与维护者本地台账（`SKILLS.local.md`）的格式标准也定义于本文档（§5），两者与本文档冲突时以本文档为准。格式字段以 [Agent Skills 官方规范](https://agentskills.io/specification) 为准（指针见 [spec/agent-skills-spec.md](../spec/agent-skills-spec.md)），本文档只写官方规范之上的仓库约定。机器可校验的规则由 `scripts/skills-lint.sh` 与 `scripts/skills-doctor.sh` 强制。
 
 ## 1. 范围与原则
 
 - **一个 skill 一个目录，全部位于根 `skills/` 子目录下**，`SKILL.md` 是唯一入口与权威元数据来源；"skill 的定义" = `skills/` 下含 SKILL.md 的子目录（对齐 Agent Skills 社区惯例与 skills CLI 的发现规则，lint L-layout 强制）。
-- **skill 目录自包含**：把单个 skill 目录拷走仍可用（代码 skill 自带 `bin/`、`scripts/`、`pyproject.toml`）；仓库级维护脚本放在根 `scripts/`，不进入 skill 目录。
+- **一个 skill 一个连贯工作单元**：范围内任务无需同时读取另一个 skill 的正文即可完成；能力扩展时先判断是分支、脚本还是独立 skill，不为拆而拆。
+- **skill 目录自包含**：把单个 skill 目录拷走仍可用（代码 skill 自带 `bin/`、`scripts/`、`pyproject.toml`，目录内附 `LICENSE`）；仓库级维护脚本放在根 `scripts/`，不进入 skill 目录。
+- **skill 间只做可选协作**：不得声明运行时硬依赖，不得引用其他 skill 的内部文件路径，不得把其他 skill 的存在当触发前提；需要协作时写“可选、如已安装、缺失则降级”。仓库根 README 的组合段只是可选示例，不是安装前置。
 - **分发单一来源**：各 agent 的 skills 目录（目标清单见 §6）只放指向本仓库的 junction/symlink，不拷贝。
 - **渐进披露**：常驻上下文只有 `name` + `description`；`SKILL.md` 在触发时加载；条件分支、模板与长清单放 `references/`，按需读取（§2.1）。
 - **文档分工**：`README.md` 面向人的仓库说明并承载对外唯一的 skill 目录表；`AGENTS.md` 面向 AI 会话的入口；本规范定义标准；`CONTRIBUTING.md` 给最短上手路径；`template/` 提供骨架；`spec/` 只放官方规范指针。维护者个人台账与状态记录在 `SKILLS.local.md`（本地文件，不入库）。
@@ -17,10 +19,11 @@
 | 文件 / 目录 | 状态 | 说明 |
 | --- | --- | --- |
 | `SKILL.md` | **必需** | 入口与元数据，标准见 §3；目标 ≤500 行 / ≤16KB（§2.1） |
-| `README.md` | **必需** | 面向人的导览：定位与触发场景、工作方式概要、**安装（一句可复制给 Agent 的命令）**、入门用法与边界、文档链接。安装措辞以仓库根 README 的「让 Agent 代装」块为唯一来源，skill README 不并列多种安装矩阵；完整参数、协议细节与排障留在 `SKILL.md` / `references/`，README 不复述。lint 强制存在且含可执行安装命令（L-readme-file）；不写版本号 |
-| `docs/TESTS.md` | **条件必需** | 行为含可断言协议（何时触发 / 何时不触发 / 步骤约束）的 skill 必须有；新骨架默认生成；编号约定见 §7 |
-| `docs/SPEC.md` | 条件必需 | 决策多、有开放问题或多方案权衡的 skill 应有。md2pdf 使用 `docs/SPEC.md` + `docs/DECISIONS.md` 变体（范围契约 + 决策记录），等价有效 |
+| `README.md` | **必需** | 面向人的导览：定位与触发场景、工作方式概要、**安装（一个可复制给 Agent 的语句）**、入门用法与边界、文档链接。其他分发方式不复制进 skill README，只说明“见仓库根 README”；完整参数、协议细节与排障留在 `SKILL.md` / `references/`，README 不复述。lint 强制存在且含可执行安装命令（L-readme-file）；不写版本号 |
+| `docs/TESTS.md` | **条件必需** | 行为含可断言协议（何时触发 / 何时不触发 / 步骤约束）的 skill 必须有；新骨架默认生成；编号约定见 §7。文件头统一含 `文档版本`、`日期`、`适用版本`（= frontmatter version） |
+| `docs/SPEC.md` | 条件必需 | 决策多、有开放问题或多方案权衡的 skill 应有。文件头统一含 `文档版本`、`日期`、`实现版本`（= frontmatter version）。md2pdf 使用 `docs/SPEC.md` + `docs/DECISIONS.md` 变体（范围契约 + 决策记录），等价有效 |
 | `references/` | 条件必需 | 条件分支、输出模板、长清单、领域手册；只在 `SKILL.md` 指向时按需加载，距入口一层（§2.1） |
+| `LICENSE` | **必需** | 与仓库根 MIT 许可一致，保证单 skill 目录拷走后许可自包含 |
 | `.claude-plugin/plugin.json` | **必需** | Claude Code plugin 元数据；`name` == 目录名，`version` 与 frontmatter 一致；lint 强制 |
 | `bin/`、`scripts/`、`pyproject.toml` | 仅代码 skill | 位置无关启动器、实现脚本、依赖声明；形态见 §2.2 |
 | `docs/` 其他文档（研究/灵感文档等） | 自由 | 建议在本地台账明细"文档"行登记 |
@@ -65,14 +68,15 @@
 
 | 字段 | 状态 | 标准 |
 | --- | --- | --- |
-| `name` | **必需** | 官方约束：1–64 字符，仅小写字母/数字/连字符，不以连字符开头或结尾、无连续连字符（`^[a-z0-9]+(-[a-z0-9]+)*$`），且与目录名一致。lint 强制（L-frontmatter / L-spec） |
-| `description` | **必需** | 官方约束：1–1024 字符，不含 `<` / `>`。本仓库要求**三段式**：① 一句话定位（做什么）② 正向触发（场景 + 触发词）③ 反向不触发（什么情况下明确不用）。agent 依据 description 决定是否加载，三段式直接对应"何时用 / 何时不用"的判断输入。lint 强制非空、上限与尖括号，过短（<30 字符）warn |
-| `metadata.version` | **必需** | semver（`X.Y.Z`），全部 skill 一律标注（纯提示词同样有迭代），规则见 §4。lint 强制 |
-| `metadata.category` | **建议** | 领域标签，开放值集（现有：web / git / research / workflow / media / document / system），新值先更新本规范此处再使用；新 skill 应填写，缺失时 lint warn |
-| `license` | 建议 | 许可名（如 `MIT`），对齐官方可选字段 |
-| `compatibility` | 按需 | **标量字符串**，≤500 字符；描述系统依赖、网络与账号要求 |
-| `allowed-tools` | 按需 | 空格分隔的工具授权串（官方实验字段），标量字符串，不用 YAML 列表 |
-| 其他扩展字段 | 先立后用 | 新字段先进本规范再使用，保证三端 agent 语义统一（未知字段会被忽略，但本仓库内含义必须唯一） |
+| `name` | **必需** | 官方约束：1–64 字符，仅小写字母/数字/连字符，不以连字符开头/结尾、无连续连字符（`^[a-z0-9]+(-[a-z0-9]+)*$`），且与目录名一致。lint 强制（L-frontmatter / L-spec） |
+| `description` | **必需** | 官方约束：1–1024 字符。本仓库要求**三段式**：① 一句话定位（做什么）② 正向触发（场景 + 触发词）③ 反向不触发（近邻不用场景）。这是给宿主 agent 的触发判断输入，不是面向用户的宣传文案；目标 ≤500 字符，硬上限 1024。lint 强制非空、长度、三段式与尖括号（尖括号为本仓库约定，非官方规范） |
+| `license` | 建议 | 许可名（如 `MIT`），并与目录内 `LICENSE` 一致 |
+| `compatibility` | 按需 | **标量字符串**，≤500 字符；只写外部系统、网络、账号、key 等环境要求，不复制安装说明 |
+| `metadata` | 建议 | `string → string` 映射；本仓库固定使用 `version` 与 `category` |
+| `metadata.version` | **必需** | semver（`X.Y.Z`），全部 skill 一律标注（纯提示词同样有迭代），规则见 §4。lint 强制；它是仓库维护版本，客户端不一定消费 |
+| `metadata.category` | **建议** | 领域标签，开放值集（现有：web / git / research / workflow / media / document / system），新值先更新本规范此处再使用；新 skill 应填写，缺失 lint warn |
+| `allowed-tools` | 按需 | 空格分隔的工具授权串（官方实验字段），标量字符串，不用 YAML 列表；它只是预批准提示，不是沙箱，客户端不支持时应按正常权限流程请求 |
+| 顶层字段集合 | **封闭** | 仅允许官方 6 字段：`name`、`description`、`license`、`compatibility`、`metadata`、`allowed-tools`；客户端专有字段不得进入共享 skill，未知顶层字段 lint error |
 
 ### 3.1 description 三段式
 
@@ -83,19 +87,23 @@ description: >-
   当用户<反向场景：什么情况下明确不用>时，不要使用本 skill。
 ```
 
-- 正向触发要含**具体关键词**，中文触发词之外补 1–2 个英文触发词（如 "web search" / "commit" / "video analysis"），提高英文会话的触发率。
+- 第一段只写能力与产出，不写内部流程、步骤、营销形容词或实现细节。
+- 正向触发要含**具体关键词**，中文触发词之外补 1–2 个英文触发词（如 "web search" / "commit" / "video analysis"），提高英文会话的触发率；写用户意图、症状、文件类型和同义词，不堆失败样例的原文。
 - 反向不触发写**近邻反例**（共享关键词但需要别的能力），不要写"其他情况"这类空话。
-- 用第三人称陈述，不写 "I can help you" / "你可以用它"；不含 XML 标签与尖括号。
+- 不点名其他 skill 目录，不把“另一个 skill 已安装/失败”写成触发前提；需要表达替代关系时用能力描述（如“免费元搜索通道”“API 通道”）。
+- 用第三人称陈述能力、用祈使句写触发判断，不写 "I can help you" / "你可以用它"；不含尖括号（仓库约定）。
+- 目标 ≤500 字符；超过时优先删流程与重复触发词，而不是压成无信息的一句话。
 - description 变更属于触发条件变化：按 §4 升版本，并按 §7.2 做一次触发校准。
 
 ## 4. 版本规则
 
 - **唯一权威来源**：`SKILL.md` frontmatter `metadata.version`。以下位置必须与其一致，lint 强制：
-  - `pyproject.toml` 的 `version`（若存在）；
+  - `pyproject.toml` 的 `version`（若存在，且存在时不得为空）；
+  - `src/*/__init__.py` 的 `__version__`（若包使用 src 布局，应显式标注）；
   - `.claude-plugin/plugin.json` 的 `version`；
   - `.claude-plugin/marketplace.json` 对应 plugin 条目的 `version`；
-  - 本地台账（`SKILLS.local.md`，存在时）。
-  README Skills 表不展示版本号。
+  - 本地台账总览与明细（`SKILLS.local.md`，存在时）。
+  README Skills 表不展示版本号。`metadata.version` 是仓库维护与分发同步用元数据，不是 Agent Skills 官方运行时接口。
 - 语义：`0.x` 表示生态未定/首版；措辞优化、小修 → 补丁位 +1；行为协议变化（增删阶段、触发条件、命令接口、渐进披露拆分）→ 次位 +1；破坏性变更（调用方式 / 输出格式）在 0.x 阶段也按次位对待、进入 1.0 后升主位。
 - 变更时机：改动行为语义的**同一批**变更里升版本，并同步上述所有位置与台账（明细"版本"行注明日期与一句话原因）。
 - 版本同步检查表：改 frontmatter → 改 pyproject（若有）→ 改 plugin.json → 改 marketplace 条目 → 回填台账 → 跑 lint。
@@ -188,8 +196,9 @@ Run `npx skills add "https://github.com/GitZhiQing/agent-skills"` and follow the
 description 是唯一的触发机制，改措辞后至少做一轮轻量校准：
 
 - 准备 8–10 条**应触发**与 8–10 条**不应触发**的真实用户说法；反例取近邻场景（共享关键词但需要别的能力）。
-- 每条跑 3 次（新会话），记录触发率；应触发组目标 ≥0.8，不应触发组目标 ≤0.2。
-- 结果与调整理由写入该 skill `docs/TESTS.md` 的「触发校准」附录（日期 + 查询 + 结果），不新建独立文件。
+- 默认可先做**静态评审**：逐条写出“应/不应触发 + 理由”，记录日期并注明未运行动态触发率；适合文档批量修正与首版校准。
+- 对触发边界竞争明显（如多个 web 搜索通道、同义词近邻）的 skill，静态评审后应抽样跑新会话，每条 3 次并记录触发率；应触发组目标 ≥0.8，不应触发组 ≤0.2。
+- 结果与调整理由写入该 skill `docs/TESTS.md` 的「触发校准」附录（日期 + 查询 + 结果），不新建独立文件；不得把静态评审伪装成动态触发率。
 - 只改 description 的措辞也按 §4 升补丁位版本。
 
 ### 7.3 代码型 skill 的最小验证

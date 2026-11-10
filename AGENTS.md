@@ -18,45 +18,51 @@ bash scripts/skills-lint.sh           # 结构/元数据：全绿 exit 0
 bash scripts/skills-doctor.sh         # 链接健康矩阵
 bash scripts/skills-link.sh --all     # 分发（幂等）
 
-# ddgs-web-access（uv >= 0.5；调用间隔 >=2 秒）
-bash skills/ddgs-web-access/bin/ddgs-web-search "smoke test" -m 1
-bash skills/ddgs-web-access/bin/ddgs-web-fetch "https://example.com"
+# ddgs-web-access（冻结维护：不改运行时代码；仅做 --help 冒烟）
+uv run --project skills/ddgs-web-access ddgs-web-search --help
+uv run --project skills/ddgs-web-access ddgs-web-fetch --help
+
+# api-web-access（uv >= 0.5；key 走进程环境变量或 skill 根 .env，真实用例未设置自动跳过）
+python -m unittest discover -s skills/api-web-access/tests
+uv run --project skills/api-web-access api-web-search --help
+uv run --project skills/api-web-access api-web-fetch --help
 
 # md2pdf（uv >= 0.5 + 系统 Edge；首次 fetch 约 15MB）
+uv run --project skills/md2pdf python -m unittest discover -s skills/md2pdf/tests
 bash skills/md2pdf/bin/md2pdf --help
-bash skills/md2pdf/bin/md2pdf fetch
 
 # video-insight（纯标准库；外部依赖 ffmpeg/ffprobe）
 python -m unittest discover -s skills/video-insight/tests
 
 # windows-disk-cleanup（纯标准库 + PowerShell 辅助；uv 可选）
 python -m unittest discover -s skills/windows-disk-cleanup/tests
-python skills/windows-disk-cleanup/scripts/memory.py check --json
 bash skills/windows-disk-cleanup/bin/windows-disk-cleanup doctor --root . --json
 ```
 
-视频单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 42 条，真实扫描/回收站用例需在 Windows 人工执行。md2pdf 改动按 `skills/md2pdf/docs/TESTS.md` 回归，核心质量门为 S-3 canary 双版式。
+api-web-access 单测 22 条离线用例另有真实 API 用例，真实用例需进程环境变量 `TAVILY_API_KEY` / `EXA_API_KEY`（CLI 另支持 gitignored `.env`），未设置自动跳过。md2pdf 轻量单测 5 条；渲染质量门仍为 S-3 canary 双版式。video-insight 单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 47 条，真实扫描/回收站用例需在 Windows 人工执行。
 
 ## skill 矩阵
 
 | Skill | 形态 | 入口 | 验证 |
 | --- | --- | --- | --- |
-| ddgs-web-access | Python CLI（uv） | `skills/ddgs-web-access/SKILL.md` | 两个 bin 冒烟 + `docs/TESTS.md` |
+| ddgs-web-access | Python CLI（uv，冻结维护 / 免费无密钥） | `skills/ddgs-web-access/SKILL.md` | 两个 `--help` + `docs/TESTS.md`（不回归联网行为） |
+| api-web-access | Python CLI（uv + 标准库 HTTP） | `skills/api-web-access/SKILL.md` | unittest + 两个 `--help` + `docs/TESTS.md` |
 | deep-research | 纯提示词 | `skills/deep-research/SKILL.md` | `docs/TESTS.md`（人工会话） |
 | theme-commit | 纯提示词 | `skills/theme-commit/SKILL.md` | `docs/TESTS.md`（人工会话） |
 | zero-coding | 纯提示词 | `skills/zero-coding/SKILL.md` | `docs/TESTS.md`（人工会话） |
 | session-handoff | 纯提示词 | `skills/session-handoff/SKILL.md` | `docs/TESTS.md`（人工会话） |
 | video-insight | Python 脚本（标准库） | `skills/video-insight/SKILL.md` | unittest + `docs/TESTS.md` |
-| md2pdf | Python CLI（uv） | `skills/md2pdf/SKILL.md` | `--help` + canary S-3 + `docs/TESTS.md` |
-| windows-disk-cleanup | Python CLI（标准库 + PowerShell） | `skills/windows-disk-cleanup/SKILL.md` | unittest + memory check + `docs/TESTS.md` |
+| md2pdf | Python CLI（uv） | `skills/md2pdf/SKILL.md` | unittest + `--help` + canary S-3 + `docs/TESTS.md` |
+| windows-disk-cleanup | Python CLI（标准库 + PowerShell） | `skills/windows-disk-cleanup/SKILL.md` | unittest + doctor 冒烟 + `docs/TESTS.md` |
 
-架构与依赖细节写在各 skill 的 `README.md` / `docs/SPEC.md`（md2pdf 为 `docs/SPEC.md` + `docs/DECISIONS.md`），本文不重复。
+架构、外部环境要求与可选协作细节写在各 skill 的 `README.md` / `docs/SPEC.md`（md2pdf 为 `docs/SPEC.md` + `docs/DECISIONS.md`），本文不重复。
 
 ## 目录与约定
 
-- 一个 skill 一个目录，`SKILL.md` 为入口；frontmatter 需含 `name`（== 目录名）、三段式 `description`、`metadata.version`（semver，版本唯一权威）与 `metadata.category`（建议）。
-- 每个 skill 必须有 `README.md` 与 `.claude-plugin/plugin.json`，并在 `.claude-plugin/marketplace.json` 有对应条目；应带 `docs/TESTS.md`（缺失 lint warn）。
-- 详细条件分支、模板、长清单放 `references/`（距 `SKILL.md` 一层）；`SKILL.md` 目标 ≤500 行 / ≤16KB，只留核心流程与"何时读哪个文件"。
+- 一个 skill 一个目录、一个连贯工作单元，`SKILL.md` 为入口；frontmatter 需含 `name`（== 目录名）、面向 agent 的三段式 `description`、`metadata.version`（semver，版本唯一权威）与 `metadata.category`（建议）；顶层字段只允许官方 6 字段。
+- skill 之间不写运行时硬依赖；协作只能是“可选、如已安装、缺失可降级”，不得引用其他 skill 内部路径或把对方存在当触发前提。
+- 每个 skill 必须有 `README.md`、`LICENSE` 与 `.claude-plugin/plugin.json`，并在 `.claude-plugin/marketplace.json` 有对应条目；应带 `docs/TESTS.md`（缺失 lint warn）。
+- 详细条件分支、模板、长清单放 `references/`（距 `SKILL.md` 一层）；`SKILL.md` 目标 ≤500 行 / ≤16KB，只留核心流程与“何时读哪个文件”。
 - README 的 `## Skills` 表是唯一公开目录，列固定 `Skill | 说明`，不展示类型与版本号。
 - 维护者个人的台账、分发状态与下一步计划记录在 `SKILLS.local.md`（gitignore `*.local.md`，不入库）。
 - 分发与卸载统一用 `bash scripts/skills-link.sh` / `skills-unlink.sh`；链接变更后跑 doctor 并回填台账。内置目标清单的权威实现是 `scripts/lib.sh` 的 `builtin_agent_targets()`。

@@ -6,16 +6,17 @@
 
 | Skill | 说明 |
 | --- | --- |
-| [ddgs-web-access](skills/ddgs-web-access/) | 联网搜索与网页抓取 |
+| [ddgs-web-access](skills/ddgs-web-access/) | 免费无密钥元搜索与网页抓取（冻结维护，不影响既有命令） |
+| [api-web-access](skills/api-web-access/) | 基于 Tavily / Exa API 的搜索与抓取：自动主备、错误分类与逐 URL 失败隔离 |
 | [deep-research](skills/deep-research/) | 先校准再调研：目标、计划与输出目录经用户确认后执行，无法确认则停止；交付 REPORT + REFERENCES + META，支持源码调研 |
 | [theme-commit](skills/theme-commit/) | 先计划预览并用提问工具确认，再按主题分组提交 |
 | [zero-coding](skills/zero-coding/) | 从零启动个人项目的轻量工作流 |
 | [session-handoff](skills/session-handoff/) | 生成跨会话交接提示词 |
 | [video-insight](skills/video-insight/) | 拉片级视频内容与画面分析 |
 | [md2pdf](skills/md2pdf/) | Markdown 转精美 PDF |
-| [windows-disk-cleanup](skills/windows-disk-cleanup/) | Windows 磁盘/文件夹扫描、可勾选 HTML 报告、安全删除与经验闭环 |
+| [windows-disk-cleanup](skills/windows-disk-cleanup/) | Windows 磁盘/文件夹扫描、离线可勾选 HTML 报告与安全删除 |
 
-各 skill 的用法、依赖与排障见其目录内的 `README.md` / `SKILL.md`；版本号以 `SKILL.md` frontmatter 为准。
+各 skill 的用法、外部环境要求与可选协作见其目录内的 `README.md` / `SKILL.md`；版本号以 `SKILL.md` frontmatter 为准。每个 skill 均可独立安装和使用。
 
 ## 安装
 
@@ -66,12 +67,14 @@ bash scripts/skills-doctor.sh                  # 链接健康检查
 
 具体用法见各 skill 目录的 `README.md`。
 
-## 典型组合
+## 可选组合
 
-- **调研交付**：`deep-research` 检索与源码分析 → `md2pdf` 排版成 PDF；搜索工具缺失时由 `ddgs-web-access` 补位。
-- **项目启动**：`zero-coding` 立项与切片 → `theme-commit` 按主题提交 → `session-handoff` 换会话继续。
-- **内容复盘**：`video-insight` 产出分析报告 → `md2pdf` 排版归档。
-- **磁盘清理**：`windows-disk-cleanup` 扫描并生成勾选报告 → 用户选择 → 安全删除与清理报告。
+每个 skill 独立安装、独立触发；以下是可选工作流示例，不是安装前置、运行依赖或固定调用顺序。
+
+- **调研交付**：`deep-research` 可使用宿主原生 web 工具或任一已安装搜索 skill 完成调研；如需排版，可再调用 `md2pdf`。
+- **项目启动**：`zero-coding` 可独立完成立项与切片；如需分主题提交或换会话交接，可分别配合 `theme-commit`、`session-handoff`。
+- **内容复盘**：`video-insight` 可独立产出分析；如需 PDF 归档，可再调用 `md2pdf`。
+- **磁盘清理**：`windows-disk-cleanup` 独立完成扫描、勾选报告、预演与安全删除。
 
 ## 文档
 
@@ -87,7 +90,7 @@ bash scripts/skills-doctor.sh                  # 链接健康检查
 
 ## 许可与安全
 
-- 本仓库以 [MIT](LICENSE) 发布（ddgs-web-access 目录内另附一份，供单独拷走使用）。
+- 本仓库以 [MIT](LICENSE) 发布；每个 skill 目录内另附同版 MIT 许可，便于单独拷走使用。
 - **skill 含可执行代码**（`skills/*/bin/`、`skills/*/scripts/`），安装前请自行审阅。
 - ddgs-web-access 依赖的上游 ddgs 声明"仅供教育目的使用"，使用时请遵守目标网站服务条款与 robots 协议。
 - md2pdf 首次 `fetch` 会在运行时下载字体切片、Paged.js 与 KaTeX，许可与来源见该 skill 的 `README.md`。
