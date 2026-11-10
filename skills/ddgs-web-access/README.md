@@ -35,7 +35,7 @@ npx skills add GitZhiQing/agent-skills/ddgs-web-access
 
 手动分发与卸载见[仓库 README](../../README.md#安装)。
 
-仅命令行使用（不需要 agent 集成）：`export PATH="$PWD/bin:$PATH"` 后直接跑 `ddgs-web-search`。skill 自带的 `scripts/install.sh` 可把本 skill 单独链接到本机 14 个常见 agent 目录，用法见脚本头注释。
+仅命令行使用（不需要 agent 集成）：`export PATH="$PWD/bin:$PATH"` 后直接跑 `ddgs-web-search`。skill 自带的 `scripts/install.sh` 可把本 skill 单独链接到本机 15 个常见 agent 目录，用法见脚本头注释。
 
 ## 使用
 

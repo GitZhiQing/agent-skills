@@ -1,15 +1,15 @@
 ---
 name: ddgs-web-access
 description: >-
-  联网搜索与网页抓取工具（基于 ddgs 多引擎元搜索：DuckDuckGo / Bing / Brave / Wikipedia 等）。
-  当用户需要搜索最新资料、查找代码、文档或新闻、验证事实、或抓取某个网页的正文内容时使用；
+  免费、无需 API key 的联网搜索与网页抓取工具（基于 ddgs 多引擎元搜索：DuckDuckGo / Bing / Brave / Wikipedia 等）。
+  当用户需要搜索最新资料、查找代码、文档或新闻、验证事实、抓取某个网页的正文内容，或要求普通 web search / web fetch 时使用；
   触发词包括"搜索""查一下""web search""找资料""联网查证""抓取网页""网页正文""fetch 这个页面"等。
-  当用户只是讨论本地文件内容、或已有完整文本无需再抓取网页时，不要使用本 skill。
+  当用户点名 Tavily / Exa / 其他付费 API 搜索通道、要求高稳定性与明确错误码的 API 通道，或只需讨论本地文件内容、已有完整文本无需再抓取网页时，不要使用本 skill。
 license: MIT
 compatibility: 需要 uv >= 0.5 与网络访问；首次调用联网安装 ddgs 依赖（约 30-60 秒）；代理经 --proxy 或环境变量传入
 allowed-tools: Bash(uv run *) Bash(bash *bin/ddgs-web-search *) Bash(bash *bin/ddgs-web-fetch *)
 metadata:
-  version: 0.2.3
+  version: 0.2.4
   category: web
 ---
 

@@ -2,9 +2,9 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 文档版本 | v0.8 |
-| 日期 | 2026-09-13 |
-| 状态 | 已实现（v0.2.2） |
+| 文档版本 | v0.9 |
+| 日期 | 2026-11-11 |
+| 状态 | 已实现（v0.2.4） |
 | 适用范围 | `ddgs_web_search` / `ddgs_web_fetch` 两个 agent 工具（Skill）的设计与实现依据 |
 
 ---
@@ -184,7 +184,7 @@ ddgs 自带 click CLI（`ddgs` 命令：`text`/`extract`/`images`/`videos`/`news
 | NFR-2 | 原生 | 仅 Python 标准库（`argparse`、`os`、`sys`）+ ddgs；无框架、无 async 复杂度 |
 | NFR-3 | 环境要求 | Python >= 3.10；uv >= 0.5；Windows / macOS / Linux 均可（uv 抽象了解释器差异） |
 | NFR-4 | 性能 | 冷缓存首次调用（含安装依赖）目标 ≤ 60s（视网络）；热缓存单次搜索 ≤ 15s（ddgs 多引擎并发）；超时兜底 10s |
-| NFR-5 | Token 效率 | 搜索结果输出为每结果 ≤ 3 行紧凑文本，无 JSON 结构开销；抓取内容支持 `--max-chars` 截断（默认 50000 字符 ≈ 1.2 万 token） |
+| NFR-5 | Token 效率 | 搜索结果输出为每结果 ≤ 3 行紧凑文本，无 JSON 结构开销；抓取内容支持 `--max-chars` 截断（默认 5000 字符，约 1.2k–2k token） |
 | NFR-6 | 可靠性 | 任何异常不产生 Python traceback 泄漏到 stdout；退出码语义稳定（0/1/2）；错误信息含异常类名便于 agent 决策 |
 | NFR-7 | 可维护性 | CLI 参数名与 ddgs 官方 CLI 保持一致（`-q/-r/-s/-t/-m/-pr` 等），降低学习成本；单文件便于整体替换升级 |
 
@@ -192,7 +192,7 @@ ddgs 自带 click CLI（`ddgs` 命令：`text`/`extract`/`images`/`videos`/`news
 
 1. **联网**：搜索与抓取需要外网访问；首次 `uv run` 需从 PyPI 拉取依赖，网络受限时可通过 `UV_INDEX_URL` 指向镜像（如 `https://pypi.tuna.tsinghua.edu.cn/simple`），**不在 pyproject 中硬编码镜像**。
 2. **不依赖系统 Python**：不假设宿主机装有系统级 Python / `py` 启动器，一切通过 uv 托管的解释器运行 —— 这是选择 `uv run` 的根本原因。
-3. **ddgs 版本锁定**：依赖声明 `ddgs>=9.15.0`（保持 <10 的隐式约束？）。因 9.x 仍在快速演进，设计按 9.15 源码为准；升级 ddgs 后需回归 §9 冒烟用例。建议实现时用 `ddgs>=9.15,<10` 锁定大版本。
+3. **ddgs 版本锁定**：依赖声明为 `ddgs>=9.15,<10`（锁定 9.x 大版本）。因 9.x 仍在快速演进，设计按 9.15 源码为准；升级 ddgs 后需回归 §9 冒烟用例。
 4. **ddgs 免责声明**：官方 README 声明 "This library is for educational purposes only"，本项目按"工具提供方不承担搜索内容合规责任"处理，见 §7。
 
 ---
@@ -295,16 +295,16 @@ This article explains the new features in Python 3.13, compared to 3.12 ...
 
 ## 5. 总体架构设计
 
-### 5.1 仓库布局（目标形态，本阶段仅含文档）
+### 5.1 仓库布局（v0.1 目标形态；现行目录另含 `bin/`、`scripts/`、`docs/TESTS.md` 与 `LICENSE`）
 
 ```
 ddgs-web-access/
 ├── SKILL.md                # skill 定义：frontmatter + 使用规则（见 §6）
 ├── README.md               # 项目简介、安装、快速开始
 ├── pyproject.toml          # uv 项目：依赖 ddgs，定义两个 console scripts
-├── ddgs_web_access.py           # 单文件薄 CLI（~150 行，见 §5.3）
+├── ddgs_web_access.py      # 单文件薄 CLI（~150 行，见 §5.3）
 └── docs/
-    └── SPEC.md     # 本文档
+    └── SPEC.md             # 本文档
 ```
 
 不创建 `src/` 包、不建 `uv.lock` 提交策略另行约定（uv 自动生成）。
@@ -374,9 +374,9 @@ ddgs_web_access.py
 ```toml
 [project]
 name = "ddgs-web-access"
-version = "0.1.0"
+version = "0.2.4"   # 示例；以 pyproject.toml 为唯一实现版本来源
 requires-python = ">=3.10"
-dependencies = ["ddgs>=9.15,<10"]
+dependencies = ["ddgs>=9.15,<10", "markdownify>=1.2.3"]
 
 [project.scripts]
 ddgs-web-search = "ddgs_web_access:web_search_main"
@@ -421,19 +421,19 @@ ddgs-web-fetch = "ddgs_web_access:web_fetch_main"
 
 ## 6. SKILL.md 设计草案
 
-### 6.1 Frontmatter
+### 6.1 Frontmatter（v0.1 历史草案；字段形态已按现行规范更新为标量字符串，现行 description 以 `SKILL.md` 为准）
 
 ```yaml
 ---
 name: ddgs-web-access
-description: 联网搜索与网页抓取工具（DuckDuckGo 多引擎元搜索，基于 ddgs 库）。当用户需要搜索最新资料、查找代码/文档/新闻、验证事实、或抓取某个网页的正文内容时使用。触发词包括：搜索/查一下/web search/找资料/联网查证/fetch/抓取网页/网页内容。当用户只是讨论本地文件、或已有完整内容无需再抓取网页时，不要触发本 skill。
-compatibility:
-  - uv >= 0.5（通过 uv run 调用，需联网）
-  - 首次调用会联网安装 ddgs 依赖，耗时约 30-60s
-allowed-tools:
-  - Bash(uv run *)
+description: >-
+  免费、无需 API key 的联网搜索与网页抓取工具（基于 ddgs 多引擎元搜索）。
+  当用户需要搜索最新资料、查找代码/文档/新闻、验证事实、或抓取网页正文时使用。
+  当用户点名 Tavily / Exa / 其他付费 API 搜索通道，或只需讨论本地文件内容、已有完整文本无需再抓取网页时，不要使用本 skill。
+compatibility: uv >= 0.5；通过 uv run 调用并需联网；首次调用会联网安装 ddgs 依赖（约 30-60s）
+allowed-tools: Bash(uv run *) Bash(bash *bin/ddgs-web-search *) Bash(bash *bin/ddgs-web-fetch *)
 metadata:
-  version: 0.1.0
+  version: 0.2.4
   category: web
 ---
 ```
@@ -504,7 +504,7 @@ metadata:
 
 | 编号 | 操作 | 预期 |
 | --- | --- | --- |
-| T1 | `uv run --project . ddgs-web-search --help`（冷缓存首次） | 帮助正常输出；记录安装耗时（目标 ≤60s） |
+| T1 | `uv run --project <skill_dir> ddgs-web-search --help`（冷缓存首次） | 帮助正常输出；记录安装耗时（目标 ≤60s） |
 | T2 | `ddgs-web-search "python 3.13" -m 5` | stdout 为块格式 ≥1 条，字段齐全；exit 0 |
 | T3 | `ddgs-web-search "zzqqxx nonexistent phrase 99001" -m 3` | stdout 空、stderr 提示、exit 0 |
 | T4 | `ddgs-web-search "python" -m 5 --format json` | stdout 为合法 JSON 数组 |
