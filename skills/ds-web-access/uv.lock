@@ -3,6 +3,6 @@ revision = 5
 requires-python = ">=3.10"
 
 [[package]]
-name = "api-web-access"
-version = "0.1.1"
+name = "ds-web-access"
+version = "0.1.0"
 source = { editable = "." }

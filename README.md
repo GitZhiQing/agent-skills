@@ -7,7 +7,7 @@
 | Skill | 说明 |
 | --- | --- |
 | [ddgs-web-access](skills/ddgs-web-access/) | 免费无密钥元搜索与网页抓取（冻结维护，不影响既有命令） |
-| [api-web-access](skills/api-web-access/) | 基于 Tavily / Exa API 的搜索与抓取：自动主备、错误分类与逐 URL 失败隔离 |
+| [ds-web-access](skills/ds-web-access/) | 基于 DeepSeek Search / Fetch API 的联网搜索与网页 Markdown 抓取，带付费成本防护与本地缓存 |
 | [deep-research](skills/deep-research/) | 先校准再调研：目标、计划与输出目录经用户确认后执行，无法确认则停止；交付 REPORT + REFERENCES + META，支持源码调研 |
 | [theme-commit](skills/theme-commit/) | 先计划预览并用提问工具确认，再按主题分组提交 |
 | [zero-coding](skills/zero-coding/) | 从零启动个人项目的轻量工作流 |

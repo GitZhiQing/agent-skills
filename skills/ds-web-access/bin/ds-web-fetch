@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# ds-web-fetch — location-independent launcher for the DeepSeek Fetch API.
+set -euo pipefail
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if command -v cygpath >/dev/null 2>&1; then
+  PROJECT_DIR="$(cygpath -w "$PROJECT_DIR")"
+fi
+exec uv run --project "$PROJECT_DIR" ds-web-fetch "$@"

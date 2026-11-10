@@ -21,8 +21,8 @@ jobs:
           bash scripts/skills-link.sh --agent agents --all
           bash scripts/skills-doctor.sh
 
-  api-web-access:
-    name: api-web-access unit tests
+  ds-web-access:
+    name: ds-web-access unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: unittest
-        run: python -m unittest discover -s skills/api-web-access/tests
+        run: python -m unittest discover -s skills/ds-web-access/tests
 
   md2pdf:
     name: md2pdf unit tests

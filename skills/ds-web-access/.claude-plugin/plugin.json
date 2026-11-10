@@ -1,0 +1,6 @@
+{
+  "name": "ds-web-access",
+  "description": "基于 DeepSeek 官方 Search / Fetch API 的联网搜索与网页 Markdown 抓取 CLI，带付费成本防护、错误分类与本地缓存",
+  "version": "0.1.1",
+  "author": { "name": "QING" }
+}

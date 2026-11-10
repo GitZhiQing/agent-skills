@@ -1,0 +1,19 @@
+[project]
+name = "ds-web-access"
+version = "0.1.1"
+description = "DeepSeek Search & Fetch API CLI with explicit billing safeguards, retry policy, and local caching."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = []
+
+[project.scripts]
+ds-web-search = "ds_web_access:web_search_main"
+ds-web-fetch = "ds_web_access:web_fetch_main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["ds_web_access"]

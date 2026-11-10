@@ -24,12 +24,12 @@
       ]
     },
     {
-      "name": "api-web-access",
-      "source": "./skills/api-web-access",
+      "name": "ds-web-access",
+      "source": "./skills/ds-web-access",
       "skills": [
         "./"
       ],
-      "description": "基于 Tavily / Exa 官方 API 的联网搜索与网页抓取备援：自动主备、错误分类、限流退避、逐 URL 失败隔离与缓存",
+      "description": "基于 DeepSeek Search / Fetch API 的联网搜索与网页 Markdown 抓取，带付费成本防护、错误分类与本地缓存",
       "version": "0.1.1",
       "author": {
         "name": "QING"
@@ -37,8 +37,7 @@
       "keywords": [
         "web-search",
         "web-fetch",
-        "tavily",
-        "exa"
+        "deepseek"
       ]
     },
     {

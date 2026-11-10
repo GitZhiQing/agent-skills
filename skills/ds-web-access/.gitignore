@@ -1,4 +1,4 @@
-# Secrets are environment-only by design; block accidental local files.
+# Secrets are environment-or-.env only; .env.example must stay tracked.
 .env
 .env.*
 !.env.example

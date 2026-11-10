@@ -22,10 +22,10 @@ bash scripts/skills-link.sh --all     # 分发（幂等）
 uv run --project skills/ddgs-web-access ddgs-web-search --help
 uv run --project skills/ddgs-web-access ddgs-web-fetch --help
 
-# api-web-access（uv >= 0.5；key 走进程环境变量或 skill 根 .env，真实用例未设置自动跳过）
-python -m unittest discover -s skills/api-web-access/tests
-uv run --project skills/api-web-access api-web-search --help
-uv run --project skills/api-web-access api-web-fetch --help
+# ds-web-access（uv >= 0.5；DEEPSEEK_API_KEY 进程环境变量或 skill 根 .env；付费 API）
+python -m unittest discover -s skills/ds-web-access/tests
+uv run --project skills/ds-web-access ds-web-search --help
+uv run --project skills/ds-web-access ds-web-fetch --help
 
 # md2pdf（uv >= 0.5 + 系统 Edge；首次 fetch 约 15MB）
 uv run --project skills/md2pdf python -m unittest discover -s skills/md2pdf/tests
@@ -39,14 +39,14 @@ python -m unittest discover -s skills/windows-disk-cleanup/tests
 bash skills/windows-disk-cleanup/bin/windows-disk-cleanup doctor --root . --json
 ```
 
-api-web-access 单测 22 条离线用例另有真实 API 用例，真实用例需进程环境变量 `TAVILY_API_KEY` / `EXA_API_KEY`（CLI 另支持 gitignored `.env`），未设置自动跳过。md2pdf 轻量单测 5 条；渲染质量门仍为 S-3 canary 双版式。video-insight 单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 47 条，真实扫描/回收站用例需在 Windows 人工执行。
+ds-web-access 单测 23 条离线用例另有 1 条真实 API 用例，真实用例需 `DEEPSEEK_API_KEY`；Search/Fetch 为付费 API。md2pdf 轻量单测 5 条；渲染质量门仍为 S-3 canary 双版式。video-insight 单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 47 条，真实扫描/回收站用例需在 Windows 人工执行。
 
 ## skill 矩阵
 
 | Skill | 形态 | 入口 | 验证 |
 | --- | --- | --- | --- |
 | ddgs-web-access | Python CLI（uv，冻结维护 / 免费无密钥） | `skills/ddgs-web-access/SKILL.md` | 两个 `--help` + `docs/TESTS.md`（不回归联网行为） |
-| api-web-access | Python CLI（uv + 标准库 HTTP） | `skills/api-web-access/SKILL.md` | unittest + 两个 `--help` + `docs/TESTS.md` |
+| ds-web-access | Python CLI（uv + 标准库 HTTP，付费 API） | `skills/ds-web-access/SKILL.md` | unittest + 两个 `--help` + `docs/TESTS.md` |
 | deep-research | 纯提示词 | `skills/deep-research/SKILL.md` | `docs/TESTS.md`（人工会话） |
 | theme-commit | 纯提示词 | `skills/theme-commit/SKILL.md` | `docs/TESTS.md`（人工会话） |
 | zero-coding | 纯提示词 | `skills/zero-coding/SKILL.md` | `docs/TESTS.md`（人工会话） |
