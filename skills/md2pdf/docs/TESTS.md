@@ -1,11 +1,22 @@
 # md2pdf 测试集
 
-版本：v0.1.0。人工会话执行；
+| 文档版本 | v0.1.3 | 日期 | 2026-11-11 | 适用版本 | md2pdf 0.1.3 |
+| --- | --- | --- | --- | --- | --- |
+
+行为协议断言人工会话执行；代码层另有轻量自动化单测（§0）。
 编号采用「类别前缀-序号」（S 冒烟 / P 协议 / F 功能），新场景追加不重排。
 
-前置条件：uv >= 0.5、系统装有 Edge、联网；`<skill_dir>` 为本 skill 目录
-（仓库内 `skills/md2pdf/` 或经 junction 分发后的任意 agent skills 目录，命令不依赖当前工作目录）。
-首次执行前先完成 S-2（fetch 下载运行资源）。
+前置条件：uv >= 0.5、联网；打印优先复用系统 Edge，未安装时需已准备 Playwright Chromium；
+`<skill_dir>` 为本 skill 目录（仓库内 `skills/md2pdf/` 或经 junction 分发后的任意 agent skills 目录，
+命令不依赖当前工作目录）。首次执行前先完成 S-2（fetch 下载运行资源）。
+
+## 0. 轻量自动化测试（不联网 / 不渲染）
+
+▶ `uv run --project <skill_dir> python -m unittest discover -s "<skill_dir>/tests" -v`
+
+- = 5 条用例全部通过（`OK`），耗时约 0.1s；不渲染 PDF、不联网、不下载资源
+- = 覆盖：`--help` 可解析；fetch / preview / convert / check 四个子命令存在；convert 在读取来源前拒绝未知主题且不产生任务文件夹；config.yaml 的 `engine` 字段取自包内 `__version__`（动态替换版本后仍生效）
+- = 无 uv 时：`PYTHONPATH="<skill_dir>/src" python -m unittest discover -s "<skill_dir>/tests"`（依赖需已安装）
 
 ## 1. 冒烟（S）
 
@@ -35,7 +46,7 @@
 - = 退出码 0，任务文件夹含 source.md、config.yaml、pdf/ 下双版式 PDF
 - = 质量门无 FAIL 输出（空白页 / 孤悬标题 / 字体集 / 目录页码四类断言全过）
 - = 报告版含封面 + 目录 + 页眉页脚页码；正文版无封面无页码
-- = config.yaml 记录 source / theme / layouts / engine
+- = config.yaml 记录 source / theme / layouts / engine（engine 版本与包内 `__version__` 一致）
 
 ### S-4 预览图生成
 
@@ -121,3 +132,36 @@
 ▶ `bash "<skill_dir>/bin/md2pdf" check <pdf路径>`
 
 - = 全绿时退出码 0 且无输出；有 FAIL 时列出并退出码 1
+
+## 附录 A. 触发校准（静态评审）
+
+日期：2026-11-11；适用版本：md2pdf 0.1.3。
+方式：按 [SKILL.md](../SKILL.md) 的 description 三段式与近邻 skill 边界逐条**静态评审**，不新开会话、不统计触发率；结果为评审预期，后续 description 变更时再按仓库规范做会话级复测。
+
+### A.1 应触发（8 条，静态判定 8/8）
+
+| # | 用户说法 | 判定依据 |
+| --- | --- | --- |
+| 1 | 把这个 md 转成 PDF | 正向触发词「转 PDF」+ 本地 md 来源 |
+| 2 | 帮我导出报告，用 deepseek 主题 | 「导出报告」+ 指定主题，直接 convert |
+| 3 | 出一版 PDF，排得好看点 | 「出一版 PDF」+ 排版诉求 |
+| 4 | 这份 Markdown 排个版 | 「排个版」+ Markdown 来源 |
+| 5 | 生成一份精美 PDF | description 中的「精美 PDF」 |
+| 6 | 把这篇文章 https://… 转成 PDF | 远程网页 URL 来源属明确适用场景 |
+| 7 | 把这次会话的内容整理成 PDF | 会话内容落盘后转换，属来源三态之一 |
+| 8 | 用 anthropic 主题出一版报告 PDF | 主题名 + 「报告 PDF」，直接 convert |
+
+### A.2 近邻不触发（8 条，静态判定 8/8）
+
+| # | 用户说法 | 判定依据 |
+| --- | --- | --- |
+| 1 | 把这个 PDF 转成 Markdown | 反向格式转换，不是 md → PDF |
+| 2 | 把这个 Word 文档转成 PDF | 输入为 Word；本 skill 只接受 Markdown / URL / 会话内容 |
+| 3 | 帮我把它转成纯文本 | 纯文本转换，description 明确不触发 |
+| 4 | 用 LaTeX 排一篇学术论文 | 要求 LaTeX 排版，走对应工具链 |
+| 5 | 读出这个 PDF 里的文字 | PDF 内容读取，无排版输出 |
+| 6 | 给这个 md 文件加个目录 | Markdown 内容编辑，不产出 PDF |
+| 7 | 把网页保存成 HTML | 网页存档，不是 PDF 排版 |
+| 8 | 把这张图片转成 PDF | 图片转 PDF，无 Markdown 来源与排版流程 |
+
+结论：8 条应触发均命中 description 的正向场景与来源三态；8 条近邻反例均落在反向不触发或能力边界外，未发现需要改写的歧义。本次为静态评审，不替代会话级触发率统计。

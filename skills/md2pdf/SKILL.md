@@ -5,10 +5,10 @@ description: >-
   当用户说「转 PDF」「导出报告」「出一版 PDF」「把这个文档排个版」，或要把本地 md、远程 URL（含网页转 md）、会话内容排版成 PDF 时使用；触发词包括「转 PDF」「导出报告」「出一版 PDF」「排个版」「精美 PDF」等。
   当用户只要纯文本转换、已有排版好的 PDF/Word 无需重排、或要求 LaTeX/学术论文排版时，不要使用本 skill。
 license: MIT
-compatibility: 需要 uv >= 0.5、Python >= 3.11 与系统 Edge（Playwright channel=msedge 打印，零浏览器下载）；首次使用需联网 fetch 一次下载字体切片 + Paged.js + KaTeX（~15MB）；网页来源经 trafilatura 抽正文
+compatibility: 需要 uv >= 0.5、Python >= 3.11；打印优先复用系统 Edge（Playwright channel=msedge，零浏览器下载），未安装 Edge 时回退 Playwright Chromium（需已安装）；首次使用需联网 fetch 一次下载字体切片 + Paged.js + KaTeX（~15MB）；网页来源经 trafilatura 抽正文
 allowed-tools: Bash(uv run *) Bash(bash *bin/md2pdf *)
 metadata:
-  version: 0.1.2
+  version: 0.1.3
   category: document
 ---
 
@@ -69,7 +69,7 @@ kimi（默认，深蓝+亮蓝）· deepseek（电光蓝）· gemini（蓝绿双�
 bash "<skill_dir>/bin/md2pdf" fetch    # 下载字体切片 + Paged.js + KaTeX（~15MB，一次即可）
 ```
 
-打印用系统 Edge（Playwright channel="msedge"，零浏览器下载）；打印前有字体就绪断言，字体未就绪会拒绝打印（防静默回落系统字体）。
+打印优先复用系统 Edge（Playwright channel="msedge"，零浏览器下载）；未安装 Edge 时回退 Playwright Chromium（需自行准备浏览器）。打印前有字体就绪断言，字体未就绪会拒绝打印（防静默回落系统字体）。
 
 ## 排版约定（写文档时可直接用）
 
@@ -83,6 +83,7 @@ bash "<skill_dir>/bin/md2pdf" fetch    # 下载字体切片 + Paged.js + KaTeX�
 - 全文唯一 `# h1` 视为文档标题（进封面/题头，不进正文），`##` 升格为章节；自带「一、」等编号的章节不叠加自动章号
 - 布局变体在模板层物化（非 CSS 显隐）——Paged.js 的 display:none 分页冲突教训（DECISIONS D2）
 - 单美元 `$` 公式与货币符号可能误判，必要时转义 `\$`
+- 已在 Windows 验证；Linux/macOS 未验证
 
 ## 参考文档
 

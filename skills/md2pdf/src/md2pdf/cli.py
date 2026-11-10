@@ -17,7 +17,7 @@ from pathlib import Path
 
 import yaml
 
-from . import checker, fetch_assets
+from . import __version__, checker, fetch_assets
 from .builder import available_themes, build_html
 from .convert_md import parse
 from .printer import print_pdf
@@ -106,7 +106,7 @@ def cmd_convert(args) -> int:
         "title": title,
         "subtitle": subtitle,
         "generated": _dt.datetime.now().isoformat(timespec="seconds"),
-        "engine": "md2pdf 0.1.0 (playwright+paged.js)",
+        "engine": f"md2pdf {__version__} (playwright+paged.js)",
     }
     (task / "config.yaml").write_text(
         yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8"

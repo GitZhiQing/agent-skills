@@ -1,11 +1,11 @@
----
-created: 2026-10-16
-updated: 2026-10-16
----
-
 # md2pdf — Markdown 精美 PDF Skill 设计规范
 
-> 实现位置：本 skill 目录（源码即安装目录，经仓库 `scripts/skills-link.sh` junction 分发到各 agent）。
+| 项目 | 内容 |
+| --- | --- |
+| 文档版本 | v0.1.3 |
+| 日期 | 2026-11-11 |
+| 实现版本 | md2pdf 0.1.3 |
+| 实现位置 | 本 skill 目录（源码即安装目录，经仓库 `scripts/skills-link.sh` junction 分发到各 agent） |
 
 一句话定位：把 Markdown 一键转成排版精良的 PDF——`convert` 内部两段式（`build_html` 生成中间 HTML/CSS → `print_pdf` 输出 PDF），中间产物落盘可读可改；双布局（article 纯正文 / report 报告骨架）× 主题预设（四套）开箱即用，三层调参接口支持按需定制。
 
@@ -15,7 +15,7 @@ Markdown 笔记在交付、归档、汇报时需要精美 PDF，现有工具留�
 
 ## 走通路径
 
-用户对 Agent 说「把 xx.md 转成 PDF」→ Agent 运行 `uv run md2pdf preview xx.md -o preview.png` 让用户选主题（可选）→ `uv run md2pdf convert xx.md --theme kimi --layout report`（内部 build_html → print_pdf → check，产出任务文件夹）→（可选：Agent 读改任务文件夹里的 `build-*.html` 后用 `python -m md2pdf.printer` 重打印）。
+用户对 Agent 说「把 xx.md 转成 PDF」→ Agent 运行 `uv run --project "<skill_dir>" md2pdf preview xx.md -o preview.png` 让用户选主题（可选）→ `uv run --project "<skill_dir>" md2pdf convert xx.md --theme kimi --layout report`（内部 build_html → print_pdf → check，产出任务文件夹）→（可选：Agent 读改任务文件夹里的 `build-*.html` 后用 `uv run --project "<skill_dir>" python -m md2pdf.printer` 重打印）。
 
 MVP 交付判据：一篇含代码块、表格、公式的真实中文笔记，用任选布局与主题一键产出 PDF（report 版含封面、目录、页眉页脚页码），全程离线，且新会话 Agent 仅凭 SKILL.md 能独立完成一次转换。
 
@@ -42,10 +42,11 @@ MVP 交付判据：一篇含代码块、表格、公式的真实中文笔记，�
 
 - uv + Python（≥3.11）；markdown-it-py + mdit-py-plugins 解析；Pygments 代码高亮；KaTeX（本地 JS 文件）公式
 - Jinja2 渲染 HTML 骨架；Paged.js 分页（页眉页脚、页码、目录回填都在页面 DOM 内生成，不依赖浏览器打印参数）
-- 打印引擎统一为 Playwright：优先 `channel="msedge"` 复用系统 Edge（零额外下载），无可复用浏览器时下载自带 Chromium 兜底；打印前显式等待 Paged.js 分页完成与字体就绪（替代方案与否决理由见 DECISIONS D1）
+- 打印引擎统一为 Playwright：优先 `channel="msedge"` 复用系统 Edge（零额外浏览器下载）；未安装 Edge 时回退 Playwright 自带 Chromium（需已安装，否则先执行 `playwright install chromium`）。打印前显式等待 Paged.js 分页完成与字体就绪（替代方案与否决理由见 DECISIONS D1）
 - 字体：正文思源宋体（Noto Serif SC 400/700，回退宋体），辅助元素（表格/页眉页脚/标注）思源黑体（Noto Sans SC 400/600/700，回退微软雅黑），代码中文注释由 mono 栈内 Noto Sans SC 兜底；数字一律 `font-variant-numeric: tabular-nums`；静态字重切片（可变字体会被 Chromium 打印降级为 Type3，见 DECISIONS D10）本地化，清单从各档 CSS 解析（单一事实源），首次由获取脚本下载
 - 程序化质量门 check.py：打印后自动断言（无空白页/无孤悬标题/段末孤字告警/字体集须含 Noto 禁 Type3 与系统 CJK 回退/目录页码对齐），FAIL 即止不进视觉验收；金丝雀样张 `examples/canary.md` 覆盖全部版式元素，管线改动先过金丝雀再动真实文档
 - frontmatter 约定：`title / subtitle / date` 进封面与文档题头；主题与布局由 CLI 参数选择
+- 平台：0.1.3 只在 Windows 上验证；Linux/macOS 未验证
 
 ## 两段式与三层调整（核心设计）
 
@@ -53,13 +54,15 @@ MVP 交付判据：一篇含代码块、表格、公式的真实中文笔记，�
 md → parse → build_html → 中间 HTML + CSS（落盘 build-*.html，可读可改）→ print_pdf → check（程序断言）→ PDF
 ```
 
-打印全程本地静态资源（字体切片 + Paged.js 内嵌），打印前有字体就绪断言（防静默回落系统字体）、打印后有 check 质量门（DECISIONS D9/D11）；有浏览器工具的 Agent 会话，推荐先打开任务文件夹里的 `build-*.html` 目检版式、定点修改，再用 `python -m md2pdf.printer` 重打印。
+打印全程本地静态资源（字体切片 + Paged.js 内嵌），打印前有字体就绪断言（防静默回落系统字体）、打印后有 check 质量门（DECISIONS D9/D11）；有浏览器工具的 Agent 会话，推荐先打开任务文件夹里的 `build-*.html` 目检版式、定点修改，再用 `uv run --project "<skill_dir>" python -m md2pdf.printer` 重打印。
 
 调参分三层，SKILL.md 里向 Agent 明确这三级用法：
 
-1. CLI 参数（`--layout / --theme / --page / --accent` 等）——覆盖八成常见需求；
-2. override.css 覆盖 CSS 变量——主题全用自定义属性书写，换肤不动主题本体；
+1. CLI 参数（`--layout` / `--theme`，以及输出位置 `--out`）——覆盖八成常见需求；
+2. 改 `templates/base.css` 变量或 `themes/<name>.css`——主题全用自定义属性书写，换肤不动主题本体；
 3. 直接编辑任务文件夹里的 `build-*.html` 后重打印——自由度上限。
+
+> 早期设想的 `--page` / `--accent` 参数当前**未实现**，不属于 0.1.3 的 CLI 接口（列入后续计划）；页面参数与强调色调整请走第 2、3 层。
 
 ## 工作流
 
@@ -69,7 +72,7 @@ md → parse → build_html → 中间 HTML + CSS（落盘 build-*.html，可读
   ```
   <文档名>-YYMMDD-HHMM/
     source.md            # 原始文档存档（复制/下载/会话生成）
-    config.yaml          # 来源、主题、版式、页面参数、时间、内核版本
+    config.yaml          # 来源、主题、版式、标题、生成时间、引擎版本
     preview.png          # 预览对比图（若走过预览流）
     pdf/<文档名>-报告版.pdf
     pdf/<文档名>-正文版.pdf
@@ -78,12 +81,12 @@ md → parse → build_html → 中间 HTML + CSS（落盘 build-*.html，可读
 
 ## 实现
 
-- **CLI**：`fetch / preview / convert / check` 四个子命令，`bin/md2pdf` 位置无关启动器，`uv run --project` 等价调用。
+- **CLI**：`fetch / preview / convert / check` 四个子命令，`bin/md2pdf` 位置无关启动器；标准调用 `uv run --project "<skill_dir>" md2pdf <子命令>`（`bash "<skill_dir>/bin/md2pdf" <子命令>` 为等价启动方式）。
 - **convert**：读取本地/远程/网页来源 → markdown-it-py 解析（Pygments 高亮、KaTeX 浏览器端渲染）→ `build_html` 按布局生成 `build-{layout}.html`（base.css + themes/*.css + Jinja2 模板）→ `print_pdf` → `check_pdf` 断言 → 任务文件夹（source.md + config.yaml + pdf/双版式）。
 - **preview**：四主题横排、上行标准样张、下行文档节选，输出 PNG 供用户选主题。
 - **主题**：`themes/<name>.css` 数据文件，preview/convert 自动发现，新增主题零代码。
 - **分发**：src 布局 + `bin/` 启动器；仓库根 `scripts/skills-link.sh` 以 junction/symlink 分发，单一来源。
-- **验证**：`examples/canary.md` 双版式转换 + check 质量门作为核心回归基线。
+- **验证**：`examples/canary.md` 双版式转换 + check 质量门作为核心回归基线；`tests/` 提供不渲染 PDF、不联网的轻量单测（见 [TESTS.md](TESTS.md)）。
 
 ## 非目标
 
@@ -91,4 +94,12 @@ md → parse → build_html → 中间 HTML + CSS（落盘 build-*.html，可读
 - 不做 mermaid 与数据图表渲染——Agent 先行用 mermaid-cli / matplotlib 生成图片，在 md 里引用；
 - 不做 GUI、Web 界面、监听服务；不做批量守护进程（批量转换由 Agent 循环单文件实现）；
 - 不做 Word / LaTeX 输入输出；
-- MVP 只验证 Windows 环境。
+- 不做 `--page` / `--accent` 等页面与强调色 CLI 参数（当前通过 CSS 覆盖实现同类需求）。
+
+## 变更记录
+
+本文自 0.1.3 起维护变更记录；更早沿革见 `git log -- skills/md2pdf`。
+
+| 日期 | 文档版本 | 实现版本 | 变更 |
+| --- | --- | --- | --- |
+| 2026-11-11 | v0.1.3 | 0.1.3 | 对齐实现：`--page/--accent` 标注为未实现；命令示例统一为 `uv run --project "<skill_dir>" md2pdf ...`；平台与浏览器表述对齐 SKILL/README；补自动化测试说明与版本头 |
