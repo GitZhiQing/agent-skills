@@ -1,0 +1,6 @@
+{
+  "name": "api-web-access",
+  "description": "基于 Tavily / Exa 官方 API 的联网搜索与网页抓取备援：自动主备、错误分类、限流退避、逐 URL 失败隔离与缓存",
+  "version": "0.1.1",
+  "author": { "name": "QING" }
+}

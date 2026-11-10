@@ -1,0 +1,10 @@
+# Secrets are environment-only by design; block accidental local files.
+.env
+.env.*
+!.env.example
+
+# Runtime artifacts
+.venv/
+.cache/
+__pycache__/
+*.egg-info/
