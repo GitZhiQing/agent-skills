@@ -9,7 +9,7 @@ description: >-
 license: MIT
 compatibility: Windows 10/11；Python 3.9+（推荐 uv，也可直接用 python）；回收站模式需要 Windows PowerShell 5.1+；系统级目录通常需要管理员权限
 metadata:
-  version: 0.6.0
+  version: 0.7.0
   category: system
 ---
 
@@ -186,7 +186,7 @@ $BIN delete --selection "$OUT/selection.json" --yes --allow-review --json
 
 ## 7. 参考
 
-- `references/rules-catalog.md` — 226 条目录规则（系统/用户/开发/项目/凭据）与官方来源。
+- `references/rules-catalog.md` — 250 条目录规则（系统/用户/开发/项目/凭据/运行时）与官方来源。
 - `references/protocol.md` — 选择 JSON、二次校验、保护清单、失败处理。
 - `README.md` — 面向人的介绍与使用方式。
 - `docs/SPEC.md` — 架构、安全模型、规则 schema、扫描策略与决策。

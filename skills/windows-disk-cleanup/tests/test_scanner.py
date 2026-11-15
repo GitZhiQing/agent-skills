@@ -129,6 +129,33 @@ class ScannerTests(unittest.TestCase):
             result = scanner.scan()
             self.assertTrue(result.stats.partial)
 
+    def test_codex_runtime_node_modules_not_listed_as_safe(self):
+        with tempfile.TemporaryDirectory(prefix="wdc-scan-") as tmp:
+            root = Path(tmp) / "fixture"
+            modules = (
+                root
+                / ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules"
+            )
+            (modules / "pkg").mkdir(parents=True)
+            (modules / "pkg/index.js").write_bytes(b"x" * 500)
+            result = helpers.scan_fixture(root)
+            by = {e.path: e for e in result.entries}
+            runtime = by[str(root / ".cache/codex-runtimes")]
+            self.assertEqual(runtime.recommendation, "keep")
+            self.assertEqual(runtime.rule_id, "rt-codex-runtimes")
+            self.assertFalse(runtime.selectable)
+            # 运行时内部不再下钻，node_modules 不得以 safe 条目出现
+            self.assertFalse(
+                any(p.endswith("node_modules") for p in by),
+                "runtime node_modules must not be listed",
+            )
+            self.assertFalse(
+                any(
+                    e.recommendation == "safe" and "codex-runtimes" in e.path
+                    for e in result.entries
+                )
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

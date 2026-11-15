@@ -1,6 +1,6 @@
 # windows-disk-cleanup 需求与设计文档
 
-版本：v0.6.0　日期：2026-11-11
+版本：v0.7.0　日期：2026-11-15
 
 ## 1. 问题与目标
 
@@ -48,7 +48,7 @@ skills/windows-disk-cleanup/
     winutil.py                        # 盘信息、长路径、reparse、PowerShell、格式化
     model.py                          # Entry/ScanResult/DeleteResult
   assets/
-    rules.json                        # 226 条规则（权威）
+    rules.json                        # 250 条规则（权威）
     report.template.html              # 扫描报告（单文件离线）
     cleanup.template.html             # 清理报告
     ps/probe.ps1                      # 回收站大小 / 卷信息
@@ -56,7 +56,7 @@ skills/windows-disk-cleanup/
   references/
     rules-catalog.md                      # 规则可读目录 + 来源
     protocol.md                  # 选择/保护/失败协议
-  tests/                              # 47 条 unittest
+  tests/                              # 52 条 unittest
 ```
 
 ### 2.2 数据流
@@ -249,7 +249,7 @@ skills/windows-disk-cleanup/
 
 ## 6. 测试与验收
 
-- 自动化：`python -m unittest discover -s tests`（47 条）。
+- 自动化：`python -m unittest discover -s tests`（52 条）。
 - 真实扫描：本仓库（0.5s）、AppData\Local（30s 上限，62k dirs）。
 - 浏览器验收：Edge headless + Playwright，验证亮/暗主题、tab、搜索、筛选、勾选、确认、复制、page→CLI 预演闭环。
 - 报告离线验收：断网打开 `report.html` / `cleanup-report.html`，样式与交互完整，无外部 URL 请求。
@@ -268,6 +268,7 @@ skills/windows-disk-cleanup/
 
 ## 8. 变更记录
 
+- 2026-11-15：0.7.0 规则库扩充（第一批：运行时保护）。新增「运行时/安装（保留）」分类 19 条 keep 规则，保护 Codex/WorkBuddy/ZCode 插件自带运行时、fnm/nvm 安装的 Node、npm 全局包、TypeScript SDK、rustup 工具链与 cargo bin，修复通用 `node_modules` 规则把运行时依赖误标 safe 的问题（含子路径 glob 兜底）；`.cargo`/`.rustup`/fnm 根目录降为 caution 容器，ZCode 插件缓存 caution 叶子。规则 226 → 250 条，单测 47 → 52 条。
 - 2026-11-11：0.6.0 破坏性重构。彻底移除经验闭环与 AI 深化分析：删除 `memory/`、`scripts/memory.py`、`src/disk_cleanup/enrich.py`、`references/memory-loop.md`、`references/enrichment-protocol.md`、CLI `enrich` 子命令，以及 `Entry` 的 enriched/advice/confidence/tier_source/evidence 字段；报告移除 AI 定档/AI 参考徽章与 AI 状态筛选。两个报告模板改为全内联 CSS 的单文件离线页面，移除 Tailwind CDN 与所有外部资源请求。单测 63 → 47 条。
 - 2026-10-28：0.5.x 报告与分类升级。建议分级扩为五档（新增 suggest 建议清理）；新增归属/性质/生态三个正交受控维度（`model.py` 唯一定义），报告页改为带条数与体积计数的 chips 导航；逐条删除方式与 schema 2（`modes` 可选覆盖）；分页渲染与紧凑行详情。
 - 2026-10-27：0.1.0 首版。规则库 226 条；扫描/报告/选择/删除/清理报告全链路；真实仓库与 AppData 扫描、浏览器交互与 page→CLI 协议验证。

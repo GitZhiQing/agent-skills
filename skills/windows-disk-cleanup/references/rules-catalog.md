@@ -1,6 +1,6 @@
 # Windows 目录规则库
 
-版本：v1　更新：2026-10-27　规则数：226
+版本：v1　更新：2026-11-15　规则数：250
 
 本文件是 [`assets/rules.json`](../assets/rules.json) 的可读目录；**JSON 是权威数据**，本表用于人工审阅与解释。修改规则后运行 `windows-disk-cleanup rules --check`，并同步本表。
 
@@ -21,8 +21,8 @@
   - [用户数据（6）](#用户数据6)
   - [用户临时文件（4）](#用户临时文件4)
   - [浏览器缓存（18）](#浏览器缓存18)
-  - [应用缓存（24）](#应用缓存24)
-  - [开发工具缓存（20）](#开发工具缓存20)
+  - [应用缓存（25）](#应用缓存25)
+  - [开发工具缓存（24）](#开发工具缓存24)
   - [包管理器缓存（23）](#包管理器缓存23)
   - [AI/模型缓存（3）](#ai模型缓存3)
   - [项目构建产物（44）](#项目构建产物44)
@@ -30,6 +30,7 @@
   - [凭据/配置（保留）（6）](#凭据配置保留6)
   - [游戏平台（10）](#游戏平台10)
   - [虚拟机/容器（3）](#虚拟机容器3)
+  - [运行时/安装（保留）（19）](#运行时安装保留19)
 - [5. 维护与校验](#5-维护与校验)
 - [6. 来源与核对日期](#6-来源与核对日期)
 - [7. 已知限制](#7-已知限制)
@@ -215,7 +216,7 @@
 | `user-temporary-internet-files` | `suffix` `\AppData\Local\Microsoft\Windows\Temporary Internet Files` | leaf · 需管理员 | 建议清理 | 旧版 Windows/IE 的临时 Internet 文件目录。 | 可清理。 |
 | `user-webcache` | `suffix` `\AppData\Local\Microsoft\Windows\WebCache` | leaf · 需管理员 | 建议清理 | 旧版 IE/系统组件的 Web 缓存数据库。 | 关闭浏览器与相关程序后清理；文件常被占用。 |
 
-### 12. 应用缓存（24）
+### 12. 应用缓存（25）
 
 | ID | 匹配 | 模式 | 建议 | 说明 | 建议操作 |
 | --- | --- | --- | --- | --- | --- |
@@ -243,8 +244,9 @@
 | `office-file-cache` | `glob` `*\AppData\Local\Microsoft\Office\*\OfficeFileCache` | leaf | 谨慎清理 | Office 文档的本地缓存，可能包含未同步的编辑。 | 关闭 Office 并确认文档已保存/同步后清理。 |
 | `spotify-storage` | `suffix` `\AppData\Local\Spotify\Storage` | leaf | 谨慎清理 | Spotify 的离线歌曲与封面缓存，可能很大。 | 确认不需要离线收听后清理；重新下载会消耗流量。 |
 | `uwp-localcache` | `glob` `*\AppData\Local\Packages\*\LocalCache` | leaf | 谨慎清理 | Windows 商店应用（UWP）的本地缓存，可能包含离线数据。 | 关闭对应应用后清理；重要离线内容先确认。 |
+| `app-zcode-plugins-cache` | `suffix` `\.zcode\cli\plugins\cache` | leaf | 谨慎清理 | ZCode CLI 已安装插件的各版本副本，内含插件运行时依赖（node_modules）。 | 确认插件已更新、旧版本不再需要后清理；不要删除当前使用版本。 |
 
-### 13. 开发工具缓存（20）
+### 13. 开发工具缓存（24）
 
 | ID | 匹配 | 模式 | 建议 | 说明 | 建议操作 |
 | --- | --- | --- | --- | --- | --- |
@@ -268,6 +270,10 @@
 | `vs-component-model-cache` | `glob` `*\AppData\Local\Microsoft\VisualStudio\*\ComponentModelCache` | leaf | 安全清理 | Visual Studio 的组件/扩展元数据缓存。 | 关闭 Visual Studio 后清理。 |
 | `vs-designer-cache` | `glob` `*\AppData\Local\Microsoft\VisualStudio\*\DesignerCache` | leaf | 安全清理 | Visual Studio 窗体/设计器缓存。 | 关闭 Visual Studio 后清理。 |
 | `dev-android-avd` | `suffix` `\.android\avd` | leaf | 谨慎清理 | Android 模拟器的虚拟设备镜像与用户数据。 | 在 Android Studio 的 Device Manager 中删除不用的模拟器。 |
+| `dev-cargo-root` | `suffix` `\.cargo` | container · 不可选 | 谨慎清理 | Cargo 根目录：含 cargo install 安装的二进制（bin）、registry/git 依赖缓存与配置。 | 不要整体删除；只清理其中明确标记的缓存子目录。 |
+| `dev-rustup-root` | `suffix` `\.rustup` | container · 不可选 | 谨慎清理 | Rustup 根目录：含已安装工具链（toolchains）与下载/临时缓存。 | 不要整体删除；工具链用 rustup toolchain uninstall 管理，只清理 downloads/tmp 缓存。 |
+| `dev-fnm-root` | `suffix` `\AppData\Roaming\fnm` | container · 不可选 | 谨慎清理 | fnm（Fast Node Manager）根目录：含已安装的 Node.js 版本与别名配置。 | 不要整体删除；用 fnm uninstall 管理不用的 Node 版本。 |
+| `dev-fnm-root-local` | `suffix` `\AppData\Local\fnm` | container · 不可选 | 谨慎清理 | fnm 根目录的 Local 位置：含已安装的 Node.js 版本与别名配置。 | 不要整体删除；用 fnm uninstall 管理不用的 Node 版本。 |
 
 ### 14. 包管理器缓存（23）
 
@@ -396,6 +402,32 @@
 | `wsl-vhdx` | `glob` `*\AppData\Local\Packages\*\LocalState\*.vhdx` | leaf · 文件 · 不可选 | 保留 | WSL 发行版的虚拟磁盘，包含该发行版的整个文件系统。 | 保留；需要回收空间时先清理发行版内部文件，再 wsl --shutdown 后压缩 VHDX。 |
 | `wsl-vhdx-nested` | `glob` `*\AppData\Local\Packages\*\LocalState\*\*.vhdx` | leaf · 文件 · 不可选 | 保留 | 部分 WSL 发行版将 VHDX 放在 LocalState 的子目录中。 | 保留；用 WSL 命令清理/压缩。 |
 
+### 21. 运行时/安装（保留）（19）
+
+工具自带运行时与已安装组件：内部的 `node_modules` 是运行时依赖，不是项目依赖，通用项目缓存规则不得将其标为安全清理。子路径 glob 规则（优先级高于 basename）用于直接以子路径为根的扫描兜底。
+
+| ID | 匹配 | 模式 | 建议 | 说明 | 建议操作 |
+| --- | --- | --- | --- | --- | --- |
+| `rt-codex-runtimes` | `suffix` `\.cache\codex-runtimes` | leaf · 不可选 | 保留 | Codex CLI 自带的 Node/Python 运行时及依赖，可能并存 previous-* 旧版本。 | 禁止删除；运行时由 Codex 自行下载与更新。 |
+| `rt-openai-codex-runtimes` | `suffix` `\AppData\Local\OpenAI\Codex\runtimes` | leaf · 不可选 | 保留 | OpenAI Codex 桌面版自带运行时（cua_node 等）。 | 禁止删除；由应用自行管理。 |
+| `rt-fnm-node-versions` | `suffix` `\fnm\node-versions` | leaf · 不可选 | 保留 | fnm 安装的各版本 Node.js 运行时，installation 内含全局 node_modules。 | 禁止整体删除；用 fnm uninstall <version> 管理不用的版本。 |
+| `rt-workbuddy-binaries` | `suffix` `\.workbuddy\binaries` | leaf · 不可选 | 保留 | WorkBuddy 自带的 Node 等运行时及依赖。 | 禁止删除；由 WorkBuddy 自行管理。 |
+| `rt-workbuddy-app` | `suffix` `\.workbuddy\app` | leaf · 不可选 | 保留 | WorkBuddy 应用本体文件。 | 禁止删除；卸载请走应用自身流程。 |
+| `rt-workbuddy-connector` | `suffix` `\.workbuddy\cli-connector-packages` | leaf · 不可选 | 保留 | WorkBuddy CLI 连接器的依赖包（含 node_modules）。 | 禁止删除；由 WorkBuddy 自行管理。 |
+| `rt-workbuddy-vendor` | `suffix` `\.workbuddy\vendor` | leaf · 不可选 | 保留 | WorkBuddy 内置的第三方依赖副本。 | 禁止删除；由 WorkBuddy 自行管理。 |
+| `rt-workbuddy-external` | `suffix` `\.workbuddy\external-packages` | leaf · 不可选 | 保留 | WorkBuddy 下载的外部依赖包。 | 禁止删除；由 WorkBuddy 自行管理。 |
+| `rt-typescript-sdk` | `suffix` `\AppData\Local\Microsoft\TypeScript` | leaf · 不可选 | 保留 | Visual Studio/MSBuild 使用的 TypeScript SDK 各版本安装目录。 | 禁止删除；由 Visual Studio 安装器管理。 |
+| `rt-nvm-windows` | `suffix` `\AppData\Roaming\nvm` | leaf · 不可选 | 保留 | nvm-windows 安装的各版本 Node.js 与设置。 | 禁止整体删除；用 nvm uninstall <version> 管理不用的版本。 |
+| `rt-rustup-toolchains` | `suffix` `\.rustup\toolchains` | leaf · 不可选 | 保留 | 已安装的 Rust 工具链（编译器、标准库、组件）。 | 禁止整体删除；用 rustup toolchain uninstall 管理不用的工具链。 |
+| `rt-cargo-bin` | `suffix` `\.cargo\bin` | leaf · 不可选 | 保留 | cargo install 安装的可执行文件（rustup 代理也在其中）。 | 禁止删除；用 cargo uninstall 管理不用的命令。 |
+| `rt-npm-global` | `suffix` `\AppData\Roaming\npm\node_modules` | leaf · 不可选 | 保留 | npm i -g 全局安装的包，不是项目依赖。 | 禁止整体删除；用 npm uninstall -g <pkg> 管理不用的包。 |
+| `rt-nodejs-bundled` | `suffix` `\nodejs\node_modules` | leaf · 不可选 | 保留 | Node.js 安装目录自带的 npm/corepack 等依赖。 | 禁止删除；随 Node.js 安装器管理。 |
+| `rt-codex-node-modules` | `glob` `*\.cache\codex-runtimes\*\node_modules` | leaf · 不可选 | 保留 | Codex 运行时自带的 node_modules，是运行时依赖而非项目依赖。 | 禁止删除。 |
+| `rt-openai-codex-node-modules` | `glob` `*\OpenAI\Codex\runtimes\*\node_modules` | leaf · 不可选 | 保留 | OpenAI Codex 桌面版运行时自带的 node_modules。 | 禁止删除。 |
+| `rt-fnm-node-modules` | `glob` `*\fnm\node-versions\*\node_modules` | leaf · 不可选 | 保留 | fnm 安装的 Node.js 版本内的 node_modules（含全局包）。 | 禁止删除。 |
+| `rt-workbuddy-node-modules` | `glob` `*\.workbuddy\binaries\*\node_modules` | leaf · 不可选 | 保留 | WorkBuddy 自带 Node 运行时的 node_modules。 | 禁止删除。 |
+| `rt-zcode-plugin-node-modules` | `glob` `*\.zcode\cli\plugins\cache\*\node_modules` | leaf · 不可选 | 保留 | ZCode CLI 已安装插件自带的 node_modules，是插件运行时依赖。 | 禁止删除。 |
+
 ## 5. 维护与校验
 
 1. 只改 `assets/rules.json`；字段：`id`（唯一）、`title`、`category`、`scope`、`match`、`mode`、`recommendation`、`method`、`description`、`action`、`risk`，可选 `target`、`requires_admin`、`selectable`、`priority`。
@@ -406,7 +438,7 @@
 
 ## 6. 来源与核对日期
 
-以下来源用于核对“哪些目录可以删、正确做法是什么”；各工具缓存位置以官方文档为准。核对日期：**2026-10-27**。
+以下来源用于核对“哪些目录可以删、正确做法是什么”；各工具缓存位置以官方文档为准。核对日期：**2026-10-27**（2026-11-15 增补运行时保护批次）。
 
 - Microsoft Learn — [Clean Up the WinSxS Folder](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/clean-up-the-winsxs-folder)：WinSxS 不得手动删除；用 DISM/磁盘清理。
 - Microsoft Learn — [Additional resources for Windows Update](https://learn.microsoft.com/en-us/troubleshoot/windows-client/installing-updates-features-roles/additional-resources-for-windows-update)：重置更新组件时停止 wuauserv/bits、重命名/清理 SoftwareDistribution。
@@ -420,6 +452,11 @@
 - Gradle — [Directory layout](https://docs.gradle.org/current/userguide/directory_layout.html)：`caches/` 下的依赖/转换缓存。
 - Go — [Build and test caching](https://pkg.go.dev/cmd/go#hdr-Build_and_test_caching)：Windows 默认 `%LocalAppData%\go-build`。
 - Docker — [Docker Desktop docs](https://docs.docker.com/desktop/)：WSL2 数据盘 / `docker system prune` / 压缩 VHDX 的官方背景；本工具不直接删 VHDX。
+- fnm — [fnm README](https://github.com/Schniz/fnm)：`node-versions/<version>/installation` 为已安装 Node 运行时（2026-11-15 本机实测 `%APPDATA%\fnm`）。
+- nvm-windows — [nvm-windows README](https://github.com/coreybutler/nvm-windows)：`%APPDATA%\nvm` 存放各版本 Node.js 与 settings.txt。
+- Rustup — [The rustup book](https://rust-lang.github.io/rustup/)：`~/.rustup/toolchains` 为已安装工具链，`downloads`/`tmp` 为缓存；Cargo `~/.cargo/bin` 为已安装命令。
+- npm — [npm-folders](https://docs.npmjs.com/cli/configuring-npm/folders)：全局包安装在 prefix 的 `node_modules`（Windows 默认 `%APPDATA%\npm`），与项目依赖不同。
+- 本机实测（2026-11-15 扫描样本）：`.cache\codex-runtimes`、`AppData\Local\OpenAI\Codex\runtimes`、`.workbuddy\{app,binaries,vendor,external-packages,cli-connector-packages}`、`.zcode\cli\plugins\cache` 的目录结构与运行时依赖形态。
 
 ## 7. 已知限制
 

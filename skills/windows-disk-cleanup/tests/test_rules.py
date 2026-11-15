@@ -134,6 +134,78 @@ class RuleTests(unittest.TestCase):
         self.assertIsNone(self.index.match(r"C:\Program Files\SomeApp\node_modules"))
         self.assertIsNone(self.index.match(r"C:\Program Files\SomeApp\__pycache__"))
 
+    def test_runtime_node_modules_are_not_safe(self):
+        # 运行时/插件自带的 node_modules 不是项目依赖，删了工具会起不来。
+        runtime_paths = [
+            r"C:\Users\alice\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules",
+            r"C:\Users\alice\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\site-packages\artifact_tool_v2\bin\node_modules",
+            r"C:\Users\alice\AppData\Local\OpenAI\Codex\runtimes\cua_node\bbc9141fe9f920ac\bin\node_modules",
+            r"C:\Users\alice\AppData\Roaming\fnm\node-versions\v24.20.0\installation\node_modules",
+            r"C:\Users\alice\.workbuddy\binaries\node\versions\22.22.2-6\node_modules",
+            r"C:\Users\alice\.zcode\cli\plugins\cache\zcode-plugins-official\computer-use\0.5.13\node_modules",
+        ]
+        for path in runtime_paths:
+            rule = self.index.match(path)
+            self.assertIsNotNone(rule, path)
+            self.assertEqual(rule["recommendation"], "keep", path)
+        # 普通项目依赖仍然可清理
+        self.assertEqual(
+            self.index.match(r"D:\proj\node_modules")["recommendation"], "safe"
+        )
+
+    def test_runtime_roots_are_keep(self):
+        cases = {
+            r"C:\Users\alice\.cache\codex-runtimes": "rt-codex-runtimes",
+            r"C:\Users\alice\AppData\Local\OpenAI\Codex\runtimes": "rt-openai-codex-runtimes",
+            r"C:\Users\alice\AppData\Roaming\fnm\node-versions": "rt-fnm-node-versions",
+            r"C:\Users\alice\.workbuddy\binaries": "rt-workbuddy-binaries",
+            r"C:\Users\alice\.workbuddy\app": "rt-workbuddy-app",
+            r"C:\Users\alice\.workbuddy\cli-connector-packages": "rt-workbuddy-connector",
+            r"C:\Users\alice\.workbuddy\vendor": "rt-workbuddy-vendor",
+            r"C:\Users\alice\.workbuddy\external-packages": "rt-workbuddy-external",
+            r"C:\Users\alice\AppData\Local\Microsoft\TypeScript": "rt-typescript-sdk",
+            r"C:\Users\alice\AppData\Roaming\nvm": "rt-nvm-windows",
+            r"C:\Users\alice\.rustup\toolchains": "rt-rustup-toolchains",
+            r"C:\Users\alice\.cargo\bin": "rt-cargo-bin",
+            r"C:\Users\alice\AppData\Roaming\npm\node_modules": "rt-npm-global",
+            r"C:\Program Files\nodejs\node_modules": "rt-nodejs-bundled",
+        }
+        for path, rule_id in cases.items():
+            rule = self.index.match(path)
+            self.assertIsNotNone(rule, path)
+            self.assertEqual(rule["id"], rule_id, path)
+            self.assertEqual(rule["recommendation"], "keep", path)
+
+    def test_dev_tool_roots_are_containers(self):
+        cases = {
+            r"C:\Users\alice\.cargo": "dev-cargo-root",
+            r"C:\Users\alice\.rustup": "dev-rustup-root",
+            r"C:\Users\alice\AppData\Roaming\fnm": "dev-fnm-root",
+            r"C:\Users\alice\AppData\Local\fnm": "dev-fnm-root-local",
+        }
+        for path, rule_id in cases.items():
+            rule = self.index.match(path)
+            self.assertIsNotNone(rule, path)
+            self.assertEqual(rule["id"], rule_id, path)
+            self.assertEqual(rule["recommendation"], "caution", path)
+            self.assertEqual(rule["mode"], "container", path)
+        # 既有缓存子规则不受容器规则影响
+        self.assertEqual(
+            self.index.match(r"C:\Users\alice\.rustup\downloads")["id"],
+            "dev-rustup-downloads",
+        )
+        self.assertEqual(
+            self.index.match(r"C:\Users\alice\.cargo\registry\src")["id"],
+            "dev-cargo-registry-src",
+        )
+
+    def test_zcode_plugin_cache_is_caution_leaf(self):
+        rule = self.index.match(r"C:\Users\alice\.zcode\cli\plugins\cache")
+        self.assertIsNotNone(rule)
+        self.assertEqual(rule["id"], "app-zcode-plugins-cache")
+        self.assertEqual(rule["recommendation"], "caution")
+        self.assertEqual(rule["mode"], "leaf")
+
     def test_pruning_interest_set(self):
         self.assertTrue(self.index.has_interesting_below(r"C:\Windows"))
         self.assertTrue(self.index.has_interesting_below(r"C:\Windows\System32"))
