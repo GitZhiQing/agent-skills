@@ -1,6 +1,6 @@
 # windows-disk-cleanup 测试集
 
-版本：v0.7.0（规则库扩充）。行为协议断言，人工会话执行；代码部分另有 `python -m unittest discover -s tests`（当前 52 条）。
+版本：v0.7.0（规则库扩充）。行为协议断言，人工会话执行；代码部分另有 `python -m unittest discover -s tests`（当前 69 条）。
 
 > 0.6.0 破坏性变更：经验闭环（memory）与 AI 深化分析（enrich）已移除，对应 W-15/W-16、S-11、R-9/R-11 与 M 段用例不再存在；报告改为全内联 CSS 的单文件离线页面，不加载任何外部资源。
 
@@ -263,6 +263,27 @@
 - = 运行时内部的 node_modules 不以 `safe` 条目出现（父级叶子不下钻；直接以子路径为根扫描时命中 keep 兜底规则）。
 - = 普通项目 `proj/node_modules` 仍为 `safe`（S-1/E-6 不变）。
 - = `.cargo`/`.rustup`/fnm 根目录为 caution 容器，其中 downloads/tmp/registry 等缓存子规则仍生效。
+
+### S-13 厂商数据目录分层
+
+场景：目录树含 `AppData/Local/PixPin/{History,Data,UpgradeFiles,Crashpad}`、`AppData/Roaming/kingsoft/{office6/backup,office6/cache,wps/addons/pool,kaccountsdk}`、`AppData/Roaming/LarkShell/aha/users/<id>/profile_explorer/Cache`、`AppData/Local/JianyingPro/User Data/{Cache,Projects}`、`Documents/xwechat_files/<wxid>/{db_storage,cache}`。
+
+▶ 扫描。
+
+- = 厂商父目录（PixPin/kingsoft/LarkShell/JianyingPro/Tencent/Unity/Code/Brave/.zcode/.workbuddy 等）为 caution 容器，不整体 safe。
+- = 截图历史（PixPin History/Data）、文档备份（office6/backup）、草稿索引（JianyingPro Projects）、聊天数据库（xwechat db_storage）、登录态（kaccountsdk）为 keep、不可选。
+- = 可再生缓存（office6/cache、LarkShell profile_explorer/Cache、JianyingPro User Data/Cache、xwechat cache）为 safe。
+- = PixPin UpgradeFiles 为 suggest；WPS 插件池为 caution（多版本共存，不自动判 safe）。
+
+### S-14 更新残留与项目目录区分
+
+场景：目录树含 `AppData/Local/myapp-updater/installer.exe`、`AppData/Local/SquirrelTemp`，以及项目目录 `proj/foo-updater`（源码）。
+
+▶ 扫描。
+
+- = `myapp-updater` 命中 `app-electron-updater`，safe；`SquirrelTemp` 命中 `app-squirreltemp`，safe。
+- = 项目里的 `foo-updater` 不命中 updater 规则（regex 锚定 AppData\Local 单层），最多成为 review 大目录。
+- = 凭据类目录（Microsoft/Credentials、Telegram tdata、1Password、Bitwarden、Composer）为 keep、不可选。
 
 ## 3. 删除与安全（D）
 
@@ -554,7 +575,7 @@
 python -m unittest discover -s tests
 ```
 
-当前 52 条，覆盖：规则库校验/匹配/标记文件/language 枚举、suggest 档规则集合与标签、运行时依赖保护（Codex/fnm/WorkBuddy/ZCode 插件 node_modules 反例、运行时根 keep、开发工具根容器）、扫描叶子和剪枝、suggest 分类与语言透传、安全保护清单、选择校验（schema 1/2、modes 逐条方式、--mode 覆盖）、reparse、永久删除与混合方式执行、报告转义与五档汇总、报告模板无外部 URL/无 enrich 子命令、CLI 扫描→预演→删除闭环（含 schema 2）、review 拒绝、无效路径与缺失根目录。
+当前 69 条，覆盖：规则库校验/匹配/标记文件/language 枚举、suggest 档规则集合与标签、运行时依赖保护（Codex/fnm/WorkBuddy/ZCode 插件 node_modules 反例、运行时根 keep、开发工具根容器）、厂商数据目录分层（容器 caution/用户数据 keep/缓存 safe）、updater regex 锚定反例、凭据与主流软件 keep、长尾开发缓存与厂商容器、扫描叶子和剪枝、suggest 分类与语言透传、安全保护清单、选择校验（schema 1/2、modes 逐条方式、--mode 覆盖）、reparse、永久删除与混合方式执行、报告转义与五档汇总、报告模板无外部 URL/无 enrich 子命令、CLI 扫描→预演→删除闭环（含 schema 2）、review 拒绝、无效路径与缺失根目录。
 
 真实托管 API/管理员/回收站用例在人工会话执行；回收站测试会写入当前用户回收站，默认不在自动化里跑。
 

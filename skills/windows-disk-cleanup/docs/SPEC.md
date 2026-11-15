@@ -48,7 +48,7 @@ skills/windows-disk-cleanup/
     winutil.py                        # 盘信息、长路径、reparse、PowerShell、格式化
     model.py                          # Entry/ScanResult/DeleteResult
   assets/
-    rules.json                        # 250 条规则（权威）
+    rules.json                        # 561 条规则（权威）
     report.template.html              # 扫描报告（单文件离线）
     cleanup.template.html             # 清理报告
     ps/probe.ps1                      # 回收站大小 / 卷信息
@@ -56,7 +56,7 @@ skills/windows-disk-cleanup/
   references/
     rules-catalog.md                      # 规则可读目录 + 来源
     protocol.md                  # 选择/保护/失败协议
-  tests/                              # 52 条 unittest
+  tests/                              # 69 条 unittest
 ```
 
 ### 2.2 数据流
@@ -249,7 +249,7 @@ skills/windows-disk-cleanup/
 
 ## 6. 测试与验收
 
-- 自动化：`python -m unittest discover -s tests`（52 条）。
+- 自动化：`python -m unittest discover -s tests`（69 条）。
 - 真实扫描：本仓库（0.5s）、AppData\Local（30s 上限，62k dirs）。
 - 浏览器验收：Edge headless + Playwright，验证亮/暗主题、tab、搜索、筛选、勾选、确认、复制、page→CLI 预演闭环。
 - 报告离线验收：断网打开 `report.html` / `cleanup-report.html`，样式与交互完整，无外部 URL 请求。
@@ -268,7 +268,7 @@ skills/windows-disk-cleanup/
 
 ## 8. 变更记录
 
-- 2026-11-15：0.7.0 规则库扩充（第一批：运行时保护）。新增「运行时/安装（保留）」分类 19 条 keep 规则，保护 Codex/WorkBuddy/ZCode 插件自带运行时、fnm/nvm 安装的 Node、npm 全局包、TypeScript SDK、rustup 工具链与 cargo bin，修复通用 `node_modules` 规则把运行时依赖误标 safe 的问题（含子路径 glob 兜底）；`.cargo`/`.rustup`/fnm 根目录降为 caution 容器，ZCode 插件缓存 caution 叶子。规则 226 → 250 条，单测 47 → 52 条。
+- 2026-11-15：0.7.0 规则库扩充（226 → 561 条）。①运行时保护：新增「运行时/安装（保留）」分类 29 条 keep 规则，保护 Codex/WorkBuddy/ZCode 插件/Claude-3p 自带运行时、fnm/nvm/Volta 安装的 Node、npm 全局包、TypeScript SDK、rustup 工具链、cargo bin、uv 管理的 Python、pip 用户级包、Bun/Pandoc/Helium 程序目录，修复通用 `node_modules` 规则把运行时依赖误标 safe 的问题（含子路径 glob 兜底）；`.cargo`/`.rustup`/fnm/uv/.bun 根目录降为 caution 容器。②本机 top 35 厂商数据目录：Unity/NIKKE、腾讯系、剪映、飞书、WPS/金山、PixPin、.zcode/.workbuddy/.codex、VS Code/Brave/Chrome、ZCode 桌面版、网易云、夸克、Trae/CodeBuddy/Qoder、Listary、B站、Helium 等，父目录一律 caution 容器 + 子缓存 safe + 用户数据/登录态 keep/caution。③通用 Electron 更新残留 regex（锚定 AppData\Local 单层）+ SquirrelTemp。④主流软件清单（官方文档佐证）：微信/QQ/钉钉/Telegram、Figma/Cherry Studio/Obsidian/1Password/Bitwarden、Zed/Deno/Composer/Godot、Adobe/DaVinci、EA/Ubisoft/Rockstar/GOG/HoYoPlay、Delivery Optimization/$WinREAgent 等。⑤长尾开发缓存与厂商容器（bun/pnpm-cache/npm-cache/node-gyp/Playwright MCP、Firefox/百度网盘/语雀/滴答清单/鹰角等）。⑥单测 47 → 69 条（含运行时反例、updater 锚定反例、凭据 keep、扫描级回归）。真实复扫（561 条规则）：review 138 条/63.3 GB → 34 条/4.7 GB；离线重匹配确认 top 35 review 全部由规则识别、15 条运行时 safe 误判纠正为 keep。
 - 2026-11-11：0.6.0 破坏性重构。彻底移除经验闭环与 AI 深化分析：删除 `memory/`、`scripts/memory.py`、`src/disk_cleanup/enrich.py`、`references/memory-loop.md`、`references/enrichment-protocol.md`、CLI `enrich` 子命令，以及 `Entry` 的 enriched/advice/confidence/tier_source/evidence 字段；报告移除 AI 定档/AI 参考徽章与 AI 状态筛选。两个报告模板改为全内联 CSS 的单文件离线页面，移除 Tailwind CDN 与所有外部资源请求。单测 63 → 47 条。
 - 2026-10-28：0.5.x 报告与分类升级。建议分级扩为五档（新增 suggest 建议清理）；新增归属/性质/生态三个正交受控维度（`model.py` 唯一定义），报告页改为带条数与体积计数的 chips 导航；逐条删除方式与 schema 2（`modes` 可选覆盖）；分页渲染与紧凑行详情。
 - 2026-10-27：0.1.0 首版。规则库 226 条；扫描/报告/选择/删除/清理报告全链路；真实仓库与 AppData 扫描、浏览器交互与 page→CLI 协议验证。

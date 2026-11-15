@@ -4,7 +4,7 @@
 
 它不接管删除，也不替你判断。流程是：只读扫描 → 生成一份可勾选的离线报告 → 你选完把选择交回来 → Agent 逐条核对后再动手 → 生成清理报告。扫描不删任何东西，报告页也没有删除按钮——删什么、怎么删，决定权始终在你手里。
 
-适合「C 盘满了但不知道该删什么」：250 条规则认识系统升级残留、更新缓存、浏览器与开发工具缓存、项目构建产物；不认识的东西会老实标成「待定」，交给你判断。
+适合「C 盘满了但不知道该删什么」：561 条规则认识系统升级残留、更新缓存、浏览器与开发工具缓存、项目构建产物、主流软件数据目录；不认识的东西会老实标成「待定」，交给你判断。
 
 ## 报告能力
 
@@ -91,7 +91,7 @@ npx skills add GitZhiQing/agent-skills/windows-disk-cleanup
 
 - [SKILL.md](SKILL.md) — Agent 的固定工作流与硬规则（权威来源）
 - [references/protocol.md](references/protocol.md) — 选择协议、二次校验、保护清单、失败处理
-- [references/rules-catalog.md](references/rules-catalog.md) — 规则分类、250 条明细与官方来源
+- [references/rules-catalog.md](references/rules-catalog.md) — 规则分类、561 条明细与官方来源
 - [docs/TESTS.md](docs/TESTS.md) — 行为协议回归
 - [docs/SPEC.md](docs/SPEC.md) — 架构、安全模型与设计决策
 

@@ -156,6 +156,26 @@ class ScannerTests(unittest.TestCase):
                 )
             )
 
+    def test_updater_leftover_and_pixpin_history(self):
+        with tempfile.TemporaryDirectory(prefix="wdc-scan-") as tmp:
+            root = Path(tmp) / "fixture"
+            updater = root / "AppData/Local/myapp-updater"
+            updater.mkdir(parents=True)
+            (updater / "installer.exe").write_bytes(b"x" * 500)
+            history = root / "AppData/Local/PixPin/History/_ScreenshotRecord"
+            history.mkdir(parents=True)
+            (history / "1.his").write_bytes(b"x" * 300)
+            result = helpers.scan_fixture(root)
+            by = {e.path: e for e in result.entries}
+            up = by[str(updater)]
+            self.assertEqual(up.recommendation, "safe")
+            self.assertEqual(up.rule_id, "app-electron-updater")
+            hist = by[str(root / "AppData/Local/PixPin/History")]
+            self.assertEqual(hist.recommendation, "keep")
+            self.assertFalse(hist.selectable)
+            # keep 叶子不下钻：.his 文件不单独成条
+            self.assertFalse(any(p.endswith(".his") for p in by))
+
 
 if __name__ == "__main__":
     unittest.main()
