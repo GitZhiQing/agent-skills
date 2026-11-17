@@ -8,7 +8,7 @@
 | --- | --- |
 | [ddgs-web-access](skills/ddgs-web-access/) | 免费无密钥元搜索与网页抓取（冻结维护，不影响既有命令） |
 | [ds-web-access](skills/ds-web-access/) | 基于 DeepSeek Search / Fetch API 的联网搜索与网页 Markdown 抓取，带付费成本防护与本地缓存 |
-| [deep-research](skills/deep-research/) | 先校准再调研：目标、计划与输出目录经用户确认后执行，无法确认则停止；交付 REPORT + REFERENCES + META，支持源码调研 |
+| [deep-research](skills/deep-research/) | 先校准再调研：目标、计划与输出目录经用户确认后执行，无法确认则停止；交付 REPORT + REFERENCES + META + 可选 HTML 报告（预设模板渲染），支持源码调研 |
 | [theme-commit](skills/theme-commit/) | 先计划预览并用提问工具确认，再按主题分组提交 |
 | [zero-coding](skills/zero-coding/) | 从零启动个人项目的轻量工作流 |
 | [session-handoff](skills/session-handoff/) | 生成跨会话交接提示词 |
@@ -71,7 +71,7 @@ bash scripts/skills-doctor.sh                  # 链接健康检查
 
 每个 skill 独立安装、独立触发；以下是可选工作流示例，不是安装前置、运行依赖或固定调用顺序。
 
-- **调研交付**：`deep-research` 可使用宿主原生 web 工具或任一已安装搜索 skill 完成调研；如需排版，可再调用 `md2pdf`。
+- **调研交付**：`deep-research` 可使用宿主原生 web 工具或任一已安装搜索 skill 完成调研，并默认产出单文件 HTML 报告；如需 PDF 归档，可再调用 `md2pdf`。
 - **项目启动**：`zero-coding` 可独立完成立项与切片；如需分主题提交或换会话交接，可分别配合 `theme-commit`、`session-handoff`。
 - **内容复盘**：`video-insight` 可独立产出分析；如需 PDF 归档，可再调用 `md2pdf`。
 - **磁盘清理**：`windows-disk-cleanup` 独立完成扫描、勾选报告、预演与安全删除。
