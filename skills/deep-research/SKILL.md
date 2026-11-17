@@ -2,14 +2,14 @@
 name: deep-research
 description: >-
   先校准问题、再消耗调研资源的深度调研 skill：调研目标、计划与输出目录经用户确认后执行，
-  产出 REPORT.md + REFERENCES.md + META.md；源码调研先固定 commit 再本地分析并给出行号证据。
+  产出 REPORT.md + REFERENCES.md + META.md + 单文件 HTML 报告；源码调研先固定 commit 再本地分析并给出行号证据。
   当用户提出需要联网多源交叉验证的调研（"帮我调研""深入研究""对比分析""查清现状""源码分析""deep research"），
   或问题有歧义、领域冷门、表述模糊时使用。
   当用户只需一次搜索可答的单点查询、只需阅读已有代码片段、或明确要求不联网且不涉及源码分析时，不要使用本 skill。
 license: MIT
 compatibility: 可选 HTML 渲染需 uv >= 0.5；缺失跳过
 metadata:
-  version: 0.12.0
+  version: 0.12.1
   category: research
 ---
 
