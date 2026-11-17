@@ -54,7 +54,7 @@ uv run "<skill_dir>/scripts/render_report.py" "<OUT>/<YYMMDD>-<主题>/REPORT.md
 4. 每个上标引用 `[S#]` 都解析为链接且来源表有对应锚点行；缺定义的引用（如 `[S99]`）直接报错；同一 S# 在多个表首列重复 → 报错（附录合并形状错误）。
 5. HTML 标签闭合（void 标签除外）。
 
-另：标题取 h1，**不自动加章号**（保护附录 A 反向索引的 §x.x 引用）；页脚元信息从 REPORT.md **附录 B** 的粗体标签行提取（日期/模型/平台/工具组合；附录缺失则仅渲染时间）。旧版（0.12.x）报告无附录 B，页脚退化为仅渲染时间，仍可正常渲染。
+另：标题取 h1，**不自动加章号**（保护附录 A 反向索引的 §x.x 引用）；**页脚仅一行免责声明**（指向附录 A / B），不重复附录 B 已有的日期/模型/平台/工具组合等元信息——附录已在报告内，页脚再列一遍是冗余。旧版（0.12.x）报告同样正常渲染。
 
 ## 4. 降级规则
 
@@ -68,6 +68,6 @@ uv run "<skill_dir>/scripts/render_report.py" "<OUT>/<YYMMDD>-<主题>/REPORT.md
 
 ## 5. 模板维护
 
-- 模板：`assets/report.template.html`（占位符 `__TITLE__` / `__THEME_ATTR__` / `__TOC_ITEMS__` / `__CONTENT__` / `__FOOTER_META__`）。
+- 模板：`assets/report.template.html`（占位符 `__TITLE__` / `__THEME_ATTR__` / `__TOC_ITEMS__` / `__CONTENT__`）。
 - 视觉变更只改模板与渲染器，**不改报告 Markdown 规范**；改完跑 `uv run --with markdown-it-py python -m unittest discover -s skills/deep-research/tests` 回归（canary 样张覆盖全部受控语法）。
 - 报告 Markdown 侧的引用形态（上标参考式链接 + 来源表 + 定义区）与附录形状见 `references/delivery-template.md` §2.1 / §3，渲染器依赖该受控格式。

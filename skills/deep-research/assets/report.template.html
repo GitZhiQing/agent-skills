@@ -99,9 +99,8 @@ li::marker { color: var(--muted); }
 .theme-switch button[aria-pressed="true"] { color: var(--brand); background: var(--paper);
   box-shadow: 0 1px 2px rgba(0,0,0,.14); }
 .theme-switch svg { width: 15px; height: 15px; display: block; }
-footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line);
-  font-size: 12.5px; color: var(--muted); }
-footer .note { margin-top: 4px; }
+footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); }
+footer .note { font-size: 12px; line-height: 1.7; color: color-mix(in srgb, var(--muted) 72%, var(--paper)); }
 
 /* ===== 目录侧栏 ===== */
 #toc { position: sticky; top: 24px; align-self: start; max-height: calc(100vh - 48px);
@@ -234,7 +233,6 @@ __TOC_ITEMS__
 </header>
 __CONTENT__
 <footer>
-  <div>__FOOTER_META__</div>
   <div class="note">本报告为信息整理；来源证据与调研元信息见文末附录 A / B。</div>
 </footer>
 </article>

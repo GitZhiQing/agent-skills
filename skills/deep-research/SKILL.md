@@ -9,7 +9,7 @@ description: >-
 license: MIT
 compatibility: 可选 HTML 渲染需 uv >= 0.5；缺失跳过
 metadata:
-  version: 0.13.0
+  version: 0.13.1
   category: research
 ---
 

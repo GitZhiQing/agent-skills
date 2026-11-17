@@ -49,7 +49,7 @@
 ## 环境前提与可选协作
 
 - **环境前提**：宿主具备 web 搜索 / 抓取能力——原生 WebSearch / WebFetch 类工具，或任一已安装的 web 搜索 / 抓取 skill。阶段 0 探测模型 / 平台 / 工具 / 提问工具 / 任务清单 / 子代理 / git。
-- **可选 HTML 渲染**：REPORT.md 交付后默认渲染同目录 REPORT.html（预设精美模板：TOC 侧栏、明暗主题、来源徽章、可打印；单文件离线零 CDN；页脚元信息来自附录 B）。需 uv >= 0.5，首次自动装一个轻量包；uv 缺失或渲染失败自动跳过，不影响 Markdown 交付。用法见 [references/html-render.md](references/html-render.md)。
+- **可选 HTML 渲染**：REPORT.md 交付后默认渲染同目录 REPORT.html（预设精美模板：TOC 侧栏、明暗主题、来源徽章、可打印；单文件离线零 CDN；页脚仅一行免责声明，元信息不重复附录 B）。需 uv >= 0.5，首次自动装一个轻量包；uv 缺失或渲染失败自动跳过，不影响 Markdown 交付。用法见 [references/html-render.md](references/html-render.md)。
 - **可选并行**：宿主有子代理类工具且子主题独立时并行调研，否则单线程；写作永远单代理。
 - **可选协作**：具体用哪个搜索工具由阶段 0 探测决定，本 skill 不绑定实现；无论选用哪种通道，都按 SKILL.md 内联纪律执行（调用间隔 ≥2 秒、限流退避重试、同 URL 不重复抓取）。
 - **源码调研**：另需 git；无 git 时可退回官方源码包。web 工具缺失但 git 可用时，可降级为仅本地源码调研并声明未做外部资料交叉验证。

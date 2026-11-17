@@ -17,7 +17,6 @@ import html
 import json
 import re
 import sys
-from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -138,23 +137,6 @@ def add_badges(body: str) -> str:
     return body
 
 
-def appendix_meta(text: str) -> str:
-    """从 REPORT.md 附录 B 提取页脚元信息（粗体标签行，节作用域）；缺失则省略。"""
-    m = re.search(r"(?m)^(#{2,3})[ \t]*附录[ \t]*B\b.*$", text)
-    if not m:
-        return ""
-    level = len(m.group(1))
-    rest = text[m.end():]
-    nxt = re.search(rf"(?m)^#{{1,{level}}}[ \t]", rest)
-    section = rest[:nxt.start()] if nxt else rest
-    fields = []
-    for label in ("日期", "模型", "平台", "工具组合"):
-        fm = re.search(rf"\*\*{label}\*\*[：:]\s*(.+)", section)
-        if fm:
-            fields.append(f"{label}：{fm.group(1).strip()}")
-    return " · ".join(fields)
-
-
 class BalanceChecker(HTMLParser):
     """标签闭合检查（void 标签除外）。"""
 
@@ -240,9 +222,6 @@ def render(report_path: Path, out_path: Path, theme: str, check_only: bool = Fal
     title = h1 or report_path.stem
     body, cite_problems = rewrite_citations(body)
     body = add_badges(body)
-    meta_line = appendix_meta(text)
-    generated = datetime.now().strftime("%Y-%m-%d %H:%M")
-    footer_meta = " · ".join(x for x in (meta_line, f"渲染于 {generated}") if x)
 
     template = TEMPLATE.read_text(encoding="utf-8")
     theme_attr = f' data-theme="{theme}"' if theme != "default" else ""
@@ -251,7 +230,6 @@ def render(report_path: Path, out_path: Path, theme: str, check_only: bool = Fal
         .replace("__THEME_ATTR__", theme_attr)
         .replace("__TOC_ITEMS__", build_toc(toc))
         .replace("__CONTENT__", body)
-        .replace("__FOOTER_META__", html.escape(footer_meta))
     )
     problems = cite_problems + quality_gate(html_text, body)
     if problems:

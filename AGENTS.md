@@ -43,7 +43,7 @@ python -m unittest discover -s skills/windows-disk-cleanup/tests
 bash skills/windows-disk-cleanup/bin/windows-disk-cleanup doctor --root . --json
 ```
 
-ds-web-access 单测 23 条离线用例另有 1 条真实 API 用例，真实用例需 `DEEPSEEK_API_KEY`；Search/Fetch 为付费 API。deep-research 单测 17 条（canary 样张覆盖报告受控语法与附录形状；markdown-it-py 缺失时真实渲染用例自动跳过），行为协议另按 `docs/TESTS.md` 人工会话回归。md2pdf 轻量单测 5 条；渲染质量门仍为 S-3 canary 双版式。video-insight 单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 47 条，真实扫描/回收站用例需在 Windows 人工执行。
+ds-web-access 单测 23 条离线用例另有 1 条真实 API 用例，真实用例需 `DEEPSEEK_API_KEY`；Search/Fetch 为付费 API。deep-research 单测 14 条（canary 样张覆盖报告受控语法与附录形状；markdown-it-py 缺失时真实渲染用例自动跳过），行为协议另按 `docs/TESTS.md` 人工会话回归。md2pdf 轻量单测 5 条；渲染质量门仍为 S-3 canary 双版式。video-insight 单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 47 条，真实扫描/回收站用例需在 Windows 人工执行。
 
 ## skill 矩阵
 
