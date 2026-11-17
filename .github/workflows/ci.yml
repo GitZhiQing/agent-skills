@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - name: unittest
-        run: uv run --with markdown-it-py python -m unittest discover -s skills/deep-research/tests
+        run: uv run --with markdown-it-py --with pygments --with latex2mathml python -m unittest discover -s skills/deep-research/tests
       - name: render --help smoke
         run: uv run skills/deep-research/scripts/render_report.py --help
 

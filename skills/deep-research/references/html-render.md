@@ -27,7 +27,7 @@ uv run "<skill_dir>/scripts/render_report.py" "<OUT>/<YYMMDD>-<主题>/REPORT.md
 
 - 模型每次只跑这一条命令，**不手写 HTML、不改模板、不逐节设计排版**——视觉全部由预设模板承担。
 - 渲染器不联网调研、不启动浏览器、不下载字体；单文件输出，CSS/JS 全内联，零 CDN，离线可打开、可打印。
-- 首次运行 uv 自动安装 `markdown-it-py`（轻量纯 Python 包，秒级）；此后命中缓存。
+- 首次运行 uv 自动安装 `markdown-it-py` / `pygments` / `latex2mathml`（均纯 Python 包，秒级）；此后命中缓存。缺 pygments/latex2mathml 时代码不高亮、公式保留原文，不阻塞渲染。
 - 渲染失败不是调研失败：按 §4 降级，Markdown 交付不受影响。
 
 ## 2. 主题
@@ -42,7 +42,9 @@ uv run "<skill_dir>/scripts/render_report.py" "<OUT>/<YYMMDD>-<主题>/REPORT.md
 
 **配色纪律**：主题色 **#1a88ff**（用户指定）——暗色直接用原值；亮色/打印用同色相加深档 #0b6fd8（#1a88ff 白底约 3.5:1 不达 AA，加深后 ≥4.5:1，保"加强对比度"要求）。除主题色（链接/引用/TOC 高亮/粗体）外，表面/文字/线条/徽章一律中性灰阶；暗色为纯黑灰底（#121212 系），不用蓝调深色背景。正文高对比（#111/白、#f5f5f5/#121212；次级 #525252/#b0b0b0）。改配色只改模板 CSS 变量，不改渲染器。
 
-**排版纪律**：正文 16px / 行高 1.9 / 段距 1.1em（中文长文舒适区）；字体栈 Segoe UI Variable Text → Segoe UI → system-ui → PingFang SC → Microsoft YaHei → Noto Sans CJK SC（系统字体，不下载）；粗体用主题色突出结论；滚动条细轨圆角随主题（Firefox scrollbar-width + WebKit 双套）。
+**排版纪律**：正文 16px / 行高 1.9 / 段距 1.1em（中文长文舒适区）；**英文/数字统一等宽**——等宽字体栈（Cascadia Code / JetBrains Mono / SF Mono / DejaVu Sans Mono / Consolas / Liberation Mono）在前供拉丁字形，CJK 逐字形回退到黑体（PingFang SC / Microsoft YaHei / Noto Sans CJK SC），系统字体不下载；粗体用主题色突出结论；滚动条细轨随主题。**克制圆角**：卡片/表格/代码块统一小圆角（6px）、徽章/行内代码 4px，不用大圆角与胶囊。**表格单元格不断行**（`white-space: nowrap`），宽表由横向滚动承载，避免日期/路径/SHA 被拦腰折行；打印时恢复可断行。摘要结论卡片高密度（窄内边距、行高 1.7）。移动端折叠目录用**真正的 SVG chevron icon**（开合旋转 90°），不用默认三角或 `>` 字符。
+
+**代码与公式**： fenced 代码块经 Pygments 服务端高亮，token 配色为 **mono-blue** 蓝色系（随主题切换），**背景用中性 `--code-bg`，不另设蓝底**；支持**折行**（pre-wrap）、**行号**（CSS 计数器，不进 DOM 文本）、**复制按钮**（悬停浮现，复制不含行号）。LaTeX（`$…$` / `$$…$$` / `\(…\)` / `\[…\]`）经 latex2mathml 转 **MathML** 由浏览器原生渲染——零 JS、零字体下载、保持单文件离线；缺库时公式保留原文不阻塞。
 
 ## 3. 质量门
 
@@ -69,5 +71,5 @@ uv run "<skill_dir>/scripts/render_report.py" "<OUT>/<YYMMDD>-<主题>/REPORT.md
 ## 5. 模板维护
 
 - 模板：`assets/report.template.html`（占位符 `__TITLE__` / `__THEME_ATTR__` / `__TOC_ITEMS__` / `__CONTENT__`）。
-- 视觉变更只改模板与渲染器，**不改报告 Markdown 规范**；改完跑 `uv run --with markdown-it-py python -m unittest discover -s skills/deep-research/tests` 回归（canary 样张覆盖全部受控语法）。
+- 视觉变更只改模板与渲染器，**不改报告 Markdown 规范**；改完跑 `uv run --with markdown-it-py --with pygments --with latex2mathml python -m unittest discover -s skills/deep-research/tests` 回归（canary 样张覆盖全部受控语法）。
 - 报告 Markdown 侧的引用形态（上标参考式链接 + 来源表 + 定义区）与附录形状见 `references/delivery-template.md` §2.1 / §3，渲染器依赖该受控格式。

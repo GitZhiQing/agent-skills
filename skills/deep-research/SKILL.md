@@ -7,9 +7,9 @@ description: >-
   或问题有歧义、领域冷门、表述模糊时使用。
   当用户只需一次搜索可答的单点查询、只需阅读已有代码片段、或明确要求不联网且不涉及源码分析时，不要使用本 skill。
 license: MIT
-compatibility: 可选 HTML 渲染需 uv >= 0.5；缺失跳过
+compatibility: 可选 HTML 渲染需 uv >= 0.5（自动装 markdown-it-py / pygments / latex2mathml）；缺失跳过
 metadata:
-  version: 0.13.1
+  version: 0.14.0
   category: research
 ---
 

@@ -26,6 +26,18 @@ try:
 except ImportError:
     HAS_MDIT = False
 
+try:
+    import pygments  # noqa: F401
+    HAS_PYG = True
+except ImportError:
+    HAS_PYG = False
+
+try:
+    import latex2mathml  # noqa: F401
+    HAS_L2M = True
+except ImportError:
+    HAS_L2M = False
+
 
 def run_cli(*args):
     return subprocess.run([sys.executable, str(SCRIPT), *args],
@@ -141,6 +153,9 @@ class TestRender(unittest.TestCase):
         footer = html_text.split("<footer>", 1)[1].split("</footer>", 1)[0]
         self.assertIn("附录 A / B", footer)
         self.assertNotIn("模型：", footer)
+        # 代码块复制按钮与行号样式（模板层，不依赖高亮库）
+        self.assertIn("copy-btn", html_text)
+        self.assertIn('span[id^="cl"]', html_text)
         # 打印样式
         self.assertIn("@media print", html_text)
         self.assertIn("@page", html_text)
@@ -171,6 +186,20 @@ class TestRender(unittest.TestCase):
             proc = run_cli(str(bad), "-o", str(self.out))
             self.assertEqual(proc.returncode, 1)
             self.assertIn("S99", proc.stderr)
+
+    @unittest.skipUnless(HAS_PYG, "pygments 未安装（代码高亮用例跳过）")
+    def test_code_highlight_linenos(self):
+        _, html_text = self.render_canary()
+        self.assertIn('class="hljs language-python"', html_text)
+        self.assertIn('span id="cl1-1"', html_text)
+        self.assertIn('class="k"', html_text)
+
+    @unittest.skipUnless(HAS_L2M, "latex2mathml 未安装（LaTeX 用例跳过）")
+    def test_math_mathml(self):
+        _, html_text = self.render_canary()
+        self.assertIn("<math", html_text)
+        self.assertIn('display="block"', html_text)
+        self.assertNotIn("@@MATH", html_text)
 
     def test_duplicate_source_anchor_fails(self):
         with tempfile.TemporaryDirectory() as td:

@@ -1,6 +1,6 @@
 # deep-research · 测试集
 
-| 文档版本 | v3.1 | 日期 | 2026-11-18 | 适用版本 | deep-research v0.13.1（SKILL.md） | 定位 | 设计文档 §3 需求与 §4 设计的执行化：验证行为协议是否被遵循 |
+| 文档版本 | v3.2 | 日期 | 2026-11-18 | 适用版本 | deep-research v0.14.0（SKILL.md） | 定位 | 设计文档 §3 需求与 §4 设计的执行化：验证行为协议是否被遵循 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 执行方式 | 人工会话（在装有本 skill 的 agent 环境中发起对话） | 结果判定 | 断言全过 = 通过；任一断言失败 = 记录偏离点与轮次 | 回归策略 | SKILL.md 任一改动后，按 §6 矩阵必跑 |
 
@@ -585,6 +585,9 @@
 = 单文件离线无 CDN / 远程字体 / `<script src=`；浏览器可读
 = S# 与 Markdown 一致：上标指向来源表锚点，来源表行有 id；未自动加章号
 = 含 TOC、明暗主题、打印样式；页脚仅一行免责声明，不重复附录 B 元信息
+= 代码块 mono-blue 高亮 + 行号 + 折行 + 悬停复制按钮（复制不含行号）
+= LaTeX（$…$ / $$…$$）渲染为 MathML（浏览器原生，零 JS 零字体下载）
+= 英文/数字等宽、表格单元格不断行（横向滚动）、克制圆角、折叠目录用 SVG chevron icon
 = 渲染不占确认轮次，未额外询问
 
 ### V-34 HTML 降级（改写，uv 缺失或失败）*
@@ -634,7 +637,7 @@
 | 源码协议（FR-5/25~28）改动 | V-18、V-19、V-20、V-21、V-22、V-23、V-40 |
 | 延续协议（FR-29）改动 | V-9、V-10、V-22、V-49 |
 | 报告可读性 / 引用（FR-22/23）改动 | V-46、V-32、V-18（源码追问加 V-19、V-22） |
-| HTML 渲染器 / 模板（FR-31）改动 | V-33、V-34、V-50 + unittest（`uv run --with markdown-it-py python -m unittest discover -s skills/deep-research/tests`）+ V-46 |
+| HTML 渲染器 / 模板（FR-31）改动 | V-33、V-34、V-50 + unittest（`uv run --with markdown-it-py --with pygments --with latex2mathml python -m unittest discover -s skills/deep-research/tests`）+ V-46 |
 | 仅触发词 / description 改动 | V-2、V-3、V-18、V-38（触发率观察） |
 | 仅边界章节改动 | V-11、V-13、V-14、V-21、V-23、V-26、V-30 |
 

@@ -30,7 +30,7 @@ bash scripts/skills-doctor.sh    # 链接健康矩阵，应全部 linked
 
 1. 读该 skill 的 `SKILL.md`、`README.md`、`docs/TESTS.md`。
 2. 只改必要文件；行为语义变化时按规范 §4 升版本，并同步 `pyproject.toml`（若有）、`.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json`。
-3. 按该 skill 的测试集回归；`deep-research` 另跑 `uv run --with markdown-it-py python -m unittest discover -s skills/deep-research/tests` 与 `uv run skills/deep-research/scripts/render_report.py --help`；`video-insight` 另跑 `python -m unittest discover -s skills/video-insight/tests`；`windows-disk-cleanup` 另跑 `python -m unittest discover -s skills/windows-disk-cleanup/tests`。
+3. 按该 skill 的测试集回归；`deep-research` 另跑 `uv run --with markdown-it-py --with pygments --with latex2mathml python -m unittest discover -s skills/deep-research/tests` 与 `uv run skills/deep-research/scripts/render_report.py --help`；`video-insight` 另跑 `python -m unittest discover -s skills/video-insight/tests`；`windows-disk-cleanup` 另跑 `python -m unittest discover -s skills/windows-disk-cleanup/tests`。
 4. `bash scripts/skills-lint.sh` 全绿。
 
 ### 新增 skill

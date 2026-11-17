@@ -31,8 +31,8 @@ uv run --project skills/ds-web-access ds-web-fetch --help
 uv run --project skills/md2pdf python -m unittest discover -s skills/md2pdf/tests
 bash skills/md2pdf/bin/md2pdf --help
 
-# deep-research（核心纯提示词；可选 HTML 渲染器，PEP 723 + markdown-it-py）
-uv run --with markdown-it-py python -m unittest discover -s skills/deep-research/tests
+# deep-research（核心纯提示词；可选 HTML 渲染器，PEP 723 + markdown-it-py / pygments / latex2mathml）
+uv run --with markdown-it-py --with pygments --with latex2mathml python -m unittest discover -s skills/deep-research/tests
 uv run skills/deep-research/scripts/render_report.py --help
 
 # video-insight（纯标准库；外部依赖 ffmpeg/ffprobe）
@@ -43,7 +43,7 @@ python -m unittest discover -s skills/windows-disk-cleanup/tests
 bash skills/windows-disk-cleanup/bin/windows-disk-cleanup doctor --root . --json
 ```
 
-ds-web-access 单测 23 条离线用例另有 1 条真实 API 用例，真实用例需 `DEEPSEEK_API_KEY`；Search/Fetch 为付费 API。deep-research 单测 14 条（canary 样张覆盖报告受控语法与附录形状；markdown-it-py 缺失时真实渲染用例自动跳过），行为协议另按 `docs/TESTS.md` 人工会话回归。md2pdf 轻量单测 5 条；渲染质量门仍为 S-3 canary 双版式。video-insight 单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 47 条，真实扫描/回收站用例需在 Windows 人工执行。
+ds-web-access 单测 23 条离线用例另有 1 条真实 API 用例，真实用例需 `DEEPSEEK_API_KEY`；Search/Fetch 为付费 API。deep-research 单测 16 条（canary 样张覆盖报告受控语法、附录形状、代码高亮与 LaTeX；markdown-it-py / pygments / latex2mathml 缺失时对应用例自动跳过），行为协议另按 `docs/TESTS.md` 人工会话回归。md2pdf 轻量单测 5 条；渲染质量门仍为 S-3 canary 双版式。video-insight 单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 47 条，真实扫描/回收站用例需在 Windows 人工执行。
 
 ## skill 矩阵
 

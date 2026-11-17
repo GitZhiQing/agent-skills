@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["markdown-it-py>=3.0"]
+# dependencies = ["markdown-it-py>=3.0", "pygments>=2.17", "latex2mathml>=3.77"]
 # ///
 """deep-research 可选 HTML 渲染器：REPORT.md → 单文件离线 REPORT.html。
 
@@ -41,6 +41,40 @@ def slugify(text: str, seen: dict[str, int]) -> str:
     return s if seen[s] == 1 else f"{s}-{seen[s]}"
 
 
+MATH_TOKEN = "@@MATH{}@@"
+
+
+def extract_math(text: str):
+    """把 $$…$$ / \\[…\\] / \\(…\\) / $…$ 转为 MathML 占位符；缺 latex2mathml 时原样返回。"""
+    try:
+        from latex2mathml.converter import convert
+    except ImportError:
+        return text, []
+    store: list[str] = []
+
+    def stash(m, display):
+        try:
+            mathml = convert(m.group(1))
+        except Exception:
+            return m.group(0)
+        if display:
+            mathml = re.sub(r"<math\b", '<math display="block"', mathml, count=1)
+        store.append(mathml)
+        return MATH_TOKEN.format(len(store) - 1)
+
+    text = re.sub(r"\$\$(.+?)\$\$", lambda m: stash(m, True), text, flags=re.S)
+    text = re.sub(r"\\\[(.+?)\\\]", lambda m: stash(m, True), text, flags=re.S)
+    text = re.sub(r"\\\((.+?)\\\)", lambda m: stash(m, False), text, flags=re.S)
+    text = re.sub(r"(?<!\$)\$(?!\s)([^$\n]+?)(?<!\s)\$(?!\$)", lambda m: stash(m, False), text)
+    return text, store
+
+
+def restore_math(body: str, store: list[str]) -> str:
+    for i, mathml in enumerate(store):
+        body = body.replace(MATH_TOKEN.format(i), mathml)
+    return body
+
+
 def parse_markdown(text: str):
     """渲染正文，提取 h1 标题与 h2/h3 目录；不自动加章号（保护 §x.x 审计引用）。"""
     from markdown_it import MarkdownIt
@@ -65,7 +99,37 @@ def parse_markdown(text: str):
             return f'<{tag} id="{anchor}">'
         return f"<{tag}>"
 
+    block_counter = [0]
+
+    def fence(tokens, idx, options, env):
+        tok = tokens[idx]
+        info = (tok.info or "").strip()
+        lang = info.split()[0] if info else ""
+        code = tok.content
+        try:
+            from pygments import highlight as pyg_highlight
+            from pygments.lexers import get_lexer_by_name, guess_lexer
+            from pygments.formatters import HtmlFormatter
+            try:
+                lexer = get_lexer_by_name(lang) if lang else guess_lexer(code)
+            except Exception:
+                lexer = None
+            if lexer is not None:
+                block_counter[0] += 1
+                fmt = HtmlFormatter(nowrap=False, linespans=f"cl{block_counter[0]}")
+                raw = pyg_highlight(code, lexer, fmt)
+                m2 = re.search(r"<pre>(.*)</pre>", raw, re.S)
+                inner = m2.group(1) if m2 else raw
+                inner = re.sub(r"^<span></span>", "", inner)
+                cls = f' class="hljs language-{html.escape(lang)}"' if lang else ' class="hljs"'
+                return f"<pre><code{cls}>{inner}</code></pre>\n"
+        except ImportError:
+            pass
+        cls = f' class="language-{html.escape(lang)}"' if lang else ""
+        return f"<pre><code{cls}>{html.escape(code)}</code></pre>\n"
+
     md.renderer.rules["heading_open"] = heading_open
+    md.renderer.rules["fence"] = fence
     body = md.render(text)
     return body, toc, title
 
@@ -218,10 +282,12 @@ def render(report_path: Path, out_path: Path, theme: str, check_only: bool = Fal
         if len(parts) == 3:
             text = parts[2].lstrip("\n")
 
+    text, math_store = extract_math(text)
     body, toc, h1 = parse_markdown(text)
     title = h1 or report_path.stem
     body, cite_problems = rewrite_citations(body)
     body = add_badges(body)
+    body = restore_math(body, math_store)
 
     template = TEMPLATE.read_text(encoding="utf-8")
     theme_attr = f' data-theme="{theme}"' if theme != "default" else ""
