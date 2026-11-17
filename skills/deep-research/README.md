@@ -15,6 +15,7 @@
 三个阶段门：校准（歧义 / 冷门 / 模糊时才预检索）→ 选项式澄清（≤3 轮）→ 目标与计划确认门（frontier 轮：Q1 目标 / Q2 输出目录 / Q3 档位 / Q4 执行方式，每项附推荐；优先用宿主结构化提问工具收口，无工具时文本等待）。确认后进入执行与交付：普通调研按来源分层与增量登记执行，源码调研先 clone 到 `sources/` 并固定 commit SHA；交付 `<OUT>/<YYMMDD>-<主题>/REPORT.md` + `REFERENCES.md` + `META.md`，META.md 记录执行环境、档位、目标、目录、假设与确认来源，报告正文直接以摘要开始。
 
 - 交付闸门：META.md 的确认来源为"未确认"时，不创建 / 交付 REPORT.md 与 REFERENCES.md。
+- 报告可读性：摘要为带引用的结论清单（只读摘要也能拿走核心结论）；外部来源用上标参考式链接 `<sup>[S#]</sup>`（编号即登记簿编号，可点击、悬停显示标题；文末按来源层分组的整洁来源表 + 隐藏定义区，报告自包含不依赖登记簿）；段落短、结论前置、单源 / 推断显式标记；交付前过可读性自查。
 - 完整协议（阶段模板、档位表、确认门措辞）见 [SKILL.md](SKILL.md)。
 - 源码调研六步、来源分层与安全细则见 [references/execution-discipline.md](references/execution-discipline.md)。
 - 报告与登记簿模板见 [references/delivery-template.md](references/delivery-template.md)。
@@ -23,7 +24,7 @@
 
 - **识别**：实现原理 / 架构 / 调用链 / 行为溯源 / 源码对比，或答案必须靠代码行为验证时启用；建议不低于中档。
 - **获取与固定**：确认后 clone 到 `<OUT>/<YYMMDD>-<主题>/sources/<repo>/`，记录完整 commit SHA；已有本地仓库 HEAD 与所需 ref 一致才原地复用。
-- **本地分析**：只读，不执行仓库内安装 / 构建 / 测试脚本；代码结论用 `[C#:path:line]` 引用，区分源码实证 / 文档说明 / 推断。
+- **本地分析**：只读，不执行仓库内安装 / 构建 / 测试脚本；代码结论用 `[C#:path:line]` 引用，报告中渲染为固定 SHA 永久链接（点开即落在分析版本的对应行），区分源码实证 / 文档说明 / 推断。
 
 ## 输出目录
 
@@ -43,6 +44,7 @@
 ## 环境前提与可选协作
 
 - **环境前提**：宿主具备 web 搜索 / 抓取能力——原生 WebSearch / WebFetch 类工具，或任一已安装的 web 搜索 / 抓取 skill。
+- **可选 HTML 渲染**：交付三文件后默认渲染同目录 REPORT.html（预设精美模板：TOC 侧栏、明暗主题、来源徽章、可打印；单文件离线零 CDN）。需 uv >= 0.5，首次自动装一个轻量包；uv 缺失或渲染失败自动跳过，不影响 Markdown 交付。用法见 [references/html-render.md](references/html-render.md)。
 - **可选协作**：具体用哪个搜索工具由阶段 0 探测决定，本 skill 不绑定实现；无论选用哪种通道，都按 SKILL.md 内联纪律执行（调用间隔 ≥2 秒、限流退避重试、同 URL 不重复抓取）。
 - **源码调研**：另需 git；无 git 时可退回官方源码包。web 工具缺失但 git 可用时，可降级为仅本地源码调研并声明未做外部资料交叉验证。
 
@@ -67,13 +69,14 @@ npx skills add GitZhiQing/agent-skills/deep-research
 
 手动分发与卸载见[仓库 README](../../README.md#安装)。
 
-纯提示词 skill，无运行时依赖。
+核心路径纯提示词、无运行时依赖；可选 HTML 渲染需 uv，缺失自动跳过。
 
 ## 文档
 
 - [SKILL.md](SKILL.md) — 协议正文（权威来源，含档位参数表、确认门模板）
 - [references/execution-discipline.md](references/execution-discipline.md) — 源码调研六步、增量登记、来源分层、安全细则
 - [references/delivery-template.md](references/delivery-template.md) — REPORT.md 结构、REFERENCES.md 模板、META.md 字段
+- [references/html-render.md](references/html-render.md) — HTML 渲染调用、主题、质量门与降级
 - [docs/SPEC.md](docs/SPEC.md) — 设计与决策依据
 - [docs/TESTS.md](docs/TESTS.md) — 验证场景
 

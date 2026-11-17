@@ -7,8 +7,9 @@ description: >-
   或问题有歧义、领域冷门、表述模糊时使用。
   当用户只需一次搜索可答的单点查询、只需阅读已有代码片段、或明确要求不联网且不涉及源码分析时，不要使用本 skill。
 license: MIT
+compatibility: 可选 HTML 渲染需 uv >= 0.5；缺失跳过
 metadata:
-  version: 0.10.3
+  version: 0.12.0
   category: research
 ---
 
@@ -118,17 +119,18 @@ metadata:
 进入执行即创建 `<OUT>/<YYMMDD>-<主题>/` 目录（`<OUT>` 为阶段 3 确认的输出根目录）。`YYMMDD` 取创建当天本地日期（跨日不改名）；主题 slug 简短可读（建议 ≤30 字符，短横线连接关键词，禁止空格、标点、路径分隔符），中文关键词可直接使用；同日同 slug 已存在则追加 `-2`、`-3`（如 `<OUT>/261018-国产开源数据库格局/`）。每轮搜索的收尾步骤就是把新增/排除条目写入该目录下 `REFERENCES.md`，先到先编号、禁止事后补写。
 
 - **普通调研**：按来源分层、多语言交叉、事实与观点分离、矛盾显式化、时效标记、多样性自检执行；细则见 `references/execution-discipline.md` §2。
-- **源码调研**：先 clone 到 `sources/` 并固定 commit SHA，再基于本地源码分析、用 `[C#:path:line]` 引用；获取 / 固定 / 分析 / 证据 / 安全 / 失败的完整步骤见 `references/execution-discipline.md` §1。
+- **源码调研**：先 clone 到 `sources/` 并固定 commit SHA，再基于本地源码分析、用 `[C#:path:line]` 引用（报告中渲染为固定 SHA 永久链接）；获取 / 固定 / 分析 / 证据 / 安全 / 失败的完整步骤见 `references/execution-discipline.md` §1。
 - **高档**：先交报告大纲请用户确认，再分节执行、分节汇报；见 `references/execution-discipline.md` §3。
 
 ## 阶段 5 · 交付
 
-在 `<OUT>/<YYMMDD>-<主题>/` 下产出三文件：**REPORT.md**（调研报告）+ **REFERENCES.md**（素材登记簿）+ **META.md**（调研元信息）。
+在 `<OUT>/<YYMMDD>-<主题>/` 下产出三文件：**REPORT.md** + **REFERENCES.md** + **META.md**。
 
-- **META.md 必须含**：档位、日期（`YYYY-MM-DD`）、执行环境（Agent + LLM，以确认门最终确认值为准；未知且未经用户纠正时标注"未确认"）、工具组合、调研目标、输出目录（绝对路径）、假设声明（无假设时标注"无"）、**确认来源（结构化提问结果 / 用户文本 / 未确认）**；源码调研加"源码基线：C1 @ <short SHA>"。REPORT.md 正文不含这些元信息，直接以摘要开始；敏感领域在 REPORT.md 顶部保留"信息整理，非决策建议"声明。
+- **META.md 必须含**：档位、日期（`YYYY-MM-DD`）、执行环境（Agent + LLM，确认门最终值；未知未纠正标"未确认"）、工具组合、调研目标、输出目录（绝对路径）、假设声明（无则标"无"）、**确认来源（结构化提问结果 / 用户文本 / 未确认）**；源码调研加"源码基线：C1 @ <short SHA>"。REPORT.md 正文不含元信息，直接以摘要开始；敏感领域顶部保留"信息整理，非决策建议"声明。
 - 确认来源为"未确认"时，禁止创建或交付 REPORT.md / REFERENCES.md；若已误建文件，停止写入并标为"未确认草稿"，不得声称"调研完成"。
-- META.md 模板、报告结构、低档精简方式、REFERENCES.md 表结构与登记要点见 `references/delivery-template.md`。
-- "未覆盖与不确定"章节**必选**（内容可为空）。
+- **报告可读性**：摘要为 3~7 条结论清单（BLUF）；外部来源用上标参考式链接 `<sup>[S#]</sup>`（文末来源表+定义区；不用脚注），源码结论用固定 SHA 永久链接；段落 ≤5 句、结论段首；交付前过可读性自查。细则见 `references/delivery-template.md` §1。
+- **HTML 交付**：三文件后默认渲染同目录 REPORT.html（一条命令，失败跳过不阻塞）；见 `references/html-render.md`。
+- 模板与登记要点见 `references/delivery-template.md`；"未覆盖与不确定"章节**必选**（可为空）。
 
 ## 阶段 6 · 延续交互
 
@@ -142,6 +144,7 @@ metadata:
 | --- | --- |
 | 进入执行：普通调研纪律、源码调研六步、高档分阶段 | `references/execution-discipline.md` |
 | 写 REPORT.md / REFERENCES.md / META.md | `references/delivery-template.md` |
+| 三文件交付后渲染 REPORT.html | `references/html-render.md` |
 | 需要抓取 / 源码的安全边界与保留规则 | `references/execution-discipline.md` §4 |
 
 ## 边界与诚实性
@@ -156,5 +159,6 @@ metadata:
 
 - `references/execution-discipline.md` — 源码调研六步、增量登记、来源分层、多样性与安全细则
 - `references/delivery-template.md` — REPORT.md 结构、REFERENCES.md 模板与登记要点
+- `references/html-render.md` — HTML 渲染调用、主题、质量门与降级
 - `docs/SPEC.md` — 设计与决策依据
 - `docs/TESTS.md` — 验证场景

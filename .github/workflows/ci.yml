@@ -41,6 +41,17 @@ jobs:
       - name: unittest
         run: uv run --project skills/md2pdf python -m unittest discover -s skills/md2pdf/tests
 
+  deep-research:
+    name: deep-research renderer unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: unittest
+        run: uv run --with markdown-it-py python -m unittest discover -s skills/deep-research/tests
+      - name: render --help smoke
+        run: uv run skills/deep-research/scripts/render_report.py --help
+
   video-insight:
     name: video-insight unit tests
     runs-on: ubuntu-latest

@@ -10,7 +10,7 @@
 
 ## 怎么跑起来 / 验证
 
-纯提示词 skill（deep-research、theme-commit、zero-coding、session-handoff）无运行时，直接读 `SKILL.md` 并按 `docs/TESTS.md` 人工回归。
+纯提示词 skill（theme-commit、zero-coding、session-handoff）无运行时，直接读 `SKILL.md` 并按 `docs/TESTS.md` 人工回归。deep-research 核心路径纯提示词，另有可选 HTML 渲染脚本（uv 缺失自动跳过）。
 
 ```bash
 # 仓库级校验（纯 bash，零依赖；退出码 0/1/2）
@@ -31,6 +31,10 @@ uv run --project skills/ds-web-access ds-web-fetch --help
 uv run --project skills/md2pdf python -m unittest discover -s skills/md2pdf/tests
 bash skills/md2pdf/bin/md2pdf --help
 
+# deep-research（核心纯提示词；可选 HTML 渲染器，PEP 723 + markdown-it-py）
+uv run --with markdown-it-py python -m unittest discover -s skills/deep-research/tests
+uv run skills/deep-research/scripts/render_report.py --help
+
 # video-insight（纯标准库；外部依赖 ffmpeg/ffprobe）
 python -m unittest discover -s skills/video-insight/tests
 
@@ -39,7 +43,7 @@ python -m unittest discover -s skills/windows-disk-cleanup/tests
 bash skills/windows-disk-cleanup/bin/windows-disk-cleanup doctor --root . --json
 ```
 
-ds-web-access 单测 23 条离线用例另有 1 条真实 API 用例，真实用例需 `DEEPSEEK_API_KEY`；Search/Fetch 为付费 API。md2pdf 轻量单测 5 条；渲染质量门仍为 S-3 canary 双版式。video-insight 单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 47 条，真实扫描/回收站用例需在 Windows 人工执行。
+ds-web-access 单测 23 条离线用例另有 1 条真实 API 用例，真实用例需 `DEEPSEEK_API_KEY`；Search/Fetch 为付费 API。deep-research 单测 13 条（canary 样张覆盖报告受控语法；markdown-it-py 缺失时真实渲染用例自动跳过），行为协议另按 `docs/TESTS.md` 人工会话回归。md2pdf 轻量单测 5 条；渲染质量门仍为 S-3 canary 双版式。video-insight 单测 163 条，真实托管 API 用例需 `VOLC_BIGMODEL_API_KEY` / `PADDLEOCR_ACCESS_TOKEN`，未设置自动跳过。windows-disk-cleanup 单测 47 条，真实扫描/回收站用例需在 Windows 人工执行。
 
 ## skill 矩阵
 
@@ -47,7 +51,7 @@ ds-web-access 单测 23 条离线用例另有 1 条真实 API 用例，真实用
 | --- | --- | --- | --- |
 | ddgs-web-access | Python CLI（uv，冻结维护 / 免费无密钥） | `skills/ddgs-web-access/SKILL.md` | 两个 `--help` + `docs/TESTS.md`（不回归联网行为） |
 | ds-web-access | Python CLI（uv + 标准库 HTTP，付费 API） | `skills/ds-web-access/SKILL.md` | unittest + 两个 `--help` + `docs/TESTS.md` |
-| deep-research | 纯提示词 | `skills/deep-research/SKILL.md` | `docs/TESTS.md`（人工会话） |
+| deep-research | 纯提示词 + 可选渲染脚本（PEP 723 / uv） | `skills/deep-research/SKILL.md` | unittest + `--help` + `docs/TESTS.md`（人工会话） |
 | theme-commit | 纯提示词 | `skills/theme-commit/SKILL.md` | `docs/TESTS.md`（人工会话） |
 | zero-coding | 纯提示词 | `skills/zero-coding/SKILL.md` | `docs/TESTS.md`（人工会话） |
 | session-handoff | 纯提示词 | `skills/session-handoff/SKILL.md` | `docs/TESTS.md`（人工会话） |
