@@ -25,10 +25,10 @@
 | `references/` | 条件必需 | 条件分支、输出模板、长清单、领域手册；只在 `SKILL.md` 指向时按需加载，距入口一层（§2.1） |
 | `LICENSE` | **必需** | 与仓库根 MIT 许可一致，保证单 skill 目录拷走后许可自包含 |
 | `.claude-plugin/plugin.json` | **必需** | Claude Code plugin 元数据；`name` == 目录名，`version` 与 frontmatter 一致；lint 强制 |
-| `bin/`、`scripts/`、`pyproject.toml` | 仅代码 skill | 位置无关启动器、实现脚本、依赖声明；形态见 §2.2 |
+| `bin/`、`scripts/`、`pyproject.toml` | 代码 skill；纯提示词 skill 可含可选辅助脚本 | 位置无关启动器、实现脚本、依赖声明；形态见 §2.2。纯提示词 skill 的可选后处理脚本（如 deep-research 的 HTML 渲染器）用 PEP 723 单文件 + `scripts/`，核心路径仍无运行时 |
 | `docs/` 其他文档（研究/灵感文档等） | 自由 | 建议在本地台账明细"文档"行登记 |
 
-判定示例：theme-commit（纯提示词，但 4 步协议可断言）→ SKILL.md + README.md + docs/TESTS.md + references/；ddgs-web-access（CLI）→ 全套；deep-research（纯提示词、协议复杂）→ SKILL.md + README.md + docs/TESTS.md + docs/SPEC.md + references/。
+判定示例：theme-commit（纯提示词，但 4 步协议可断言）→ SKILL.md + README.md + docs/TESTS.md + references/；ddgs-web-access（CLI）→ 全套；deep-research（纯提示词核心 + 可选渲染脚本、协议复杂）→ SKILL.md + README.md + docs/TESTS.md + docs/SPEC.md + references/ + scripts/ + assets/ + tests/。
 
 **文档命名**：文件名用英文短名（kebab-case），正文标题保持中文。
 
@@ -61,8 +61,9 @@
 | --- | --- | --- | --- |
 | uv 包型 | 需要第三方依赖（网络、渲染、解析） | `pyproject.toml` + `src/<pkg>/`（或单文件）+ `bin/` 启动器；依赖由 uv 首次调用自动安装 | ddgs-web-access（单文件 CLI + pyproject）、md2pdf（src 布局） |
 | 纯标准库脚本型 | 只依赖系统工具（ffmpeg 等），零 pip 依赖 | `scripts/` + `tests/`；环境依赖写进 frontmatter `compatibility` 与 README | video-insight |
+| PEP 723 单文件型 | 纯提示词 skill 的可选后处理（渲染等），核心路径无运行时 | `scripts/<name>.py` 内联 `# /// script` 依赖 + `uv run` 调用 + `tests/`；无 pyproject/bin；uv 缺失/失败必须降级跳过，不阻塞核心交付 | deep-research（HTML 渲染器） |
 
-不为统一而迁移：选择依据是"是否需要第三方依赖"，不是目录美观。两种形态都要求：位置无关启动（不依赖当前工作目录）、`--help`、退出码 0/1/2、状态走 stdout / 错误走 stderr。
+不为统一而迁移：选择依据是"是否需要第三方依赖"与"是否核心路径"，不是目录美观。三种形态都要求：位置无关启动（不依赖当前工作目录）、`--help`、退出码 0/1/2、状态走 stdout / 错误走 stderr。
 
 ## 3. SKILL.md Frontmatter 标准
 
