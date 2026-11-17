@@ -1,34 +1,39 @@
 # deep-research
 
-先校准、再消耗调研资源的深度调研 skill：开始检索前，调研目标、调研计划与输出目录必须经用户确认。产出三文件——**REPORT.md**（调研报告，结论层）+ **REFERENCES.md**（素材登记簿，证据层）+ **META.md**（调研元信息，台账层），落盘于所选输出根目录下的 `<YYMMDD>-<主题>/`。需要研究源码时，先把仓库 clone 到该目录的 `sources/` 并固定 commit SHA，再基于本地源码分析并给出文件:行号证据。
+先校准、再消耗调研资源的深度调研 skill：环境确认与研究计划两屏经用户确认后自主执行。产出两文件——**REPORT.md**（正文 + 附录 A 来源与证据 + 附录 B 调研元信息）+ **REPORT.html**（可选渲染），落盘于所选输出根目录下的 `<YYMMDD>-<主题>/`。需要研究源码时文档优先，确需代码行为验证才把仓库 clone 到该目录的 `sources/` 并固定 commit SHA，再基于本地源码分析给出文件:行号证据。
 
 ## 何时触发
 
 - 触发词："帮我调研""深入研究""全面了解""对比分析""查清楚…的现状""research" "deep research"等；
 - 或问题术语有歧义、领域冷门、表述模糊时主动使用；
 - 不触发：一次搜索可答的单点查询、只需阅读已给出的代码片段或单点调试、用户明确要求不联网且不涉及源码分析。
-- 不适用：无人值守 / 批量自动化调研——检索前必须先由用户确认目标与计划，无人确认就不执行。
+- 不适用：无人值守 / 批量自动化调研——两屏确认必须由用户回应，无人确认就不执行。
 - 前置条件：用户能在场的交互会话；宿主声明自主执行时先验证提问工具，无法确认即停止，不降级执行。
 
 ## 工作方式
 
-三个阶段门：校准（歧义 / 冷门 / 模糊时才预检索）→ 选项式澄清（≤3 轮）→ 目标与计划确认门（frontier 轮：Q1 目标 / Q2 输出目录 / Q3 档位 / Q4 执行方式，每项附推荐；优先用宿主结构化提问工具收口，无工具时文本等待）。确认后进入执行与交付：普通调研按来源分层与增量登记执行，源码调研先 clone 到 `sources/` 并固定 commit SHA；交付 `<OUT>/<YYMMDD>-<主题>/REPORT.md` + `REFERENCES.md` + `META.md`，META.md 记录执行环境、档位、目标、目录、假设与确认来源，报告正文直接以摘要开始。
+固定两屏确认：
 
-- 交付闸门：META.md 的确认来源为"未确认"时，不创建 / 交付 REPORT.md 与 REFERENCES.md。
-- 报告可读性：摘要为带引用的结论清单（只读摘要也能拿走核心结论）；外部来源用上标参考式链接 `<sup>[S#]</sup>`（编号即登记簿编号，可点击、悬停显示标题；文末按来源层分组的整洁来源表 + 隐藏定义区，报告自包含不依赖登记簿）；段落短、结论前置、单源 / 推断显式标记；交付前过可读性自查。
-- 完整协议（阶段模板、档位表、确认门措辞）见 [SKILL.md](SKILL.md)。
-- 源码调研六步、来源分层与安全细则见 [references/execution-discipline.md](references/execution-discipline.md)。
-- 报告与登记簿模板见 [references/delivery-template.md](references/delivery-template.md)。
+1. **环境确认屏（第 1 轮，先于一切联网）**：只读探测后呈现标准模型 ID（去供应商前缀）、Agent 平台、web_search/web_fetch（内置优先）、提问工具可用性、git；用户确认或纠正，纠正值优先。
+2. **校准与计划确认屏（第 2 轮）**：歧义/冷门/模糊时先 ≤3 次判向预检索；呈现调研目标（候选方向+推荐）+ TODO 计划 + 投入预估 + 输出目录候选。确认→执行；调整/换方向→重建计划直接执行（无第三屏）；取消/无回应→停。
+
+确认后按 TODO 自主执行（宿主任务清单工具优先），投入按复杂度自判（无档位问题）；广度型独立子主题可选并行子代理调研（宿主支持时），否则单线程；报告写作永远主代理一次性。仅重大矛盾/范围变化/需新源码快照/工具失败改变可行性时回用户。执行期增量登记 LEDGER.md，交付时并入附录后删除。
+
+- 交付闸门：附录 B 确认来源为"未确认"时，不创建/交付输出目录、LEDGER.md 与 REPORT.md。
+- 报告可读性：摘要为带引用的结论清单（BLUF，只读摘要也能拿走核心结论）；外部来源用上标参考式链接 `<sup>[S#]</sup>`（文末附录 A 分层来源表 + 隐藏定义区，报告自包含）；段落短、结论前置、单源/推断显式标记；交付前过可读性自查。
+- 完整协议见 [SKILL.md](SKILL.md)。
+- 环境探测细则见 [references/environment.md](references/environment.md)；执行纪律与源码六步见 [references/execution-discipline.md](references/execution-discipline.md)；并行协议见 [references/parallel-research.md](references/parallel-research.md)。
+- 报告与附录、LEDGER 模板见 [references/delivery-template.md](references/delivery-template.md)。
 
 ## 源码调研
 
-- **识别**：实现原理 / 架构 / 调用链 / 行为溯源 / 源码对比，或答案必须靠代码行为验证时启用；建议不低于中档。
+- **识别（docs-first）**：优先文档；实现原理 / 架构 / 调用链 / 行为溯源 / 源码对比，或答案必须靠代码行为验证时才 clone；无档位范围限制。
 - **获取与固定**：确认后 clone 到 `<OUT>/<YYMMDD>-<主题>/sources/<repo>/`，记录完整 commit SHA；已有本地仓库 HEAD 与所需 ref 一致才原地复用。
 - **本地分析**：只读，不执行仓库内安装 / 构建 / 测试脚本；代码结论用 `[C#:path:line]` 引用，报告中渲染为固定 SHA 永久链接（点开即落在分析版本的对应行），区分源码实证 / 文档说明 / 推断。
 
 ## 输出目录
 
-阶段 0 只读探测工作区，阶段 3 在 Q2 给出 2~3 个输出根目录候选并标推荐项；确认采用推荐（点选推荐项或回复「确认」），选择编号 / 自定义路径即改选。推荐规则：
+阶段 0 只读探测工作区，第 2 屏给出 2~3 个输出根目录候选并标推荐项；确认采用推荐（点选推荐项或回复「确认」），选择编号 / 自定义路径即改选。推荐规则：
 
 - 已有 `research/` → 沿用；
 - 代码仓且无 `research/` → 优先仓外目录（如 `~/research/` 或工作区同级 `research/`），避免调研产物污染代码库；
@@ -39,12 +44,13 @@
 
 ## 目录命名
 
-`<OUT>/<YYMMDD>-<主题>/`（如 `<OUT>/261018-国产开源数据库格局/`）：`YYMMDD` 取创建当天（跨日不改名）；主题 slug 简短可读，中文关键词可用；同日同主题重复调研追加 `-2`、`-3`；报告与登记簿内日期用 `YYYY-MM-DD`。
+`<OUT>/<YYMMDD>-<主题>/`（如 `<OUT>/261018-国产开源数据库格局/`）：`YYMMDD` 取创建当天（跨日不改名）；主题 slug 简短可读，中文关键词可用；同日同主题重复调研追加 `-2`、`-3`；报告内日期用 `YYYY-MM-DD`。
 
 ## 环境前提与可选协作
 
-- **环境前提**：宿主具备 web 搜索 / 抓取能力——原生 WebSearch / WebFetch 类工具，或任一已安装的 web 搜索 / 抓取 skill。
-- **可选 HTML 渲染**：交付三文件后默认渲染同目录 REPORT.html（预设精美模板：TOC 侧栏、明暗主题、来源徽章、可打印；单文件离线零 CDN）。需 uv >= 0.5，首次自动装一个轻量包；uv 缺失或渲染失败自动跳过，不影响 Markdown 交付。用法见 [references/html-render.md](references/html-render.md)。
+- **环境前提**：宿主具备 web 搜索 / 抓取能力——原生 WebSearch / WebFetch 类工具，或任一已安装的 web 搜索 / 抓取 skill。阶段 0 探测模型 / 平台 / 工具 / 提问工具 / 任务清单 / 子代理 / git。
+- **可选 HTML 渲染**：REPORT.md 交付后默认渲染同目录 REPORT.html（预设精美模板：TOC 侧栏、明暗主题、来源徽章、可打印；单文件离线零 CDN；页脚元信息来自附录 B）。需 uv >= 0.5，首次自动装一个轻量包；uv 缺失或渲染失败自动跳过，不影响 Markdown 交付。用法见 [references/html-render.md](references/html-render.md)。
+- **可选并行**：宿主有子代理类工具且子主题独立时并行调研，否则单线程；写作永远单代理。
 - **可选协作**：具体用哪个搜索工具由阶段 0 探测决定，本 skill 不绑定实现；无论选用哪种通道，都按 SKILL.md 内联纪律执行（调用间隔 ≥2 秒、限流退避重试、同 URL 不重复抓取）。
 - **源码调研**：另需 git；无 git 时可退回官方源码包。web 工具缺失但 git 可用时，可降级为仅本地源码调研并声明未做外部资料交叉验证。
 
@@ -73,9 +79,11 @@ npx skills add GitZhiQing/agent-skills/deep-research
 
 ## 文档
 
-- [SKILL.md](SKILL.md) — 协议正文（权威来源，含档位参数表、确认门模板）
-- [references/execution-discipline.md](references/execution-discipline.md) — 源码调研六步、增量登记、来源分层、安全细则
-- [references/delivery-template.md](references/delivery-template.md) — REPORT.md 结构、REFERENCES.md 模板、META.md 字段
+- [SKILL.md](SKILL.md) — 协议正文（权威来源，含两屏模板与投入启发式）
+- [references/environment.md](references/environment.md) — 模型/平台/工具探测与文本编号降级
+- [references/execution-discipline.md](references/execution-discipline.md) — 执行节奏、增量登记、源码六步、安全
+- [references/parallel-research.md](references/parallel-research.md) — 可选并行子代理协议
+- [references/delivery-template.md](references/delivery-template.md) — REPORT 结构、引用、附录 A/B 与 LEDGER 模板
 - [references/html-render.md](references/html-render.md) — HTML 渲染调用、主题、质量门与降级
 - [docs/SPEC.md](docs/SPEC.md) — 设计与决策依据
 - [docs/TESTS.md](docs/TESTS.md) — 验证场景

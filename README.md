@@ -8,7 +8,7 @@
 | --- | --- |
 | [ddgs-web-access](skills/ddgs-web-access/) | 免费无密钥元搜索与网页抓取（冻结维护，不影响既有命令） |
 | [ds-web-access](skills/ds-web-access/) | 基于 DeepSeek Search / Fetch API 的联网搜索与网页 Markdown 抓取，带付费成本防护与本地缓存 |
-| [deep-research](skills/deep-research/) | 先校准再调研：目标、计划与输出目录经用户确认后执行，无法确认则停止；交付 REPORT + REFERENCES + META + 可选 HTML 报告（预设模板渲染），支持源码调研 |
+| [deep-research](skills/deep-research/) | 先校准再调研：环境确认与计划两屏确认后自主执行，无法确认则停止；交付 REPORT.md（含来源证据与元信息附录）+ 可选 HTML 报告，投入按复杂度自判、可选并行子代理，支持源码调研 |
 | [theme-commit](skills/theme-commit/) | 先计划预览并用提问工具确认，再按主题分组提交 |
 | [zero-coding](skills/zero-coding/) | 从零启动个人项目的轻量工作流 |
 | [session-handoff](skills/session-handoff/) | 生成跨会话交接提示词 |
