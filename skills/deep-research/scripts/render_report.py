@@ -93,8 +93,13 @@ def rewrite_citations(body: str) -> tuple[str, list[str]]:
 
     body = re.sub(r"<sup>(.*?)</sup>", sup_sub, body, flags=re.S)
 
+    seen_rows: set[str] = set()
+
     def row_sub(m):
         sid = m.group(1)
+        if sid in seen_rows:
+            problems.append(f"来源表锚点重复：{sid}（同一编号出现在多个表首列）")
+        seen_rows.add(sid)
         back = first_cite.get(sid)
         link = f'<a class="backref" href="#{back}" title="回到正文首次引用">↩</a>' if back else ""
         return f'<tr id="src-{sid}"><td class="src-id">{sid}{link}</td>'
@@ -133,20 +138,20 @@ def add_badges(body: str) -> str:
     return body
 
 
-def read_meta(report_path: Path) -> str:
-    """可选：同目录 META.md 提取页脚元信息；缺失则省略。"""
-    meta_path = report_path.parent / "META.md"
-    if not meta_path.is_file():
+def appendix_meta(text: str) -> str:
+    """从 REPORT.md 附录 B 提取页脚元信息（粗体标签行，节作用域）；缺失则省略。"""
+    m = re.search(r"(?m)^(#{2,3})[ \t]*附录[ \t]*B\b.*$", text)
+    if not m:
         return ""
-    try:
-        text = meta_path.read_text(encoding="utf-8")
-    except OSError:
-        return ""
+    level = len(m.group(1))
+    rest = text[m.end():]
+    nxt = re.search(rf"(?m)^#{{1,{level}}}[ \t]", rest)
+    section = rest[:nxt.start()] if nxt else rest
     fields = []
-    for label in ("档位", "日期", "执行环境", "工具组合"):
-        m = re.search(rf"\*\*{label}\*\*[：:]\s*(.+)", text)
-        if m:
-            fields.append(f"{label}：{m.group(1).strip()}")
+    for label in ("日期", "模型", "平台", "工具组合"):
+        fm = re.search(rf"\*\*{label}\*\*[：:]\s*(.+)", section)
+        if fm:
+            fields.append(f"{label}：{fm.group(1).strip()}")
     return " · ".join(fields)
 
 
@@ -185,9 +190,10 @@ def quality_gate(html_text: str, body: str) -> list[str]:
         problems.append("模板占位符残留")
     if re.search(r'<link[^>]+href=["\']https?://|<script[^>]+src=|@import\s+url|url\(\s*["\']?https?://', html_text):
         problems.append("含外部资源引用（违反单文件离线约束）")
-    if re.search(r"\[S\d+\]:", body):
+    stripped = re.sub(r"<pre\b.*?</pre>|<code\b.*?</code>", "", body, flags=re.S)
+    if re.search(r"\[S\d+\]:", stripped):
         problems.append("链接定义行泄漏进正文")
-    if re.search(r"(?m)^#{1,6}\s|\*\*[^*]+\*\*", body):
+    if re.search(r"(?m)^#{1,6}\s|\*\*[^*]+\*\*", stripped):
         problems.append("疑似未渲染的 markdown 标记")
     cited = set(re.findall(r'href="#src-(S\d+)"', body))
     anchored = set(re.findall(r'id="src-(S\d+)"', body))
@@ -234,7 +240,7 @@ def render(report_path: Path, out_path: Path, theme: str, check_only: bool = Fal
     title = h1 or report_path.stem
     body, cite_problems = rewrite_citations(body)
     body = add_badges(body)
-    meta_line = read_meta(report_path)
+    meta_line = appendix_meta(text)
     generated = datetime.now().strftime("%Y-%m-%d %H:%M")
     footer_meta = " · ".join(x for x in (meta_line, f"渲染于 {generated}") if x)
 

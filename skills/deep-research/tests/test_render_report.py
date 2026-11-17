@@ -78,6 +78,28 @@ class TestUnits(unittest.TestCase):
         self.assertEqual(checker.errors, [])
         self.assertEqual(checker.stack, [])
 
+    def test_appendix_meta_unit(self):
+        text = (
+            "# 标题\n\n正文 **日期**：2020-01-01 不应被提取。\n\n"
+            "## 附录 B · 调研元信息\n\n"
+            "- **日期**：2026-11-17\n- **模型**: claude-opus-4-6\n"
+            "- **平台**：Claude Code\n\n## 下一节\n\n- **日期**：2099-01-01\n"
+        )
+        meta = rr.appendix_meta(text)
+        self.assertIn("日期：2026-11-17", meta)
+        self.assertIn("模型：claude-opus-4-6", meta)
+        self.assertIn("平台：Claude Code", meta)
+        self.assertNotIn("2020-01-01", meta)
+        self.assertNotIn("2099-01-01", meta)
+        self.assertEqual(rr.appendix_meta("# 无附录\n\n正文"), "")
+
+    def test_code_span_markdown_not_flagged(self):
+        body = "<p><code>**x**</code></p><pre>[S1]: y</pre>"
+        html_text = f"<html><body>{body}</body></html>"
+        self.assertEqual(rr.quality_gate(html_text, body), [])
+        flagged = rr.quality_gate("<html><p>**real**</p></html>", "<p>**real**</p>")
+        self.assertTrue(any("未渲染" in p for p in flagged))
+
 
 @unittest.skipUnless(HAS_MDIT, "markdown-it-py 未安装（用 uv run --with markdown-it-py 跑真实渲染用例）")
 class TestRender(unittest.TestCase):
@@ -124,6 +146,12 @@ class TestRender(unittest.TestCase):
         self.assertNotIn("中文标题", content)
         # 定义区不泄漏
         self.assertNotIn("[S1]:", html_text)
+        # 附录 A/B 进 TOC；排除表锚点；源码快照行；页脚元信息来自附录 B
+        self.assertIn("附录 A · 来源与证据", html_text)
+        self.assertIn("附录 B · 调研元信息", html_text)
+        self.assertIn('id="src-S4"', html_text)
+        self.assertIn("0123456789abcdef0123456789abcdef01234567", html_text)
+        self.assertIn("模型：claude-opus-4-6", html_text)
         # 打印样式
         self.assertIn("@media print", html_text)
         self.assertIn("@page", html_text)
@@ -155,16 +183,46 @@ class TestRender(unittest.TestCase):
             self.assertEqual(proc.returncode, 1)
             self.assertIn("S99", proc.stderr)
 
-    def test_meta_footer_optional(self):
+    def test_appendix_meta_footer(self):
         with tempfile.TemporaryDirectory() as td:
             copy = Path(td) / "REPORT.md"
             copy.write_text(CANARY.read_text(encoding="utf-8"), encoding="utf-8")
-            (Path(td) / "META.md").write_text(
-                "# META\n\n- **档位**：中\n- **日期**：2026-11-17\n", encoding="utf-8")
             proc = run_cli(str(copy))
             self.assertEqual(proc.returncode, 0, proc.stderr)
             html_text = (Path(td) / "REPORT.html").read_text(encoding="utf-8")
-            self.assertIn("档位：中", html_text)
+            self.assertIn("日期：2026-11-17", html_text)
+            self.assertIn("模型：claude-opus-4-6", html_text)
+            self.assertIn("平台：Claude Code", html_text)
+            self.assertIn("工具组合：WebSearch 搜索 / WebFetch 抓取", html_text)
+
+    def test_sibling_meta_ignored(self):
+        with tempfile.TemporaryDirectory() as td:
+            copy = Path(td) / "REPORT.md"
+            text = CANARY.read_text(encoding="utf-8")
+            head, _, tail = text.partition("## 附录 B · 调研元信息")
+            defs = tail[tail.index("<!-- 链接定义区"):]
+            copy.write_text(head + defs, encoding="utf-8")
+            (Path(td) / "META.md").write_text(
+                "# META\n\n- **日期**：bogus\n", encoding="utf-8")
+            proc = run_cli(str(copy))
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            html_text = (Path(td) / "REPORT.html").read_text(encoding="utf-8")
+            self.assertNotIn("bogus", html_text)
+            self.assertIn("渲染于", html_text)
+
+    def test_duplicate_source_anchor_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            bad = Path(td) / "REPORT.md"
+            text = CANARY.read_text(encoding="utf-8")
+            dup_table = (
+                "### 重复表\n\n| 编号 | 来源 | 类型 | 访问日期 | 语言 | 时效 |\n"
+                "| --- | --- | --- | --- | --- | --- |\n"
+                "| S1 | [重复行](https://example.com/dup) | 官方 | 2026-11-17 | en | 常青 |\n\n"
+            )
+            bad.write_text(text.replace("### 社区观点", dup_table + "### 社区观点"), encoding="utf-8")
+            proc = run_cli(str(bad), "-o", str(self.out))
+            self.assertEqual(proc.returncode, 1)
+            self.assertIn("重复", proc.stderr)
 
 
 if __name__ == "__main__":
