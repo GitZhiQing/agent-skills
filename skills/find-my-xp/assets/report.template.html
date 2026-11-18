@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root{
+  --bg:#1a1816; --bg-soft:#211e1b; --bg-card:#262220; --code-bg:#15130f;
+  --text:#ece6dd; --text-dim:#b0a89c; --text-faint:#7a7268;
+  --line:#3a352f; --brass:#c9a86a; --brass-dim:#8a7448;
+  --serif:"Noto Serif SC","Songti SC","Source Han Serif SC","SimSun",Georgia,serif;
+  --sans:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",system-ui,sans-serif;
+  --mono:"Cascadia Code","JetBrains Mono","SF Mono","DejaVu Sans Mono",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.9}
+.layout{display:flex;max-width:1180px;margin:0 auto;gap:48px;padding:0 28px}
+.sidebar{width:250px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:40px 0;border-right:1px solid var(--line)}
+.brand{font-family:var(--serif);font-size:15px;letter-spacing:.12em;color:var(--brass);margin-bottom:6px}
+.brand-sub{font-family:var(--mono);font-size:11px;color:var(--text-faint);letter-spacing:.08em;margin-bottom:24px}
+#toc ul{list-style:none;margin:0;padding:0}
+#toc li{margin:2px 0}
+#toc a{display:block;color:var(--text-dim);text-decoration:none;font-size:13.5px;padding:3px 10px;border-left:2px solid transparent;border-radius:0 4px 4px 0}
+#toc a:hover{color:var(--text);background:var(--bg-soft)}
+#toc a.active{color:var(--brass);border-left-color:var(--brass);background:var(--bg-soft)}
+#toc .toc-h3 a{padding-left:24px;font-size:12.5px;color:var(--text-faint)}
+#toc .nav-file>a{font-family:var(--serif);color:var(--text);font-size:14px;margin-top:12px}
+#toc .nav-file ul{margin:2px 0 8px}
+main{flex:1;min-width:0;max-width:760px;padding:48px 0 80px}
+header{margin-bottom:40px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+.classification{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;color:var(--brass-dim);text-transform:uppercase;margin-bottom:14px}
+header h1{font-family:var(--serif);font-size:32px;line-height:1.4;margin:0;font-weight:600}
+article h1.profile-title{font-family:var(--serif);font-size:26px;margin:56px 0 20px;padding-top:24px;border-top:1px solid var(--line);font-weight:600}
+article h2{font-family:var(--serif);font-size:21px;margin:40px 0 14px;font-weight:600;color:var(--text)}
+article h3{font-family:var(--serif);font-size:17px;margin:28px 0 10px;font-weight:600;color:var(--brass)}
+article p{margin:0 0 1.1em}
+article a{color:var(--brass)}
+article strong{color:var(--brass);font-weight:600}
+article ul,article ol{padding-left:1.5em;margin:0 0 1.1em}
+article li{margin:.3em 0}
+article blockquote{margin:1.2em 0;padding:14px 20px;background:var(--bg-card);border-left:3px solid var(--brass);border-radius:0 6px 6px 0;color:var(--text)}
+article blockquote p{margin:0}
+article blockquote p+p{margin-top:.6em}
+article code{font-family:var(--mono);font-size:.86em;background:var(--code-bg);padding:2px 6px;border-radius:4px;color:var(--brass)}
+article pre{background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:16px;overflow-x:auto;margin:1.2em 0}
+article pre code{background:none;padding:0;color:var(--text);font-size:13px;line-height:1.7}
+article table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:14.5px}
+article th,article td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+article th{font-family:var(--mono);font-size:12.5px;color:var(--brass);background:var(--bg-soft);font-weight:600}
+article td{color:var(--text-dim)}
+article hr{border:none;border-top:1px solid var(--line);margin:2em 0}
+.conf{font-family:var(--mono);font-size:.78em;padding:2px 8px;border-radius:4px;border:1px solid var(--line);white-space:nowrap}
+.conf-high{color:var(--brass);border-color:var(--brass-dim)}
+.conf-mid{color:var(--text-dim);border-color:var(--line)}
+.conf-low{color:var(--text-faint);border-style:dashed}
+.src-tag{font-family:var(--mono);font-size:.74em;color:var(--text-faint);border:1px dotted var(--line);border-radius:4px;padding:1px 7px;white-space:nowrap}
+.src-tag::before{content:"◈ ";color:var(--brass-dim)}
+.profile{margin-bottom:24px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--text-faint);line-height:1.7}
+#nav-toggle{display:none}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+@media (max-width:900px){
+  .layout{flex-direction:column;gap:0;padding:0 20px}
+  .sidebar{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:20px 0}
+  .sidebar.collapsed #toc{display:none}
+  #nav-toggle{display:inline-block;font-family:var(--mono);font-size:12px;color:var(--brass);background:var(--bg-soft);border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;margin-top:8px}
+  main{padding:32px 0 60px}
+  header h1{font-size:26px}
+}
+@media print{
+  :root{--bg:#fff;--bg-soft:#f5f3ef;--bg-card:#f5f3ef;--code-bg:#f5f3ef;--text:#1a1816;--text-dim:#3a352f;--text-faint:#6a6258;--line:#d8d2c8;--brass:#8a6d3b;--brass-dim:#8a6d3b}
+  body{font-size:12px}
+  .sidebar,#nav-toggle{display:none}
+  .layout{display:block;max-width:none;padding:0}
+  main{max-width:none;padding:0}
+  article blockquote{border-left-color:#8a6d3b}
+  article a{color:#1a1816;text-decoration:underline}
+  article pre,article table,article blockquote{break-inside:avoid}
+  @page{margin:18mm}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+  <div class="brand">XP 画像档案</div>
+  <div class="brand-sub">PRIVATE · 仅供本人阅读</div>
+  <button id="nav-toggle" aria-expanded="true">目录 ▾</button>
+  <nav id="toc"><ul>
+__NAV_ITEMS__
+  </ul></nav>
+</aside>
+<main>
+<header>
+  <div class="classification">私密档案 · 非诊断 · 非预测</div>
+  <h1>__TITLE__</h1>
+</header>
+<article id="content">
+__CONTENT__
+</article>
+<footer>本报告是自我认识的假设地图，不是诊断、不是预测引擎；深层假设可证伪、可被本人推翻。现实行动安全自负。</footer>
+</main>
+</div>
+<script>
+(function(){
+  var toggle=document.getElementById('nav-toggle'),sidebar=document.getElementById('sidebar');
+  if(toggle){toggle.addEventListener('click',function(){
+    var c=sidebar.classList.toggle('collapsed');
+    toggle.setAttribute('aria-expanded',String(!c));
+    toggle.textContent=c?'目录 ▸':'目录 ▾';
+  });}
+  var links=[].slice.call(document.querySelectorAll('#toc a'));
+  var map={};links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map[id]=a;});
+  var targets=Object.keys(map).map(function(id){return document.getElementById(id);});
+  function spy(){
+    var line=window.innerHeight*0.28,current=null;
+    targets.forEach(function(el){if(el.getBoundingClientRect().top<=line)current=el;});
+    links.forEach(function(a){a.classList.remove('active');});
+    if(current&&map[current.id])map[current.id].classList.add('active');
+  }
+  window.addEventListener('scroll',spy,{passive:true});window.addEventListener('resize',spy);spy();
+})();
+</script>
+</body>
+</html>

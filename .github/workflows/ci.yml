@@ -50,6 +50,17 @@ jobs:
       - name: render --help smoke
         run: uv run skills/deep-research/scripts/render_report.py --help
 
+  find-my-xp:
+    name: find-my-xp renderer unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: unittest
+        run: uv run --with markdown-it-py python -m unittest discover -s skills/find-my-xp/tests
+      - name: render --help smoke
+        run: uv run skills/find-my-xp/scripts/render_report.py --help
+
   video-insight:
     name: video-insight unit tests
     runs-on: ubuntu-latest
