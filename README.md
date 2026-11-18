@@ -15,6 +15,7 @@
 | [video-insight](skills/video-insight/) | 拉片级视频内容与画面分析 |
 | [md2pdf](skills/md2pdf/) | Markdown 转精美 PDF |
 | [windows-disk-cleanup](skills/windows-disk-cleanup/) | Windows 磁盘/文件夹扫描、离线可勾选 HTML 报告与安全删除 |
+| [find-my-xp](skills/find-my-xp/) | 成人向深度访谈探索 XP/心仪类型：标本对比+阶梯追问+强制取舍，交付多份并存原型档案+元地图，可选私密档案风 HTML |
 
 各 skill 的用法、外部环境要求与可选协作见其目录内的 `README.md` / `SKILL.md`；版本号以 `SKILL.md` frontmatter 为准。每个 skill 均可独立安装和使用。
 

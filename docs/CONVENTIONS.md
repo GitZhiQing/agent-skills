@@ -75,7 +75,7 @@
 | `compatibility` | 按需 | **标量字符串**，≤500 字符；只写外部系统、网络、账号、key 等环境要求，不复制安装说明 |
 | `metadata` | 建议 | `string → string` 映射；本仓库固定使用 `version` 与 `category` |
 | `metadata.version` | **必需** | semver（`X.Y.Z`），全部 skill 一律标注（纯提示词同样有迭代），规则见 §4。lint 强制；它是仓库维护版本，客户端不一定消费 |
-| `metadata.category` | **建议** | 领域标签，开放值集（现有：web / git / research / workflow / media / document / system），新值先更新本规范此处再使用；新 skill 应填写，缺失 lint warn |
+| `metadata.category` | **建议** | 领域标签，开放值集（现有：web / git / research / workflow / media / document / system / psychology），新值先更新本规范此处再使用；新 skill 应填写，缺失 lint warn |
 | `allowed-tools` | 按需 | 空格分隔的工具授权串（官方实验字段），标量字符串，不用 YAML 列表；它只是预批准提示，不是沙箱，客户端不支持时应按正常权限流程请求 |
 | 顶层字段集合 | **封闭** | 仅允许官方 6 字段：`name`、`description`、`license`、`compatibility`、`metadata`、`allowed-tools`；客户端专有字段不得进入共享 skill，未知顶层字段 lint error |
 

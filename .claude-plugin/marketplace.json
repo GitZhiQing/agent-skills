@@ -158,6 +158,24 @@
         "disk-cleanup",
         "storage"
       ]
+    },
+    {
+      "name": "find-my-xp",
+      "source": "./skills/find-my-xp",
+      "skills": [
+        "./"
+      ],
+      "description": "成人向深度访谈：标本对比、阶梯追问与强制取舍，带用户看清自己真正被什么打动（XP/心仪类型/性癖），产出多份并存原型档案 + 元地图报告（表面/互动/内核三层、层间错位、激活情境、XP 链、角色卡），具体描写从人类创作文本提取并署名（反 AI 味），内置网文/日漫/虚拟歌手/RPG 四介质角色档案库，可选私密档案风单文件离线 HTML；成人 gate 前置、非评判非诊断、隐私本地",
+      "version": "0.5.0",
+      "author": {
+        "name": "QING"
+      },
+      "keywords": [
+        "xp",
+        "interview",
+        "psychology",
+        "self-exploration"
+      ]
     }
   ]
 }
